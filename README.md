@@ -1,2 +1,2 @@
 # UnmannedAerialVehicle
-Student project in BMSTU
+Student project
