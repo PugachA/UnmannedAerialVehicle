@@ -35,7 +35,7 @@
 
                 "setupCommands": [
                     { "text": "-enable-pretty-printing", "description": "Enable pretty-printing for gdb", "ignoreFailures": false},
-                    { "text": "-environment-cd ${workspaceRoot}/../BUILD_${workspaceRootFolderName}/debug" },
+                    { "text": "-environment-cd ${workspaceRoot}/../BUILDS/BUILD_${workspaceRootFolderName}/debug" },
                     { "text": "-target-select remote localhost:3333", "description": "connect to target", "ignoreFailures": false },
                     { "text": "-file-exec-and-symbols ${workspaceRootFolderName}.elf", "description": "load file", "ignoreFailures": false},
                     { "text": "-interpreter-exec console \"monitor endian little\"", "ignoreFailures": false },

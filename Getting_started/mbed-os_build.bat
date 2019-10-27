@@ -1,7 +1,7 @@
 @echo off 
 SET mbed-os_dir=%userprofile%\src\arm\mbed\mbed-os
 SET project_name=Getting_started
-SET project_dir=%userprofile%\Documents\Projects\OS\%project_name%
+SET project_dir=%userprofile%\Documents\Projects\UnmannedAerialVehicle\%project_name%
 SET board=DISCO_L476VG
 SET toolchain=GCC_ARM
 
