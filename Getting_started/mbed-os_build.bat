@@ -5,7 +5,7 @@ SET project_dir=%userprofile%\Documents\Projects\UnmannedAerialVehicle\%project_
 SET board=DISCO_L476VG
 SET toolchain=GCC_ARM
 
-mbed config MBED_OS_DIR %mbed-os_dir%
+mbed config -G MBED_OS_DIR %mbed-os_dir%
 IF "%1" == "debug" (SET buildprofile=debug)
 IF "%1" == "release" (SET buildprofile=release)
 
