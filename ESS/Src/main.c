@@ -96,7 +96,11 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+		if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_SET)
+			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7, 1);
+		else   
+			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7, 0);
+		
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
