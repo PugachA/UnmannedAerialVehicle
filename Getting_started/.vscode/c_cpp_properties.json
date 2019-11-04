@@ -7,7 +7,8 @@
             ],
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:/Users/Vasiliy/src/arm/mbed/mbed-os/**"
+                "C:/Users/Vasiliy/src/arm/mbed/mbed-os/**",
+				"C:/Users/Vasiliy/src/arm/mbed/mbed-os/targets/TARGET_STM/TARGET_STM32L4/TARGET_STM32L476xG/TARGET_DISCO_L476VG/"
             ],
             "defines": [
                 "_DEBUG",
