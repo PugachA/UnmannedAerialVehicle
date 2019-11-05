@@ -200,13 +200,9 @@ static void MX_GPIO_Init(void)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if(GPIO_Pin == GPIO_PIN_0 || GPIO_Pin == GPIO_PIN_1) 
-		{
 			Save_UAV();
-		}
 	else
-		{
 			__NOP();
-		}
 }
 
 //Алгоритм спасения планера
