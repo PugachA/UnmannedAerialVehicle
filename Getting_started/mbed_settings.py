@@ -28,7 +28,7 @@ from os.path import join, abspath, dirname
 #ARM_PATH = "C:/Program Files/ARM"
 
 # GCC ARM
-#GCC_ARM_PATH = "C:\Program Files (x86)\GNU Tools ARM Embedded\8 2019-q3-update\bin"
+#GCC_ARM_PATH = ""
 
 # IAR
 #IAR_PATH = "C:/Program Files (x86)/IAR Systems/Embedded Workbench 7.0/arm"
