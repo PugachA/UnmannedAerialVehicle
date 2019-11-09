@@ -23,6 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "Servo.h"
 
 /* USER CODE END Includes */
 
@@ -44,7 +45,7 @@
 TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
-
+Servo servo(TIM4,1,58,219);
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -53,7 +54,6 @@ static void MX_GPIO_Init(void);
 static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
 void Save_UAV(void);
-void Set_Position(uint8_t position);
 
 /* USER CODE END PFP */
 
@@ -94,7 +94,7 @@ int main(void)
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
 	HAL_TIM_PWM_Start (&htim4, TIM_CHANNEL_1); //запускаем Ш�?М
-	Set_Position(0);
+	servo.Set_Position(0);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -278,7 +278,7 @@ void Save_UAV(void)
 	//Включаем сигнальный светодиод
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, GPIO_PIN_SET);
 	//Поворачиваем серво (открываем парашют)
-  Set_Position(180);
+  servo.Set_Position(180);
 }
 
 // Функция устанавливает позицию вала (в градусах)
