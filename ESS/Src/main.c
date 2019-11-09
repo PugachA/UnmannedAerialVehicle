@@ -292,9 +292,6 @@ void Set_Position(uint8_t position)
 	if(position > 180)
 		position = 180;
 	
-	if(position < 0)
-		position = 0;
-	
   TIM4->CCR1 = min_PWM_value + multiplier * position;
 }
 
