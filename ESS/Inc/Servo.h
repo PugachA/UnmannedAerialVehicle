@@ -15,9 +15,12 @@ class Servo
 	  //канал таймера
 	  uint8_t channel; 
 	
-	public:
-		Servo(TIM_TypeDef* TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t max_PWM_value);
+	  //максимальный угол поворота сервопривода
+	  uint16_t max_Angel; 
 	
+	public:
+		Servo(TIM_TypeDef* TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t max_PWM_value, uint16_t max_Angel);
+	  Servo(TIM_TypeDef* TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t max_PWM_value);
 	  //Поварачивает сервопривод на заданный угол
 	  void Set_Position(uint8_t position);
 };
