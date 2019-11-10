@@ -48,7 +48,7 @@ TIM_HandleTypeDef htim4;
 uint8_t channel = 1;
 uint16_t min_PWM_value = 58; //значение, при котором серво повернуто на 0 градусов
 uint16_t max_PWM_value = 219; //значение, при котором серво повернуто на 180 градусов
-Servo servo(TIM4,	channel, min_PWM_value, max_PWM_value);
+Servo servo(TIM4, channel, min_PWM_value, max_PWM_value);
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -57,7 +57,7 @@ static void MX_GPIO_Init(void);
 static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
 void Save_UAV(void);
-
+void Delay(uint32_t micro_seconds);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -276,12 +276,24 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 //Алгоритм спасения планера
 void Save_UAV(void)
 {
-	//Отключаем двигатель (подаем сигнал на реле)
-	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7, GPIO_PIN_RESET);
 	//Включаем сигнальный светодиод
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, GPIO_PIN_SET);
+	
+	//Отключаем двигатель (подаем сигнал на реле)
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7, GPIO_PIN_RESET);
+	
+	//Задержка, чтобы дождаться остановки двигателя
+	Delay(1000000); //1 секунда
+		
 	//Поворачиваем серво (открываем парашют)
 	servo.Set_Position(180);
+}
+
+//задержка в микросекундах
+void Delay(uint32_t micro_seconds)
+{
+	micro_seconds = micro_seconds * 10;//умножаем на 10, тогда совпадает с микросекундами.
+	while(micro_seconds--);
 }
 
 /* USER CODE END 4 */
