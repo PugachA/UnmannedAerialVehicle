@@ -24,7 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "Servo.h"
-
+#include "SimpleClock.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -34,6 +34,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -43,21 +44,24 @@
 
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim4;
+TIM_HandleTypeDef htim6;
 
 /* USER CODE BEGIN PV */
 uint8_t channel = 1;
 uint16_t min_PWM_value = 58; //значение, при котором серво повернуто на 0 градусов
 uint16_t max_PWM_value = 219; //значение, при котором серво повернуто на 180 градусов
-Servo servo(TIM4, channel, min_PWM_value, max_PWM_value);
+Servo servo(TIM4, channel, min_PWM_value, max_PWM_value); //создаем объект для управления сервоприводом
+
+SimpleClock simpleClock = SimpleClock(); //создаем объект для работы со временем
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM4_Init(void);
+static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
 void Save_UAV(void);
-void Delay(uint32_t micro_seconds);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -95,9 +99,13 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_TIM4_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
-	HAL_TIM_PWM_Start (&htim4, TIM_CHANNEL_1); //запускаем ШИМ
+	HAL_TIM_PWM_Start (&htim4, TIM_CHANNEL_1); //запускаем Ш�?М
 	servo.Set_Position(0);
+	
+	HAL_TIM_Base_Start(&htim6);
+	HAL_TIM_Base_Start_IT(&htim6); //запускаем прерывание по таймеру
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -105,7 +113,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+			
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -208,6 +216,44 @@ static void MX_TIM4_Init(void)
 }
 
 /**
+  * @brief TIM6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM6_Init(void)
+{
+
+  /* USER CODE BEGIN TIM6_Init 0 */
+
+  /* USER CODE END TIM6_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM6_Init 1 */
+
+  /* USER CODE END TIM6_Init 1 */
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = 35999;
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = 10000;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM6_Init 2 */
+
+  /* USER CODE END TIM6_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -226,7 +272,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PA0 */
   GPIO_InitStruct.Pin = GPIO_PIN_0;
@@ -240,8 +286,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PE7 */
-  GPIO_InitStruct.Pin = GPIO_PIN_7;
+  /*Configure GPIO pins : PE7 PE9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_9;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -283,17 +329,10 @@ void Save_UAV(void)
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7, GPIO_PIN_RESET);
 	
 	//Задержка, чтобы дождаться остановки двигателя
-	Delay(1000000); //1 секунда
+	simpleClock.Delay(1000000); //1 секунда
 		
 	//Поворачиваем серво (открываем парашют)
 	servo.Set_Position(180);
-}
-
-//задержка в микросекундах
-void Delay(uint32_t micro_seconds)
-{
-	micro_seconds = micro_seconds * 10;//умножаем на 10, тогда совпадает с микросекундами.
-	while(micro_seconds--);
 }
 
 /* USER CODE END 4 */
