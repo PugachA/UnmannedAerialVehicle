@@ -93,7 +93,7 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
-	HAL_TIM_PWM_Start (&htim4, TIM_CHANNEL_1); //запускаем Ш�?М
+	HAL_TIM_PWM_Start (&htim4, TIM_CHANNEL_1); //запускаем ШИМ
 	servo.Set_Position(0);
   /* USER CODE END 2 */
 
@@ -279,20 +279,6 @@ void Save_UAV(void)
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, GPIO_PIN_SET);
 	//Поворачиваем серво (открываем парашют)
   servo.Set_Position(180);
-}
-
-// Функция устанавливает позицию вала (в градусах)
-void Set_Position(uint8_t position)
-{
-	uint16_t max_PWM_value = 219; //значение скважности, при котором серво поворачивается на 180
-	uint16_t min_PWM_value = 58; //значение скважности, при котором серво поворачивается на 0
-	
-  double multiplier = (double)(max_PWM_value - min_PWM_value)/180 ;
-	
-	if(position > 180)
-		position = 180;
-	
-  TIM4->CCR1 = min_PWM_value + multiplier * position;
 }
 
 /* USER CODE END 4 */
