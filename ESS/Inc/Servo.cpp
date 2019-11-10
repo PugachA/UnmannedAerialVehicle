@@ -1,12 +1,12 @@
 #include "Servo.h"
 
-Servo::Servo(TIM_TypeDef* TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t max_PWM_value, uint16_t max_Angel)
+Servo::Servo(TIM_TypeDef* TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t max_PWM_value, uint16_t max_Angle)
 {
 	this->TIM = TIM;
 	this->channel = channel;
 	this->min_PWM_value = min_PWM_value;
 	this->max_PWM_value = max_PWM_value;
-	this->max_Angel = max_Angel;
+	this->max_Angle = max_Angle;
 }
 
 Servo::Servo(TIM_TypeDef* TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t max_PWM_value)
@@ -15,15 +15,15 @@ Servo::Servo(TIM_TypeDef* TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t
 	this->channel = channel;
 	this->min_PWM_value = min_PWM_value;
 	this->max_PWM_value = max_PWM_value;
-	this->max_Angel = 180;
+	this->max_Angle = 180;
 }
 
 void  Servo::Set_Position(uint8_t position)
 {
-  double multiplier = (double)(this->max_PWM_value - this->min_PWM_value)/this->max_Angel ;
+  double multiplier = (double)(this->max_PWM_value - this->min_PWM_value)/this->max_Angle;
 	
-	if(position > this->max_Angel)
-		position = this->max_Angel;
+	if(position > this->max_Angle)
+		position = this->max_Angle;
 	
 	uint16_t pwm = min_PWM_value + multiplier * position;
 	
