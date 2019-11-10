@@ -33,4 +33,5 @@
 
 # Folders
 BUILDS/
+mbed-os/
 ESS/MDK-ARM/ESS/

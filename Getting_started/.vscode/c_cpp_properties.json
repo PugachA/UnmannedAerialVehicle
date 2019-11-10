@@ -3,11 +3,13 @@
         {
             "name": "Windows",
             "forcedInclude": [
-                "${workspaceFolder}/mbed_config.h"
+                "${workspaceFolder}/../BUILDS/mbed-os-build/mbed_config.h"
             ],
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:/Users/Vasiliy/src/arm/mbed/mbed-os/**"
+                "${workspaceFolder}/../mbed-os/**",
+                "${workspaceFolder}/../libraries/**",
+                "${workspaceFolder}/../mbed-os/targets/TARGET_STM/TARGET_STM32L4/TARGET_STM32L476xG/TARGET_DISCO_L476VG/"
             ],
             "defines": [
                 "_DEBUG",
