@@ -102,8 +102,8 @@ int main(void)
 	
 	char str[80] = "";
 	
-	long temperature = 0;
-	long pressure = 0;
+	double temperature = 0;
+	double pressure = 0;
 	double altitude = 0;
 
   /* USER CODE END 1 */
@@ -134,7 +134,7 @@ int main(void)
 	HAL_TIM_Base_Start(&htim6);	
 	HAL_TIM_Base_Start_IT(&htim6);
 	
-	ms5611.ms5611_Init(hi2c1);
+	ms5611.init(hi2c1);
 
   /* USER CODE END 2 */
 
@@ -143,20 +143,11 @@ int main(void)
   while (1)
   {
 		
-		if (HAL_I2C_IsDeviceReady(&hi2c1, ms5611.MS5611_addr << 1, 10, 100)==HAL_OK)
-		{
-			
-			ms5611.ms5611_Convert(&temperature, &pressure, hi2c1);
-			altitude = 18400.0*(1.0+0.00366*(temperature/100.0))*log(1013.25/(pressure/100.0));
+		altitude = ms5611.getAltitude(hi2c1,1013.25);
 
-			sprintf(str,"%lf\r\n",altitude);
-			HAL_UART_Transmit(&huart2,(uint8_t*)str,16,0xFFFF);
-			HAL_Delay(100); 
-		}
-		else
-		{
-			sprintf(str,"I2C error");
-		}
+		sprintf(str,"%lf\r\n",altitude);
+		HAL_UART_Transmit(&huart2,(uint8_t*)str,16,0xFFFF);
+		HAL_Delay(100);
 		
     /* USER CODE END WHILE */
 
