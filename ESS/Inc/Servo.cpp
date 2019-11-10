@@ -31,24 +31,24 @@ void  Servo::Set_Position(uint8_t position)
 	{
 		case 1:
 			this->TIM->CCR1 = pwm;
-		  break;
+			break;
 		case 2:
 			this->TIM->CCR2 = pwm;
-		  break;
+			break;
 		case 3:
 			this->TIM->CCR3 = pwm;
-		  break;
+			break;
 		case 4:
 			this->TIM->CCR4 = pwm;
-		  break;
+			break;
 		case 5:
 			this->TIM->CCR5 = pwm;
-		  break;
+			break;
 		case 6:
 			this->TIM->CCR6 = pwm;
-		  break;
+			break;
 		default:
 			this->TIM->CCR1 = pwm;
-      break;
+			break;
 	}
 }

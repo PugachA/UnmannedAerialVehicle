@@ -278,7 +278,7 @@ void Save_UAV(void)
 	//Включаем сигнальный светодиод
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, GPIO_PIN_SET);
 	//Поворачиваем серво (открываем парашют)
-  servo.Set_Position(180);
+	servo.Set_Position(180);
 }
 
 /* USER CODE END 4 */
