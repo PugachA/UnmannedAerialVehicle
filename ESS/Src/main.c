@@ -45,7 +45,10 @@
 TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
-Servo servo(TIM4,1,58,219);
+uint8_t channel = 1;
+uint16_t min_PWM_value = 58; //значение, при котором серво повернуто на 0 градусов
+uint16_t max_PWM_value = 219; //значение, при котором серво повернуто на 180 градусов
+Servo servo(TIM4,	channel, min_PWM_value, max_PWM_value);
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
