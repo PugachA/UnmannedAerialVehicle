@@ -98,7 +98,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	
-	MS5611 ms5611(0x77,1013.25);
+	MS5611 ms5611(0x77, hi2c1);
 	
 	char str[80] = "";
 	

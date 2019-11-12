@@ -6,7 +6,9 @@
 class MS5611
 {
   private:
-    uint8_t MS5611_addr;	
+    uint8_t MS5611_addr;
+    I2C_HandleTypeDef hi2c;
+	
     double pressure_QFE;
 	  
     //constants for raw data reading
@@ -36,21 +38,21 @@ class MS5611
     long pressure;
     double altitude;
 	
-    short readProm(unsigned char, I2C_HandleTypeDef); //read one of calibration coeffecients 
-    unsigned long readBaro(I2C_HandleTypeDef); //read raw pressure
-    unsigned long readTemp(I2C_HandleTypeDef); //read raw temperature
-    void convertRaw(I2C_HandleTypeDef); //convert pressure and temp from raw
+    short readProm(unsigned char); //read one of calibration coeffecients 
+    unsigned long readBaro(void); //read raw pressure
+    unsigned long readTemp(void); //read raw temperature
+    void convertRaw(void); //convert pressure and temp from raw
 		
 		
 	
   public:
-    MS5611(uint8_t,double); //constructor
+    MS5611(uint8_t,I2C_HandleTypeDef); //constructor
 
-    void init(I2C_HandleTypeDef); //reset and init all calibration coefficients
+    void init(void); //reset and init all calibration coefficients
 	
-    double getPressure(I2C_HandleTypeDef); //return pressure
-    double getTemperature(I2C_HandleTypeDef); //return temperature
-    double getAltitude(I2C_HandleTypeDef); //return altitude depending on pressure on ground
+    double getPressure(void); //return pressure
+    double getTemperature(void); //return temperature
+    double getAltitude(void); //return altitude depending on pressure on ground
 		
 			
 };

@@ -2,10 +2,14 @@
 #include "MS5611.h"
 #include "math.h"
 
-MS5611::MS5611(uint8_t ms5611_addr, double init_QFE) //constructor
+MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c) //constructor
 {
 	MS5611_addr = ms5611_addr;
-	pressure_QFE = init_QFE;
+	this->hi2c = hi2c;
+	
+	
+	//pressure_QFE = 0;
+	
 	D1_OSR = 0x48;
 	D2_OSR = 0x58;
 	ADC_READ = 0x00;
@@ -24,59 +28,59 @@ MS5611::MS5611(uint8_t ms5611_addr, double init_QFE) //constructor
 }
 
 
-short MS5611::readProm(unsigned char reg_addr, I2C_HandleTypeDef hi2c1)
+short MS5611::readProm(unsigned char reg_addr)
 {
   const uint16_t bufSize = 2;
   uint8_t buf[bufSize];
-  HAL_I2C_Mem_Read(&hi2c1, MS5611_addr << 1, reg_addr, I2C_MEMADD_SIZE_8BIT, buf, bufSize, timeout);
+  HAL_I2C_Mem_Read(&this->hi2c, MS5611_addr << 1, reg_addr, I2C_MEMADD_SIZE_8BIT, buf, bufSize, timeout);
   return (buf[0] << 8) | buf[1];
 }
 
-unsigned long MS5611::readBaro(I2C_HandleTypeDef hi2c1)
+unsigned long MS5611::readBaro(void)
 {
   const uint16_t bufSize = 3;
   uint8_t buf[bufSize];
 
-  HAL_I2C_Master_Transmit(&hi2c1, MS5611_addr << 1,&D1_OSR, comandSize, timeout); //initiating pressure conversion
+  HAL_I2C_Master_Transmit(&this->hi2c, MS5611_addr << 1,&D1_OSR, comandSize, timeout); //initiating pressure conversion
   HAL_Delay(10);
-  HAL_I2C_Master_Transmit(&hi2c1, MS5611_addr << 1,&ADC_READ, comandSize, timeout); //initiating ADC reading
-  HAL_I2C_Master_Receive(&hi2c1, MS5611_addr << 1, buf, bufSize, timeout);
+  HAL_I2C_Master_Transmit(&this->hi2c, MS5611_addr << 1,&ADC_READ, comandSize, timeout); //initiating ADC reading
+  HAL_I2C_Master_Receive(&this->hi2c, MS5611_addr << 1, buf, bufSize, timeout);
 	
   return (buf[0] << 16) | (buf[1] << 8) | buf[2];
 }
 
-unsigned long MS5611::readTemp(I2C_HandleTypeDef hi2c1)
+unsigned long MS5611::readTemp(void)
 {
   const uint16_t bufSize = 3;
   uint8_t buf[bufSize];
 
-  HAL_I2C_Master_Transmit(&hi2c1, MS5611_addr << 1,&D2_OSR, comandSize, timeout); //initiating temperature conversion
+  HAL_I2C_Master_Transmit(&this->hi2c, MS5611_addr << 1,&D2_OSR, comandSize, timeout); //initiating temperature conversion
   HAL_Delay(10);
-  HAL_I2C_Master_Transmit(&hi2c1, MS5611_addr << 1,&ADC_READ, comandSize, timeout); //initiating ADC reading
-  HAL_I2C_Master_Receive(&hi2c1, MS5611_addr << 1, buf, bufSize, timeout);
+  HAL_I2C_Master_Transmit(&this->hi2c, MS5611_addr << 1,&ADC_READ, comandSize, timeout); //initiating ADC reading
+  HAL_I2C_Master_Receive(&this->hi2c, MS5611_addr << 1, buf, bufSize, timeout);
 	
   return (buf[0] << 16) | (buf[1] << 8) | buf[2];
 }
 
 
-void MS5611::init(I2C_HandleTypeDef hi2c1) 
+void MS5611::init(void) 
 {
   // Reset
-  HAL_I2C_Master_Transmit(&hi2c1, MS5611_addr << 1,&RST, comandSize, timeout);
+  HAL_I2C_Master_Transmit(&this->hi2c, MS5611_addr << 1,&RST, comandSize, timeout);
 
   HAL_Delay(10);
 
   // Read calibration data
-  ms5611_C1 = readProm(0xA2, hi2c1);
-  ms5611_C2 = readProm(0xA4, hi2c1);
-  ms5611_C3 = readProm(0xA6, hi2c1);
-  ms5611_C4 = readProm(0xA8, hi2c1);
-  ms5611_C5 = readProm(0xAA, hi2c1);
-  ms5611_C6 = readProm(0xAC, hi2c1);
+  ms5611_C1 = readProm(0xA2);
+  ms5611_C2 = readProm(0xA4);
+  ms5611_C3 = readProm(0xA6);
+  ms5611_C4 = readProm(0xA8);
+  ms5611_C5 = readProm(0xAA);
+  ms5611_C6 = readProm(0xAC);
 }
 
 
-void MS5611::convertRaw(I2C_HandleTypeDef hi2c1) 
+void MS5611::convertRaw(void) 
 {
 
   unsigned long D1, D2;
@@ -84,11 +88,11 @@ void MS5611::convertRaw(I2C_HandleTypeDef hi2c1)
   long long OFF, SENS, OFF2, SENS2, T2;
 	
   // Read pressure data
-  D1 = readBaro(hi2c1);
+  D1 = readBaro();
 
 
   // Read Temperature data
-  D2 = readTemp(hi2c1);
+  D2 = readTemp();
 
   dT = D2 - (ms5611_C5 << 8);
   TEMP = 2000 + (((long long)dT * (long long)ms5611_C6) >> 23);
@@ -119,21 +123,21 @@ void MS5611::convertRaw(I2C_HandleTypeDef hi2c1)
 
 }
 
-double MS5611::getPressure(I2C_HandleTypeDef hi2c1)
+double MS5611::getPressure(void)
 {
-  convertRaw(hi2c1);
+  convertRaw();
   return this->pressure/presDecimation;
 }
 
-double MS5611::getTemperature(I2C_HandleTypeDef hi2c1)
+double MS5611::getTemperature(void)
 {
-  convertRaw(hi2c1);
+  convertRaw();
   return this->temperature/tempDecimation;
 }
 
-double MS5611::getAltitude(I2C_HandleTypeDef hi2c1)
+double MS5611::getAltitude(void)
 {
-  convertRaw(hi2c1);
+  convertRaw();
   this->altitude = R*(T0+temperature/tempDecimation)*log((pressure/presDecimation)/this->pressure_QFE)/(-M*g);
   return this->altitude; 
 }
