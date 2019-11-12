@@ -142,9 +142,10 @@ int main(void)
   while (1)
   {
 		
-		altitude = ms5611.getAltitude();
+		//altitude = ms5611.getAltitude();
+		pressure = ms5611.getPressure();
 
-		sprintf(str,"%lf\r\n",altitude);
+		sprintf(str,"%lf\r\n",pressure);
 		HAL_UART_Transmit(&huart2,(uint8_t*)str,16,0xFFFF);
 		HAL_Delay(100);
 		
