@@ -6,10 +6,12 @@
 class MS5611
 {
   private:
-    uint8_t MS5611_addr;
-    I2C_HandleTypeDef hi2c;
+    uint8_t MS5611_addr; //address of the sensor on the bus
+    I2C_HandleTypeDef hi2c; //pointer to the i2c bus
 	
-    double pressure_QFE;
+    double pressure_QFE; //used in getAltitude to calc altitude AGL
+	
+    int points_to_average; //used in updateQFE to calc average pressure
 	  
     //constants for raw data reading
     uint8_t D1_OSR;
@@ -47,12 +49,11 @@ class MS5611
 	
   public:
     MS5611(uint8_t,I2C_HandleTypeDef); //constructor
-
-    void init(void); //reset and init all calibration coefficients
 	
     double getPressure(void); //return pressure
     double getTemperature(void); //return temperature
     double getAltitude(void); //return altitude depending on pressure on ground
+    void updateQFE(void); //calculating and remembering QFE pressure, public in case of need to re-init QFE from main
 		
 			
 };

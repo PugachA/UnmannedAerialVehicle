@@ -5,10 +5,9 @@
 MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c) //constructor
 {
 	MS5611_addr = ms5611_addr;
-	this->hi2c = hi2c;
+  this->hi2c = hi2c;
 	
-	
-	//pressure_QFE = 0;
+  points_to_average = 10;
 	
 	D1_OSR = 0x48;
 	D2_OSR = 0x58;
@@ -25,6 +24,24 @@ MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c) //constructor
 	
 	tempDecimation = 100.0;
 	presDecimation = 100.0;
+	
+  //------------------------MS5611 Initialising---------------------------
+  // Reset
+  HAL_I2C_Master_Transmit(&this->hi2c, MS5611_addr << 1,&RST, comandSize, timeout);
+
+  HAL_Delay(10);
+
+  // Read calibration data
+  ms5611_C1 = readProm(0xA2);
+  ms5611_C2 = readProm(0xA4);
+  ms5611_C3 = readProm(0xA6);
+  ms5611_C4 = readProm(0xA8);
+  ms5611_C5 = readProm(0xAA);
+  ms5611_C6 = readProm(0xAC);
+	//-----------------------------------------------------------------------
+	
+  updateQFE(); //remembering QFE pressure when creating object
+	
 }
 
 
@@ -60,23 +77,6 @@ unsigned long MS5611::readTemp(void)
   HAL_I2C_Master_Receive(&this->hi2c, MS5611_addr << 1, buf, bufSize, timeout);
 	
   return (buf[0] << 16) | (buf[1] << 8) | buf[2];
-}
-
-
-void MS5611::init(void) 
-{
-  // Reset
-  HAL_I2C_Master_Transmit(&this->hi2c, MS5611_addr << 1,&RST, comandSize, timeout);
-
-  HAL_Delay(10);
-
-  // Read calibration data
-  ms5611_C1 = readProm(0xA2);
-  ms5611_C2 = readProm(0xA4);
-  ms5611_C3 = readProm(0xA6);
-  ms5611_C4 = readProm(0xA8);
-  ms5611_C5 = readProm(0xAA);
-  ms5611_C6 = readProm(0xAC);
 }
 
 
@@ -140,4 +140,17 @@ double MS5611::getAltitude(void)
   convertRaw();
   this->altitude = R*(T0+temperature/tempDecimation)*log((pressure/presDecimation)/this->pressure_QFE)/(-M*g);
   return this->altitude; 
+}
+
+void MS5611::updateQFE(void)
+{
+	double sum = 0;
+	double pressure = 0;
+	
+	for(int i = 0; i < points_to_average; i++) {
+    pressure = getPressure();
+    sum = sum + pressure;
+	}
+	
+	this->pressure_QFE = sum / points_to_average;
 }
