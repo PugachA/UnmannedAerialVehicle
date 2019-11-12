@@ -98,7 +98,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	
-	MS5611 ms5611(0x77);
+	MS5611 ms5611(0x77,1013.25);
 	
 	char str[80] = "";
 	
@@ -143,7 +143,7 @@ int main(void)
   while (1)
   {
 		
-		altitude = ms5611.getAltitude(hi2c1,1013.25);
+		altitude = ms5611.getAltitude(hi2c1);
 
 		sprintf(str,"%lf\r\n",altitude);
 		HAL_UART_Transmit(&huart2,(uint8_t*)str,16,0xFFFF);

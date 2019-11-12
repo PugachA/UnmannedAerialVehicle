@@ -2,9 +2,10 @@
 #include "MS5611.h"
 #include "math.h"
 
-MS5611::MS5611(uint8_t ms5611_addr) //constructor
+MS5611::MS5611(uint8_t ms5611_addr, double init_QFE) //constructor
 {
 	MS5611_addr = ms5611_addr;
+	pressure_QFE = init_QFE;
 	D1_OSR = 0x48;
 	D2_OSR = 0x58;
 	ADC_READ = 0x00;
@@ -130,9 +131,9 @@ double MS5611::getTemperature(I2C_HandleTypeDef hi2c1)
   return this->temperature/tempDecimation;
 }
 
-double MS5611::getAltitude(I2C_HandleTypeDef hi2c1, double QFEpressure)
+double MS5611::getAltitude(I2C_HandleTypeDef hi2c1)
 {
   convertRaw(hi2c1);
-  this->altitude = R*(T0+temperature/tempDecimation)*log((pressure/presDecimation)/QFEpressure)/(-M*g);
+  this->altitude = R*(T0+temperature/tempDecimation)*log((pressure/presDecimation)/this->pressure_QFE)/(-M*g);
   return this->altitude; 
 }

@@ -7,6 +7,7 @@ class MS5611
 {
   private:
     uint8_t MS5611_addr;	
+    double pressure_QFE;
 	  
     //constants for raw data reading
     uint8_t D1_OSR;
@@ -43,13 +44,13 @@ class MS5611
 		
 	
   public:
-    MS5611(uint8_t); //constructor
+    MS5611(uint8_t,double); //constructor
 
     void init(I2C_HandleTypeDef); //reset and init all calibration coefficients
 	
     double getPressure(I2C_HandleTypeDef); //return pressure
     double getTemperature(I2C_HandleTypeDef); //return temperature
-    double getAltitude(I2C_HandleTypeDef, double); //return altitude depending on pressure on ground
+    double getAltitude(I2C_HandleTypeDef); //return altitude depending on pressure on ground
 		
 			
 };
