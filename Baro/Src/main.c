@@ -98,13 +98,11 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	
-	MS5611 ms5611(0x77, hi2c1);
-	
-	char str[80] = "";
-	
-	double temperature = 0;
-	double pressure = 0;
-	double altitude = 0;
+  char str[80] = "";
+  
+  double temperature = 0;
+  double pressure = 0;
+  double altitude = 0;
 
   /* USER CODE END 1 */
 
@@ -131,9 +129,10 @@ int main(void)
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 	
-	HAL_TIM_Base_Start(&htim6);	
-	HAL_TIM_Base_Start_IT(&htim6);
-
+  HAL_TIM_Base_Start(&htim6);	
+  HAL_TIM_Base_Start_IT(&htim6);
+	
+  MS5611 ms5611(0x77,hi2c1,10);
 
   /* USER CODE END 2 */
 
@@ -142,12 +141,11 @@ int main(void)
   while (1)
   {
 		
-		//altitude = ms5611.getAltitude();
-		pressure = ms5611.getPressure();
+    altitude = ms5611.getAltitude();
 
-		sprintf(str,"%lf\r\n",pressure);
-		HAL_UART_Transmit(&huart2,(uint8_t*)str,16,0xFFFF);
-		HAL_Delay(100);
+    sprintf(str,"%lf\r\n",altitude);
+    HAL_UART_Transmit(&huart2,(uint8_t*)str,16,0xFFFF);
+    HAL_Delay(100);
 		
     /* USER CODE END WHILE */
 

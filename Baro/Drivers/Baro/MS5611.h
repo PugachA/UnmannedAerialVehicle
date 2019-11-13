@@ -48,12 +48,13 @@ class MS5611
 		
 	
   public:
-    MS5611(uint8_t,I2C_HandleTypeDef); //constructor
+    MS5611(uint8_t,I2C_HandleTypeDef,int); //constructor
 	
     double getPressure(void); //return pressure
     double getTemperature(void); //return temperature
     double getAltitude(void); //return altitude depending on pressure on ground
     void updateQFE(void); //calculating and remembering QFE pressure, public in case of need to re-init QFE from main
+    double getQFEpressure(void); //return rememberred QFE pressure
 		
 			
 };

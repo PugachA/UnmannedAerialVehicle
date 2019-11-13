@@ -2,32 +2,32 @@
 #include "MS5611.h"
 #include "math.h"
 
-MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c) //constructor
+MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c, int number_of_points_to_average) //constructor
 {
-	MS5611_addr = ms5611_addr;
+  this->MS5611_addr = ms5611_addr;
   this->hi2c = hi2c;
 	
-  points_to_average = 10;
+  this->points_to_average = number_of_points_to_average;
 	
-	D1_OSR = 0x48;
-	D2_OSR = 0x58;
-	ADC_READ = 0x00;
-	RST = 0x1E;
+  D1_OSR = 0x48;
+  D2_OSR = 0x58;
+  ADC_READ = 0x00;
+  RST = 0x1E;
 	
-	timeout = 100;
-	comandSize = 1;
+  timeout = 100;
+  comandSize = 1;
 	
-	R = 8.31;
-	T0 = 273.15;
-	M = 0.029;
-	g = 9.81;
+  R = 8.31;
+  T0 = 273.15;
+  M = 0.029;
+  g = 9.81;
 	
-	tempDecimation = 100.0;
-	presDecimation = 100.0;
+  tempDecimation = 100.0;
+  presDecimation = 100.0;
 	
   //------------------------MS5611 Initialising---------------------------
   // Reset
-  HAL_I2C_Master_Transmit(&this->hi2c, MS5611_addr << 1,&RST, comandSize, timeout);
+  HAL_I2C_Master_Transmit(&this->hi2c, this->MS5611_addr << 1,&RST, comandSize, timeout);
 
   HAL_Delay(10);
 
@@ -49,7 +49,7 @@ short MS5611::readProm(unsigned char reg_addr)
 {
   const uint16_t bufSize = 2;
   uint8_t buf[bufSize];
-  HAL_I2C_Mem_Read(&this->hi2c, MS5611_addr << 1, reg_addr, I2C_MEMADD_SIZE_8BIT, buf, bufSize, timeout);
+  HAL_I2C_Mem_Read(&this->hi2c, this->MS5611_addr << 1, reg_addr, I2C_MEMADD_SIZE_8BIT, buf, bufSize, timeout);
   return (buf[0] << 8) | buf[1];
 }
 
@@ -58,10 +58,10 @@ unsigned long MS5611::readBaro(void)
   const uint16_t bufSize = 3;
   uint8_t buf[bufSize];
 
-  HAL_I2C_Master_Transmit(&this->hi2c, MS5611_addr << 1,&D1_OSR, comandSize, timeout); //initiating pressure conversion
+  HAL_I2C_Master_Transmit(&this->hi2c, this->MS5611_addr << 1,&D1_OSR, comandSize, timeout); //initiating pressure conversion
   HAL_Delay(10);
-  HAL_I2C_Master_Transmit(&this->hi2c, MS5611_addr << 1,&ADC_READ, comandSize, timeout); //initiating ADC reading
-  HAL_I2C_Master_Receive(&this->hi2c, MS5611_addr << 1, buf, bufSize, timeout);
+  HAL_I2C_Master_Transmit(&this->hi2c, this->MS5611_addr << 1,&ADC_READ, comandSize, timeout); //initiating ADC reading
+  HAL_I2C_Master_Receive(&this->hi2c, this->MS5611_addr << 1, buf, bufSize, timeout);
 	
   return (buf[0] << 16) | (buf[1] << 8) | buf[2];
 }
@@ -71,10 +71,10 @@ unsigned long MS5611::readTemp(void)
   const uint16_t bufSize = 3;
   uint8_t buf[bufSize];
 
-  HAL_I2C_Master_Transmit(&this->hi2c, MS5611_addr << 1,&D2_OSR, comandSize, timeout); //initiating temperature conversion
+  HAL_I2C_Master_Transmit(&this->hi2c, this->MS5611_addr << 1,&D2_OSR, comandSize, timeout); //initiating temperature conversion
   HAL_Delay(10);
-  HAL_I2C_Master_Transmit(&this->hi2c, MS5611_addr << 1,&ADC_READ, comandSize, timeout); //initiating ADC reading
-  HAL_I2C_Master_Receive(&this->hi2c, MS5611_addr << 1, buf, bufSize, timeout);
+  HAL_I2C_Master_Transmit(&this->hi2c, this->MS5611_addr << 1,&ADC_READ, comandSize, timeout); //initiating ADC reading
+  HAL_I2C_Master_Receive(&this->hi2c, this->MS5611_addr << 1, buf, bufSize, timeout);
 	
   return (buf[0] << 16) | (buf[1] << 8) | buf[2];
 }
@@ -144,13 +144,18 @@ double MS5611::getAltitude(void)
 
 void MS5611::updateQFE(void)
 {
-	double sum = 0;
-	double pressure = 0;
+  double sum = 0;
+  double pressure = 0;
 	
-	for(int i = 0; i < points_to_average; i++) {
+  for(int i = 0; i < points_to_average; i++) {
     pressure = getPressure();
     sum = sum + pressure;
-	}
+  }
 	
-	this->pressure_QFE = sum / points_to_average;
+  this->pressure_QFE = sum / points_to_average;
+}
+
+double MS5611::getQFEpressure(void)
+{
+  return this->pressure_QFE;
 }
