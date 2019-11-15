@@ -53,6 +53,7 @@ uint16_t max_PWM_value = 219; //значение, при котором серв
 Servo servo(TIM4, channel, min_PWM_value, max_PWM_value); //создаем объект для управления сервоприводом
 
 SimpleClock simpleClock = SimpleClock(); //создаем объект для работы со временем
+bool is_emergency_situation = false; //флаг для срабатывания САС (прерывание)
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -115,6 +116,8 @@ int main(void)
     /* USER CODE END WHILE */
 			
     /* USER CODE BEGIN 3 */
+		if(is_emergency_situation)
+			Save_UAV();
   }
   /* USER CODE END 3 */
 }
@@ -314,7 +317,7 @@ static void MX_GPIO_Init(void)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if(GPIO_Pin == GPIO_PIN_0 || GPIO_Pin == GPIO_PIN_1) 
-			Save_UAV();
+		is_emergency_situation = true;
 	else
 			__NOP();
 }
