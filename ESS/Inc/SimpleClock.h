@@ -10,10 +10,11 @@
 class SimpleClock
 {
 	private:
-		uint32_t ticCounter;
-		uint32_t microSecondCounter;
+		uint32_t multiplier; // кол-во тактов за 1 мкс
 	
 	public:
 		SimpleClock();
-		void Delay(uint32_t microSeconds);
+		void Delay(uint32_t micro_seconds);
+		void Restart();
+		uint32_t GetTime();
 };
