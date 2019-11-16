@@ -117,7 +117,12 @@ int main(void)
 			
     /* USER CODE BEGIN 3 */
 		if(is_emergency_situation)
+		{
 			Save_UAV();
+		}
+		
+		if(simpleClock.GetTime() > 1000000) //если heartbeat не приходил больше 1 сек
+			is_emergency_situation = true;
   }
   /* USER CODE END 3 */
 }
@@ -316,10 +321,11 @@ static void MX_GPIO_Init(void)
 //Прерывание по нажатию кнопки
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-	if(GPIO_Pin == GPIO_PIN_0 || GPIO_Pin == GPIO_PIN_1) 
+	if(GPIO_Pin == GPIO_PIN_0)
 		is_emergency_situation = true;
-	else
-			__NOP();
+	
+	if(GPIO_Pin == GPIO_PIN_1)
+		simpleClock.Restart();
 }
 
 //Алгоритм спасения планера
