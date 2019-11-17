@@ -1,4 +1,4 @@
-/* USER CODE BEGIN Header */
+﻿/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
   * @file           : main.c
@@ -102,7 +102,7 @@ int main(void)
   MX_TIM4_Init();
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
-	HAL_TIM_PWM_Start (&htim4, TIM_CHANNEL_1); //запускаем Ш�?М
+	HAL_TIM_PWM_Start (&htim4, TIM_CHANNEL_1); //запускаем ШИМ
 	servo.Set_Position(0);
 	
 	HAL_TIM_Base_Start(&htim6);
