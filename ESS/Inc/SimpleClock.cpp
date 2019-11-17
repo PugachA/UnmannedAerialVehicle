@@ -16,12 +16,12 @@ void SimpleClock::Delay(uint32_t micro_seconds)
 	// получаем кол-во тактов, которое нужно выполнить, чтобы достичь зад. времени
 	uint32_t count_tic = this->GetTime() + micro_seconds * (SystemCoreClock / 1000000);
 	
-	while((this->GetTime() - count_tic)  < count_tic);
+	while((int32_t)(this->GetTime() - count_tic) < 0);
 }
 
 void SimpleClock::Restart()
 {
-	DWT->CYCCNT = 0;
+	DWT->CYCCNT = 0; //обнуляем счетчик
 }
 
 uint32_t SimpleClock::GetTime()

@@ -117,9 +117,7 @@ int main(void)
 			
     /* USER CODE BEGIN 3 */
 		if(is_emergency_situation)
-		{
 			Save_UAV();
-		}
 		
 		if(simpleClock.GetTime() > 1000000) //если heartbeat не приходил больше 1 сек
 			is_emergency_situation = true;
@@ -338,7 +336,7 @@ void Save_UAV(void)
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7, GPIO_PIN_RESET);
 	
 	//Задержка, чтобы дождаться остановки двигателя
-	simpleClock.Delay(1000000); //1 секунда
+	HAL_Delay(1000); //1 секунда
 		
 	//Поворачиваем серво (открываем парашют)
 	servo.Set_Position(180);
