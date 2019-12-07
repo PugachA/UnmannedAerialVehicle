@@ -73,6 +73,8 @@
 /* External variables --------------------------------------------------------*/
 extern I2C_HandleTypeDef hi2c1;
 extern TIM_HandleTypeDef htim6;
+
+int tim6_counter;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -252,6 +254,8 @@ void TIM6_DAC_IRQHandler(void)
   HAL_TIM_IRQHandler(&htim6);
   /* USER CODE BEGIN TIM6_DAC_IRQn 1 */
 	
+	//HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_8);
+  tim6_counter++;
   /* USER CODE END TIM6_DAC_IRQn 1 */
 }
 
