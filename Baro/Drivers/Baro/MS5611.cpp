@@ -17,7 +17,7 @@ MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c, int number_of_points
   timeout = 100;
   comandSize = 1;
 	
-  R = 8.31;
+  R = 8.31; 
   T0 = 273.15;
   M = 0.029;
   g = 9.81;
@@ -26,9 +26,9 @@ MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c, int number_of_points
   pres_decimation = 100.0;
 	
 	
-	k1 = 9.0;
-	k2 = 11.0;
-	dt = 0.01*overflows_to_Vy_calc; //0.01 is a timer period, idk how to put it universally
+	k1 = 13.0;
+	k2 = 17.0;
+	dt = 0.001*overflows_to_Vy_calc; //0.001 is a timer period, idk how to put it universally
 	
   //------------------------MS5611 Initialising---------------------------
   // Reset
