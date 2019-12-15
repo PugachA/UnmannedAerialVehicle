@@ -26,9 +26,9 @@ MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c, int number_of_points
   pres_decimation = 100.0;
 	
 	
-	k1 = 13.0;
-	k2 = 17.0;
-	dt = 0.001*overflows_to_Vy_calc; //0.001 is a timer period, idk how to put it universally
+  k1 = 13.0;
+  k2 = 17.0;
+  dt = 0.0001*overflows_to_Vy_calc; //0.0001 is a timer period, idk how to put it universally
 	
   //------------------------MS5611 Initialising---------------------------
   // Reset
@@ -43,7 +43,7 @@ MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c, int number_of_points
   ms5611_C4 = readProm(0xA8);
   ms5611_C5 = readProm(0xAA);
   ms5611_C6 = readProm(0xAC);
-	//-----------------------------------------------------------------------
+  //-----------------------------------------------------------------------
 	
   updateQFE(); //remembering QFE pressure when creating object
 	
@@ -148,7 +148,7 @@ void MS5611::calcAltitude(void)
 
 double MS5611::getAltitude(void)
 {
-	calcAltitude();
+  calcAltitude();
   return this->altitude; 
 }
 
