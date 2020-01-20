@@ -18,18 +18,23 @@ uint32_t const AILERON_PIN_DOWN = 1 << 5;*/
 
 
 Thread radio_control_th;
-EventQueue queue(32 * EVENTS_EVENT_SIZE);
+EventQueue queue;
 
 class Channels
 {
 private:
-    static EventFlags rc_channels; // очередь флагов для всех каналов(объектов) одна
+    //static EventFlags rc_channels; // очередь флагов для всех каналов(объектов) одна (вроде и не нужна когда есть очередь событий)
+    bool const start{1};
+    bool const stop{0};    
 
     uint32_t PIN_UP_FLAG;
     uint32_t PIN_DOWN_FLAG;
     Timer timer;
     int pulse_width;
-    int calcPulseWidth(bool);
+    void calcPulseWidth(bool const);
+    Event<void()> start_timer  = queue.event(this, &Channels::calcPulseWidth, start);
+    Event<void()> stop_timer  = queue.event(this, &Channels::calcPulseWidth, stop);
+    
 public:
     void upHandler();
     void downHandler();
@@ -40,21 +45,30 @@ public:
 
 void Channels::upHandler()
 {
-    rc_channels.set(this->PIN_UP_FLAG);
+    //rc_channels.set(this->PIN_UP_FLAG);
+    //тут будет функция которая ставит в очередь старт таймера для этого канала
+    //Event<void(bool const)>    e  = queue.event(this, &Channels::calcPulseWidth);
+    start_timer.post();
 }
 void Channels::downHandler()
 {
-    rc_channels.set(this->PIN_DOWN_FLAG);
+    //rc_channels.set(this->PIN_DOWN_FLAG);
+    //тут будет функция которая ставит в очередь стоп таймера для этого канала
 }
-int Channels::calcPulseWidth(bool start_or_stop_timer)
+void Channels::calcPulseWidth(bool start_or_stop_timer)
 {
     if(start_or_stop_timer)
-        
-    timer.stop();
+        timer.start();
+    else
+    {
+        pulse_width = timer.read_us();
+        timer.stop();
+        timer.reset();
+    }   
 }
 int Channels::getPulseWidth()
 {
-
+    return pulse_width;
 }
 Channels::Channels(/* args */)
 {
@@ -76,58 +90,17 @@ void throttleDownHandler()
 {
     rc_channels.clear(THROTTEL_PIN_DOWN);
 }*/
-int pulseWidthCalc(Timer t, bool start_or_stop)
-{
-    if(start_or_stop)
-        t.start();
-    else
-    {
-        t.stop();
-        int result = t.read();
-        t.reset();
-        return result;
-    }
-    
-    
-}
-void readRC()
-{
-    uint32_t current_channel{0};
-    while(1)
-    {
-        current_channel = rc_channels.wait_any(THROTTEL_PIN_UP | THROTTEL_PIN_DOWN | ELEVATOR_PIN_DOWN | ELEVATOR_PIN_UP | AILERON_PIN_DOWN | AILERON_PIN_UP);
-        
-    
-    }
-}
-void setLedOutPwm()
-{  
-    float duty_cycle{0};
-    uint32_t button_read_flag{0};
-
-    while(1){
-        button_read_flag = buttons.wait_any(BUTTON_UP | BUTTON_DOWN);
-        switch (button_read_flag)
-        {
-            case BUTTON_UP: red_led.pulsewidth_us(duty_cycle = Math::limiter<float>(1875, 900, duty_cycle + 100)); break;
-            case BUTTON_DOWN: red_led.pulsewidth_us(duty_cycle = Math::limiter<float>(1875, 900, duty_cycle - 100)); break;  
-            
-            default: break;
-        }
-        ThisThread::sleep_for(5);
-    }
-}
 
 int main()
 {
-    red_led = 0;
+    //red_led = 0;
 
     throttle_pin.mode(PullDown);
     elevator_pin.mode(PullDown);
-    aileron_pin.mode(PullDown);
+    //aileron_pin.mode(PullDown);
 
-    throttle_pin.rise(&throttleUpHandler);
-    throttle_pin.rise(&throttleDownHandler);
-    
-    radio_control_th.start(setLedOutPwm);
+    //throttle_pin.rise(&throttleUpHandler);
+    //throttle_pin.rise(&throttleDownHandler);
+    radio_control_th.start(callback(&queue, &EventQueue::dispatch_forever));
+    //radio_control_th.start(setLedOutPwm);
 }
