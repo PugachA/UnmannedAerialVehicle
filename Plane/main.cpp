@@ -3,27 +3,102 @@
 #include "Math/Math.h"
 
 PwmOut red_led(LED1);
-InterruptIn button_up(PA_3);
-InterruptIn button_down(PA_5);
+InterruptIn throttle_pin(PA_3);
+InterruptIn elevator_pin(PA_5);
+InterruptIn aileron_pin(PA_5);
 
-uint32_t const BUTTON_DOWN = 1 << 0;
-uint32_t const BUTTON_UP = 1 << 1;
+/*EventFlags rc_channels;
+EventFlags rc_channels_down;
+uint32_t const THROTTEL_PIN_UP = 1 << 0;
+uint32_t const THROTTEL_PIN_DOWN = 1 << 1;
+uint32_t const ELEVATOR_PIN_UP = 1 << 2;
+uint32_t const ELEVATOR_PIN_DOWN = 1 << 3;
+uint32_t const AILERON_PIN_UP = 1 << 4;
+uint32_t const AILERON_PIN_DOWN = 1 << 5;*/
 
-Thread led_control_th;
 
-EventFlags buttons;
+Thread radio_control_th;
+EventQueue queue(32 * EVENTS_EVENT_SIZE);
 
-/*float limiter(float max, float min, float value)
+class Channels
 {
-    return value >= max ? max : value <= min ? min : value;
-}*/
-void buttonUpHandler()
+private:
+    static EventFlags rc_channels; // очередь флагов для всех каналов(объектов) одна
+
+    uint32_t PIN_UP_FLAG;
+    uint32_t PIN_DOWN_FLAG;
+    Timer timer;
+    int pulse_width;
+    int calcPulseWidth(bool);
+public:
+    void upHandler();
+    void downHandler();
+    int getPulseWidth();
+    Channels(/* args */);
+    ~Channels();
+};
+
+void Channels::upHandler()
 {
-    buttons.set(BUTTON_UP);
+    rc_channels.set(this->PIN_UP_FLAG);
 }
-void buttonDownHandler()
+void Channels::downHandler()
 {
-    buttons.set(BUTTON_DOWN);
+    rc_channels.set(this->PIN_DOWN_FLAG);
+}
+int Channels::calcPulseWidth(bool start_or_stop_timer)
+{
+    if(start_or_stop_timer)
+        
+    timer.stop();
+}
+int Channels::getPulseWidth()
+{
+
+}
+Channels::Channels(/* args */)
+{
+    //тут механизм соответствия флагов в очереди состояниям пинов
+    this -> PIN_UP_FLAG = 1 << 0;//времянка пока не придумаю механизм
+    this -> PIN_DOWN_FLAG = 1 << 2;//времянка пока не придумаю механизм
+}
+
+Channels::~Channels()
+{
+}
+
+
+/*void throttleUpHandler()
+{
+    rc_channels.set(THROTTEL_PIN_UP);
+}
+void throttleDownHandler()
+{
+    rc_channels.clear(THROTTEL_PIN_DOWN);
+}*/
+int pulseWidthCalc(Timer t, bool start_or_stop)
+{
+    if(start_or_stop)
+        t.start();
+    else
+    {
+        t.stop();
+        int result = t.read();
+        t.reset();
+        return result;
+    }
+    
+    
+}
+void readRC()
+{
+    uint32_t current_channel{0};
+    while(1)
+    {
+        current_channel = rc_channels.wait_any(THROTTEL_PIN_UP | THROTTEL_PIN_DOWN | ELEVATOR_PIN_DOWN | ELEVATOR_PIN_UP | AILERON_PIN_DOWN | AILERON_PIN_UP);
+        
+    
+    }
 }
 void setLedOutPwm()
 {  
@@ -47,11 +122,12 @@ int main()
 {
     red_led = 0;
 
-    button_up.mode(PullDown);
-    button_down.mode(PullDown);
+    throttle_pin.mode(PullDown);
+    elevator_pin.mode(PullDown);
+    aileron_pin.mode(PullDown);
 
-    button_down.rise(&buttonDownHandler);
-    button_up.rise(&buttonUpHandler);
+    throttle_pin.rise(&throttleUpHandler);
+    throttle_pin.rise(&throttleDownHandler);
     
-    led_control_th.start(setLedOutPwm);
+    radio_control_th.start(setLedOutPwm);
 }
