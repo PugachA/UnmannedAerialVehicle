@@ -20,42 +20,43 @@ uint32_t const AILERON_PIN_DOWN = 1 << 5;*/
 Thread radio_control_th;
 EventQueue queue;
 
-class Channels
+class RcChannels
 {
 private:
     //static EventFlags rc_channels; // очередь флагов для всех каналов(объектов) одна (вроде и не нужна когда есть очередь событий)
+    //uint32_t PIN_UP_FLAG;
+    //uint32_t PIN_DOWN_FLAG;
     bool const start{1};
-    bool const stop{0};    
-
-    uint32_t PIN_UP_FLAG;
-    uint32_t PIN_DOWN_FLAG;
+    bool const stop{0};
+    
     Timer timer;
     int pulse_width;
     void calcPulseWidth(bool const);
-    Event<void()> start_timer  = queue.event(this, &Channels::calcPulseWidth, start);
-    Event<void()> stop_timer  = queue.event(this, &Channels::calcPulseWidth, stop);
+    Event<void()> start_timer  = queue.event(this, &RcChannels::calcPulseWidth, start);
+    Event<void()> stop_timer  = queue.event(this, &RcChannels::calcPulseWidth, stop);
     
 public:
     void upHandler();
     void downHandler();
     int getPulseWidth();
-    Channels(/* args */);
-    ~Channels();
+    RcChannels(InterruptIn);
+    ~RcChannels();
 };
 
-void Channels::upHandler()
+void RcChannels::upHandler()
 {
     //rc_channels.set(this->PIN_UP_FLAG);
     //тут будет функция которая ставит в очередь старт таймера для этого канала
     //Event<void(bool const)>    e  = queue.event(this, &Channels::calcPulseWidth);
     start_timer.post();
 }
-void Channels::downHandler()
+void RcChannels::downHandler()
 {
     //rc_channels.set(this->PIN_DOWN_FLAG);
     //тут будет функция которая ставит в очередь стоп таймера для этого канала
+    stop_timer.post();
 }
-void Channels::calcPulseWidth(bool start_or_stop_timer)
+void RcChannels::calcPulseWidth(bool start_or_stop_timer)
 {
     if(start_or_stop_timer)
         timer.start();
@@ -66,18 +67,18 @@ void Channels::calcPulseWidth(bool start_or_stop_timer)
         timer.reset();
     }   
 }
-int Channels::getPulseWidth()
+int RcChannels::getPulseWidth()
 {
     return pulse_width;
 }
-Channels::Channels(/* args */)
+RcChannels::RcChannels(InterruptIn pin)
 {
-    //тут механизм соответствия флагов в очереди состояниям пинов
-    this -> PIN_UP_FLAG = 1 << 0;//времянка пока не придумаю механизм
-    this -> PIN_DOWN_FLAG = 1 << 2;//времянка пока не придумаю механизм
+    //добавить присвоение портов и обработчиков прерывваний
+    pin.mode(PullDown);
+    pin.rise(this, &RcChannels::upHandler);
+    pin.fall(this, &RcChannels::downHandler);
 }
-
-Channels::~Channels()
+RcChannels::~RcChannels()
 {
 }
 
@@ -93,14 +94,7 @@ void throttleDownHandler()
 
 int main()
 {
-    //red_led = 0;
 
-    throttle_pin.mode(PullDown);
-    elevator_pin.mode(PullDown);
-    //aileron_pin.mode(PullDown);
-
-    //throttle_pin.rise(&throttleUpHandler);
-    //throttle_pin.rise(&throttleDownHandler);
     radio_control_th.start(callback(&queue, &EventQueue::dispatch_forever));
     //radio_control_th.start(setLedOutPwm);
 }
