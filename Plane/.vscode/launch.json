@@ -31,7 +31,7 @@
                 "preLaunchTask": "openOCD",
                 "postDebugTask": "Terminate openOCD",
                 "MIMode": "gdb",
-                "MIDebuggerPath": "C:\\Program Files (x86)\\GNU Tools ARM Embedded\\8 2019-q3-update\\bin\\arm-none-eabi-gdb.exe",
+                "MIDebuggerPath": "C:\\Program Files (x86)\\GNU Tools Arm Embedded\\9 2019-q4-major\\bin\\arm-none-eabi-gdb.exe",
 
                 "setupCommands": [
                     { "text": "-enable-pretty-printing", "description": "Enable pretty-printing for gdb", "ignoreFailures": false},

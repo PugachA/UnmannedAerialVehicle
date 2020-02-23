@@ -77,14 +77,14 @@
                 "clear": false
             },
             "windows": {
-                "command": "mbed sterm --baudrate 115200"
+                "command": "mbed sterm --baudrate 9600"
             },
             "problemMatcher": []
         },
         {   "label": "openOCD",
             "type": "shell",
             "options": {
-                "cwd": "C:/Program Files/openocd-0.10.0/bin-x64"
+                "cwd": "C:\\Program Extra\\openocd-0.10.0\\bin-x64"
             },
             "isBackground": true,
             "presentation": {

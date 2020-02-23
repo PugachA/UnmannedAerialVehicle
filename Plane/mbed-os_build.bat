@@ -1,6 +1,6 @@
 @echo off 
-SET project_name=Getting_started
-SET project_dir=%userprofile%\Documents\Projects\UnmannedAerialVehicle\%project_name%
+SET project_name=Plane
+SET project_dir=E:\Projects\UnmannedAerialVehicle\%project_name%
 ::SET board=DISCO_L476VG
 ::SET toolchain=GCC_ARM
 
