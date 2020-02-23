@@ -14,8 +14,8 @@ Thread radio_control_th;
 EventQueue queue;
 PinName throttle_pin = PA_2;
 bool flag_print{0};
-Mail<int, 16> mail_box;
-
+int global_pulse{0};
+ 
 class RcChannels
 {
 private:
@@ -51,7 +51,7 @@ void RcChannels::savePulseWidth()
         pulse_width = timer.read_us();
         timer.reset();
         stop_timer = 0;
-        ThisThread::sleep_for(10);
+
     }
 }
 int RcChannels::getPulseWidth()
@@ -76,13 +76,11 @@ void printPulseWidth()
 void secondMain()
 {
     RcChannels throttle(throttle_pin);
-    int* mail = mail_box.alloc();
-     
+    
     while(1)
     {
         throttle.savePulseWidth();
-        *mail = throttle.getPulseWidth();
-        mail_box.put(mail);
+        global_pulse = throttle.getPulseWidth();
     }
 }
 int main()
@@ -94,20 +92,12 @@ int main()
     
     radio_control_th.start(secondMain);
 
-    int* mail;
-    osEvent evt;
-
     while(1)
     {
-        evt = mail_box.get();
-        mail = (int*) evt.value.p;
         if(flag_print)
         {
             flag_print = 0;
-            if(evt.status == osEventMail)
-                printf("%d\n", *mail);
+            printf("%d\n", global_pulse);
         }
-        mail_box.free(mail);
-
     }
 }
