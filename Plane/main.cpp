@@ -13,8 +13,11 @@ InterruptIn aileron_pin(PA_5);*/
 Thread radio_control_th;
 EventQueue queue;
 PinName throttle_pin = PA_2;
+PinName elevator_pin = PA_1;
+
 bool flag_print{0};
-int global_pulse{0};
+int global_pulse_throttle{0};
+int global_pulse_elevator{0};
  
 class RcChannels
 {
@@ -75,12 +78,14 @@ void printPulseWidth()
 }
 void secondMain()
 {
-    RcChannels throttle(throttle_pin);
+    RcChannels throttle(throttle_pin), elevator(elevator_pin);
     
     while(1)
     {
         throttle.savePulseWidth();
-        global_pulse = throttle.getPulseWidth();
+        elevator.savePulseWidth();
+        global_pulse_throttle = throttle.getPulseWidth();
+        global_pulse_elevator = elevator.getPulseWidth();
     }
 }
 int main()
@@ -97,7 +102,7 @@ int main()
         if(flag_print)
         {
             flag_print = 0;
-            printf("%d\n", global_pulse);
+            printf("%d,  %d\n", global_pulse_throttle, global_pulse_elevator);
         }
     }
 }
