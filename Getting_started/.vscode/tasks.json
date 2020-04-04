@@ -84,7 +84,7 @@
         {   "label": "openOCD",
             "type": "shell",
             "options": {
-                "cwd": "C:/Program Files/openocd-0.10.0/bin-x64"
+                "cwd": "C:\\Program Extra\\openocd-0.10.0\\bin-x64"
             },
             "isBackground": true,
             "presentation": {

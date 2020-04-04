@@ -54,7 +54,6 @@ void RcChannels::savePulseWidth()
         pulse_width = timer.read_us();
         timer.reset();
         stop_timer = 0;
-
     }
 }
 int RcChannels::getPulseWidth()
@@ -76,7 +75,7 @@ void printPulseWidth()
 {
     flag_print = 1;
 }
-void secondMain()
+void receiver_th()
 {
     RcChannels throttle(throttle_pin), elevator(elevator_pin);
     
@@ -95,7 +94,7 @@ int main()
     Ticker printer;
     printer.attach(printPulseWidth, 1.0);
     
-    radio_control_th.start(secondMain);
+    radio_control_th.start(receiver_th);
 
     while(1)
     {
