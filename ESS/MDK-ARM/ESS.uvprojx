@@ -417,6 +417,16 @@
               <FileType>5</FileType>
               <FilePath>..\Inc\Servo.h</FilePath>
             </File>
+            <File>
+              <FileName>SimpleClock.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\SimpleClock.h</FilePath>
+            </File>
+            <File>
+              <FileName>SimpleClock.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\Inc\SimpleClock.cpp</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
