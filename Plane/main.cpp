@@ -10,7 +10,7 @@ DigitalOut red_led(LED2);
 InterruptIn elevator_pin(PA_5);
 InterruptIn aileron_pin(PA_5);*/
 
-Thread radio_control_th;
+Thread radio_control_th, t;
 EventQueue queue;
 PinName throttle_pin = PA_2;
 PinName elevator_pin = PA_1;
@@ -26,7 +26,7 @@ private:
     InterruptIn pin;
     Timer timer;
     int pulse_width;
-    //Event<void()> start_timer  = queue.event(this, &RcChannels::calcPulseWidth, start);
+    Event<void()> save_pulse_width  = queue.event(this, &RcChannels::savePulseWidth);
     
     void upHandler();
     void downHandler();
@@ -45,16 +45,12 @@ void RcChannels::upHandler()
 void RcChannels::downHandler()
 {
     timer.stop();
-    stop_timer = 1;
+    queue.call(save_pulse_width);
 }
 void RcChannels::savePulseWidth()
 {
-    if(stop_timer)
-    {
-        pulse_width = timer.read_us();
-        timer.reset();
-        stop_timer = 0;
-    }
+    pulse_width = timer.read_us();
+    timer.reset();
 }
 int RcChannels::getPulseWidth()
 {
@@ -78,11 +74,9 @@ void printPulseWidth()
 void receiver_th()
 {
     RcChannels throttle(throttle_pin), elevator(elevator_pin);
-    
+
     while(1)
     {
-        throttle.savePulseWidth();
-        elevator.savePulseWidth();
         global_pulse_throttle = throttle.getPulseWidth();
         global_pulse_elevator = elevator.getPulseWidth();
     }
@@ -94,6 +88,7 @@ int main()
     Ticker printer;
     printer.attach(printPulseWidth, 1.0);
     
+    t.start(callback(&queue, &EventQueue::dispatch_forever));
     radio_control_th.start(receiver_th);
 
     while(1)
