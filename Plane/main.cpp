@@ -10,8 +10,9 @@ DigitalOut red_led(LED2);
 InterruptIn elevator_pin(PA_5);
 InterruptIn aileron_pin(PA_5);*/
 
-Thread radio_control_th, t;
+Thread radio_control_th;
 EventQueue queue;
+
 PinName throttle_pin = PA_2;
 PinName elevator_pin = PA_1;
 
@@ -22,18 +23,19 @@ int global_pulse_elevator{0};
 class RcChannels
 {
 private:
-    bool stop_timer{0};
+    
     InterruptIn pin;
     Timer timer;
     int pulse_width;
     Event<void()> save_pulse_width  = queue.event(this, &RcChannels::savePulseWidth);
     
+    void savePulseWidth();
     void upHandler();
     void downHandler();
     
 public:
     int getPulseWidth();
-    void savePulseWidth();
+    
     RcChannels(PinName);
     ~RcChannels();
 };
@@ -71,7 +73,7 @@ void printPulseWidth()
 {
     flag_print = 1;
 }
-void receiver_th()
+/*void receiver_th()
 {
     RcChannels throttle(throttle_pin), elevator(elevator_pin);
 
@@ -80,23 +82,23 @@ void receiver_th()
         global_pulse_throttle = throttle.getPulseWidth();
         global_pulse_elevator = elevator.getPulseWidth();
     }
-}
+}*/
 int main()
 {
+    RcChannels throttle(throttle_pin), elevator(elevator_pin);
     Serial pc(USBTX, USBRX);
 
     Ticker printer;
     printer.attach(printPulseWidth, 1.0);
     
-    t.start(callback(&queue, &EventQueue::dispatch_forever));
-    radio_control_th.start(receiver_th);
+    radio_control_th.start(callback(&queue, &EventQueue::dispatch_forever));
 
     while(1)
     {
         if(flag_print)
         {
             flag_print = 0;
-            printf("%d,  %d\n", global_pulse_throttle, global_pulse_elevator);
+            printf("%d,  %d\n", throttle.getPulseWidth(), elevator.getPulseWidth());
         }
     }
 }
