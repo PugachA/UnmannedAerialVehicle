@@ -26,7 +26,7 @@ private:
     
     InterruptIn pin;
     Timer timer;
-    int pulse_width;
+    volatile int pulse_width;
     Event<void()> save_pulse_width  = queue.event(this, &RcChannels::savePulseWidth);
     
     void savePulseWidth();
