@@ -15,6 +15,9 @@ EventQueue queue;
 
 PinName throttle_pin = PA_2;
 PinName elevator_pin = PA_1;
+PinName aileron_pin = PB_7;
+PinName gear_pin = PD_0;
+PinName rudder_pin = PB_6;
 
 bool flag_print{0};
 int global_pulse_throttle{0};
@@ -85,11 +88,11 @@ void printPulseWidth()
 }*/
 int main()
 {
-    RcChannels throttle(throttle_pin), elevator(elevator_pin);
+    RcChannels throttle(throttle_pin), elevator(elevator_pin), rudder(rudder_pin), aileron(aileron_pin), gear(gear_pin);
     Serial pc(USBTX, USBRX);
 
     Ticker printer;
-    printer.attach(printPulseWidth, 1.0);
+    printer.attach(printPulseWidth, 0.01);
     
     radio_control_th.start(callback(&queue, &EventQueue::dispatch_forever));
 
@@ -98,7 +101,7 @@ int main()
         if(flag_print)
         {
             flag_print = 0;
-            printf("%d,  %d\n", throttle.getPulseWidth(), elevator.getPulseWidth());
+            printf("%d,  %d,  %d,  %d,  %d\n", throttle.getPulseWidth(), rudder.getPulseWidth(), elevator.getPulseWidth(), aileron.getPulseWidth(), gear.getPulseWidth());
         }
     }
 }
