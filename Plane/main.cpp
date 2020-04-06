@@ -74,7 +74,7 @@ RcChannels::~RcChannels()
 
 void printPulseWidth()
 {
-    flag_print = 1;
+    flag_print = true;
 }
 /*void receiver_th()
 {
@@ -99,7 +99,7 @@ int main()
     {
         if(flag_print)
         {
-            flag_print = 0;
+            flag_print = false;
             printf("%d,  %d,  %d,  %d,  %d\n", throttle.getPulseWidth(), rudder.getPulseWidth(), elevator.getPulseWidth(), aileron.getPulseWidth(), gear.getPulseWidth());
         }
     }
