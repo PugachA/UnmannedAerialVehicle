@@ -77,7 +77,7 @@
                 "clear": false
             },
             "windows": {
-                "command": "mbed sterm --baudrate 9600"
+                "command": "mbed sterm --baudrate 115200"
             },
             "problemMatcher": []
         },
