@@ -96,7 +96,7 @@
                 "clear": false
             },
             "windows": {
-                "command": ".\\openocd -f board/stm32l4discovery.cfg"
+                "command": ".\\openocd -f interface/stlink-v2-1.cfg -f board/stm32l4discovery.cfg"
             },
             "problemMatcher": {
                 "owner": "custom",
