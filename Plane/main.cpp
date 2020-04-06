@@ -89,7 +89,6 @@ void printPulseWidth()
 int main()
 {
     RcChannels throttle(throttle_pin), elevator(elevator_pin), rudder(rudder_pin), aileron(aileron_pin), gear(gear_pin);
-    Serial pc(USBTX, USBRX);
 
     Ticker printer;
     printer.attach(printPulseWidth, 0.01);
