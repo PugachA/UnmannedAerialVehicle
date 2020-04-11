@@ -1,4 +1,4 @@
-﻿/* USER CODE BEGIN Header */
+/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
   * @file           : main.c
@@ -103,6 +103,7 @@ int main(void)
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 	HAL_TIM_PWM_Start (&htim4, TIM_CHANNEL_1); //запускаем ШИМ
+	HAL_TIM_PWM_Start (&htim4, TIM_CHANNEL_2); //запускаем ШИМ
 	servo.Set_Position(0);
 	
 	HAL_TIM_Base_Start(&htim6);
@@ -114,13 +115,15 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-			
+
     /* USER CODE BEGIN 3 */
 		if(is_emergency_situation)
 			Save_UAV();
 		
 		if(simpleClock.GetTime() > 1000000) //если heartbeat не приходил больше 1 сек
 			is_emergency_situation = true;
+		
+		TIM4->CCR2 = 1000;
   }
   /* USER CODE END 3 */
 }
@@ -211,6 +214,12 @@ static void MX_TIM4_Init(void)
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_ENABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -319,9 +328,11 @@ static void MX_GPIO_Init(void)
 //Прерывание по нажатию кнопки
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
+	//нажатие кнопки
 	if(GPIO_Pin == GPIO_PIN_0)
 		is_emergency_situation = true;
 	
+	//heartbeat от основного вычислителя
 	if(GPIO_Pin == GPIO_PIN_1)
 		simpleClock.Restart();
 }
