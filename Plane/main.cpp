@@ -13,6 +13,9 @@ InterruptIn aileron_pin(PA_5);*/
 Thread radio_control_th;
 EventQueue queue;
 
+PinName pitch = PA_3;
+PinName yaw = PA_0;
+
 PinName throttle_pin = PA_2;
 PinName elevator_pin = PA_1;
 PinName aileron_pin = PB_7;
@@ -112,7 +115,7 @@ public:
 
 void DirectMode::updateSignalIn(RcChannels* input)
 {
-    signal_in[0] = *input;
+ 
 }
 
 void DirectMode::updateSignalOut(Servo* output)
