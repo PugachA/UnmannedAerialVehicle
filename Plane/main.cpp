@@ -26,7 +26,6 @@ int global_pulse_elevator{0};
 class RcChannels
 {
 private:
-    
     InterruptIn pin;
     Timer timer;
     volatile int pulse_width;
@@ -70,6 +69,60 @@ RcChannels::RcChannels(PinName pin_name) : pin(pin_name)
 }
 RcChannels::~RcChannels()
 {
+}
+
+class Servo
+{
+private:
+    const float DEFAULT_SERVO_PWM_PERIOD{0.02}; //50 Гц
+    const float DEFAULT_SERVO_PULSE_WIDTH{1500}; //1500 мкС
+    float servo_signal{0};
+    PwmOut pin;
+
+    //Event<void()> update_servo_pos = queue.event(this, Servo::setPositionUs, );
+public:
+    void setPositionUs(float duty_sycle_us);
+    Servo(PinName);
+    ~Servo();
+};
+void Servo::setPositionUs(float pulse_width)
+{
+    pin.pulsewidth_us(pulse_width);
+}
+Servo::Servo(PinName pin_name) : pin(pin_name)
+{
+    pin.period(DEFAULT_SERVO_PWM_PERIOD);
+    pin.pulsewidth_us(DEFAULT_SERVO_PULSE_WIDTH);
+}
+Servo::~Servo()
+{
+}
+
+class DirectMode
+{
+private:
+    RcChannels signal_in[5];
+    Servo signal_out[5];
+
+public:
+    void updateSignalIn(RcChannels*);
+    void updateSignalOut(Servo*);
+    void updateMode();
+};
+
+void DirectMode::updateSignalIn(RcChannels* input)
+{
+    signal_in[0] = *input;
+}
+
+void DirectMode::updateSignalOut(Servo* output)
+{
+
+}
+
+void DirectMode::updateMode()
+{
+
 }
 
 void printPulseWidth()
