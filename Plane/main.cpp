@@ -13,14 +13,14 @@ InterruptIn aileron_pin(PA_5);*/
 Thread radio_control_th;
 EventQueue queue;
 
-PinName pitch = PA_3;
-PinName yaw = PA_0;
+PinName throttle_servo_pin = PA_3;
+// PinName yaw = PA_0;
 
-PinName throttle_pin = PA_2;
-PinName elevator_pin = PA_1;
-PinName aileron_pin = PB_7;
-PinName gear_pin = PD_0;
-PinName rudder_pin = PB_6;
+PinName throttle_pin = PE_12;
+// PinName elevator_pin = PA_1;
+// PinName aileron_pin = PB_7;
+// PinName gear_pin = PD_0;
+// PinName rudder_pin = PB_6;
 
 bool flag_print{0};
 int global_pulse_throttle{0};
@@ -66,7 +66,7 @@ int RcChannels::getPulseWidth()
 RcChannels::RcChannels(PinName pin_name) : pin(pin_name)
 {
     //добавить присвоение портов и обработчиков прерывваний
-    pin.mode(PullDown);
+    // pin.mode(PullDown);
     pin.rise(callback(this, &RcChannels::upHandler));
     pin.fall(callback(this, &RcChannels::downHandler));
 }
@@ -84,11 +84,11 @@ private:
 
     //Event<void()> update_servo_pos = queue.event(this, Servo::setPositionUs, );
 public:
-    void setPositionUs(float duty_sycle_us);
+    void setPositionUs(int duty_sycle_us);
     Servo(PinName);
     ~Servo();
 };
-void Servo::setPositionUs(float pulse_width)
+void Servo::setPositionUs(int pulse_width)
 {
     pin.pulsewidth_us(pulse_width);
 }
@@ -144,8 +144,9 @@ void printPulseWidth()
 }*/
 int main()
 {
-    RcChannels throttle(throttle_pin), elevator(elevator_pin), rudder(rudder_pin), aileron(aileron_pin), gear(gear_pin);
-
+    // RcChannels throttle(throttle_pin), elevator(elevator_pin), rudder(rudder_pin), aileron(aileron_pin), gear(gear_pin);
+    RcChannels throttle(throttle_pin);
+    Servo throttle_servo(throttle_servo_pin);
     Ticker printer;
     printer.attach(printPulseWidth, 0.01);
     
@@ -153,10 +154,11 @@ int main()
 
     while(1)
     {
+        throttle_servo.setPositionUs(throttle.getPulseWidth());
         if(flag_print)
         {
             flag_print = false;
-            printf("%d,  %d,  %d,  %d,  %d\n", throttle.getPulseWidth(), rudder.getPulseWidth(), elevator.getPulseWidth(), aileron.getPulseWidth(), gear.getPulseWidth());
+            printf("%d\n", throttle.getPulseWidth());//, rudder.getPulseWidth(), elevator.getPulseWidth(), aileron.getPulseWidth(), gear.getPulseWidth());
         }
     }
 }
