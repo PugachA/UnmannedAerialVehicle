@@ -1,0 +1,35 @@
+main.cpp:87:1:RcChannel::RcChannel(TIM_HandleTypeDef*, uint8_t, uint16_t, uint16_t)	24	static
+main.cpp:102:1:RcChannel::~RcChannel()	16	static
+main.cpp:107:10:uint32_t RcChannel::getPulseWidth()	16	static
+main.cpp:111:10:uint32_t RcChannel::getChannelMaxWidth()	16	static
+main.cpp:115:10:uint32_t RcChannel::getChannelMinWidth()	16	static
+main.cpp:119:10:uint32_t RcChannel::getChannelMidWidth()	16	static
+main.cpp:123:6:void RcChannel::pulseWidthCalc()	16	static
+main.cpp:147:10:uint32_t RcChannel::getPulseWidthDif()	16	static
+main.cpp:151:9:uint8_t RcChannel::matchMinValue()	16	static
+main.cpp:161:9:uint8_t RcChannel::matchMaxValue()	16	static
+main.cpp:175:6:void IcHandlerTim2(TIM_HandleTypeDef*)	16	static
+main.cpp:197:6:void IcHandlerTim5(TIM_HandleTypeDef*)	16	static
+main.cpp:246:1:Servo::Servo(TIM_TypeDef*, uint8_t, uint16_t, uint16_t, uint16_t)	24	static
+main.cpp:255:1:Servo::Servo(TIM_TypeDef*, uint8_t, uint16_t, uint16_t)	24	static
+main.cpp:263:1:Servo::Servo(TIM_TypeDef*, uint8_t)	24	static
+main.cpp:271:6:void Servo::setPositionMicroSeconds(uint32_t)	16	static
+main.cpp:289:6:void Servo::Set_Position(uint8_t)	40	static
+main.cpp:331:1:Beeper::Beeper(GPIO_TypeDef*, uint32_t)	24	static
+main.cpp:336:1:Beeper::~Beeper()	16	static
+main.cpp:339:6:void Beeper::shortBeep()	16	static
+main.cpp:345:6:void Beeper::longBeep()	16	static
+main.cpp:351:6:void Beeper::seriesBeep()	16	static
+main.cpp:360:9:uint8_t Armed(Beeper*)	16	static
+main.cpp:377:9:uint8_t ERSarming(Beeper*)	16	static
+main.cpp:405:5:int main()	136	static
+main.cpp:545:6:void SystemClock_Config()	88	static
+main.cpp:589:13:void MX_TIM2_Init()	48	static
+main.cpp:659:13:void MX_TIM3_Init()	64	static
+main.cpp:730:13:void MX_TIM5_Init()	80	static
+main.cpp:806:13:void MX_USART2_UART_Init()	8	static
+main.cpp:839:13:void MX_GPIO_Init()	40	static
+main.cpp:868:6:void Error_Handler()	4	static
+main.cpp:874:1:void __static_initialization_and_destruction_0(int, int)	24	static
+main.cpp:874:1:cpp)	8	static
+main.cpp:874:1:cpp)	8	static
