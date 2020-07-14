@@ -35,3 +35,7 @@
 BUILDS/
 mbed-os/
 ESS/MDK-ARM/ESS/
+Baro/MDK-ARM/Baro/
+
+# User settings
+*.uvguix.*
