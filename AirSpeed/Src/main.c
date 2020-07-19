@@ -43,7 +43,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "MPXV7002.h"
+#include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -91,6 +92,9 @@ static void MX_ADC1_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+	char str[80] = "test\n";
+	uint32_t adcValue = 0;
+	double speed =0;
 
   /* USER CODE END 1 */
 
@@ -115,6 +119,8 @@ int main(void)
   MX_USART2_UART_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
+	
+	MPXV7002 mpxv7002(hadc1);
 
   /* USER CODE END 2 */
 
@@ -122,6 +128,14 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+		adcValue = mpxv7002.getRawData();
+		speed = mpxv7002.getAirSpeed();
+		sprintf(str,"%lf\n",speed);
+		
+		
+		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_8);
+		HAL_UART_Transmit(&huart2,(uint8_t*)str,16,0xFFFF);
+		HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
