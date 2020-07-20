@@ -27,6 +27,7 @@ OBJCOPY_BIN :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
+Core/Inc/Beeper \
 Core/Inc/RcChannel \
 Core/Inc/Servo \
 Core/Src \

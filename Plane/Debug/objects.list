@@ -1,3 +1,4 @@
+"Core/Inc/Beeper/Beeper.o"
 "Core/Inc/RcChannel/RcChannel.o"
 "Core/Inc/Servo/Servo.o"
 "Core/Src/main.o"

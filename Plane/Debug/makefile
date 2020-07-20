@@ -13,6 +13,7 @@ RM := rm -rf
 -include Core/Src/subdir.mk
 -include Core/Inc/Servo/subdir.mk
 -include Core/Inc/RcChannel/subdir.mk
+-include Core/Inc/Beeper/subdir.mk
 -include subdir.mk
 -include objects.mk
 

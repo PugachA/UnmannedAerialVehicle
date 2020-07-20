@@ -22,7 +22,8 @@
 #include "main.h"
 #include "RcChannel/RcChannel.h"
 #include "Servo/Servo.h"
-//#include <./../../../libraries/RcChannel/RcChannel.h>
+#include "Beeper/Beeper.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
@@ -314,7 +315,7 @@ void Servo::Set_Position(uint8_t position)
 	}
 }*/
 
-class Beeper
+/*class Beeper
 {
 	private:
 		GPIO_TypeDef * port = 0;
@@ -357,7 +358,7 @@ void Beeper::seriesBeep()
 	shortBeep();
 	HAL_Delay(SHORT_BEEP_TIME_MS);
 	shortBeep();
-}
+}*/
 
 uint8_t Armed(Beeper* beeper)
 {
@@ -434,108 +435,106 @@ int main(void)
   MX_TIM5_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_RegisterCallback(&htim2, HAL_TIM_IC_CAPTURE_CB_ID, IcHandlerTim2);
-  	HAL_TIM_RegisterCallback(&htim5, HAL_TIM_IC_CAPTURE_CB_ID, IcHandlerTim5);
+  HAL_TIM_RegisterCallback(&htim5, HAL_TIM_IC_CAPTURE_CB_ID, IcHandlerTim5);
 
-  	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);//PA5 thr input
-  	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);//PB3 elev input
-  	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_3);//PB10 ail input
-  	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_4);//PB11 rud input
-  	HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_1);//PA0 switch input
+  HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);//PA5 thr input
+  HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);//PB3 elev input
+  HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_3);//PB10 ail input
+  HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_4);//PB11 rud input
+  HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_1);//PA0 switch input
 
-  	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);//PA6 thr output
-  	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);//PA7 elev servo output
-  	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);//PB0 ail servo 1 output
-  	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);//PB1 ail servo 2 output
-  	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_4);//PA3 rud servo 2 output
-  	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_3);//PA2 ers servo 2 output
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);//PA6 thr output
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);//PA7 elev servo output
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);//PB0 ail servo 1 output
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);//PB1 ail servo 2 output
+  HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_4);//PA3 rud servo 2 output
+  HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_3);//PA2 ers servo 2 output
 
-  	char str[32];
-  	Servo 	thr_servo(htim3.Instance, 1), elev_servo(htim3.Instance, 2),
-  			ail_servo_1(htim3.Instance, 3), ail_servo_2(htim3.Instance, 4),
+  char str[32];
+  Servo 	thr_servo(htim3.Instance, 1), elev_servo(htim3.Instance, 2),
+			ail_servo_1(htim3.Instance, 3), ail_servo_2(htim3.Instance, 4),
 			rud_servo(htim5.Instance, 4), ers_servo(htim5.Instance, 3);
 
-  	uint32_t ers_servo_set_up_position = 1600;
-  	uint8_t ers_match_counter = 0;
-  	ers_servo.setPositionMicroSeconds(ers_servo_set_up_position);
+  uint32_t ers_servo_set_up_position = 1600;
+  uint8_t ers_match_counter = 0;
+  ers_servo.setPositionMicroSeconds(ers_servo_set_up_position);
 
-  	Beeper beeper(GPIOD, GPIO_PIN_13);
+  Beeper beeper(GPIOD, GPIO_PIN_13);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
-		while(Armed(&beeper))
-		{
-
-			thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
-			elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
-			ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
-			ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
-			rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
-
-			if(switch_rc.getPulseWidth() > 1500)
-			{
-				thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
-				HAL_Delay(1000);
-				ers_servo.setPositionMicroSeconds(540);
-			}
-			while(switch_rc.getPulseWidth() > 1500)
-			{
-				beeper.seriesBeep();
-			}
-		}
+	while(Armed(&beeper))
+	{
+		thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
 		elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
 		ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
 		ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
 		rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
-		thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
 
-		while(ERSarming(&beeper))
+		if(switch_rc.getPulseWidth() > 1500)
 		{
-			elev_servo.setPositionMicroSeconds(elev_rc.getChannelMidWidth());
-			ail_servo_1.setPositionMicroSeconds(ail_rc.getChannelMidWidth());
-			ail_servo_2.setPositionMicroSeconds(ail_rc.getChannelMidWidth());
-			rud_servo.setPositionMicroSeconds(rud_rc.getChannelMidWidth());
-			ers_servo.setPositionMicroSeconds(ers_servo_set_up_position);
-			if(elev_rc.matchMaxValue())
-			{
-				ers_match_counter++;
-				switch (ers_match_counter)
-				{
-					case 1: ers_servo_set_up_position = 1000; break;
-					case 2: ers_servo_set_up_position = 1600; break;
-				}
-				HAL_Delay(500);
-			}
-			if(elev_rc.matchMinValue() && !rud_rc.matchMaxValue())
-			{
-				ers_servo_set_up_position = 540;
-				ers_match_counter = 0;
-				HAL_Delay(500);
-			}
-			//HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", ers_servo_set_up_position), 1000);
+			thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
+			HAL_Delay(1000);
+			ers_servo.setPositionMicroSeconds(540);
 		}
+		while(switch_rc.getPulseWidth() > 1500)
+		{
+			beeper.seriesBeep();
+		}
+	}
+	elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
+	ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
+	ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
+	rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
+	thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
 
-		//#define DEBUG
-		/*#if def DEBUG
-			ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidth());
-			ail_servo_2.setPositionMicroSeconds(ail_rc.getPusleWidthDif());
-			elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidth());
-			rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
-			ers_servo.setPositionMicroSeconds(switch_rc.getPulseWidth());
-			thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
+	while(ERSarming(&beeper))
+	{
+		elev_servo.setPositionMicroSeconds(elev_rc.getChannelMidWidth());
+		ail_servo_1.setPositionMicroSeconds(ail_rc.getChannelMidWidth());
+		ail_servo_2.setPositionMicroSeconds(ail_rc.getChannelMidWidth());
+		rud_servo.setPositionMicroSeconds(rud_rc.getChannelMidWidth());
+		ers_servo.setPositionMicroSeconds(ers_servo_set_up_position);
+		if(elev_rc.matchMaxValue())
+		{
+			ers_match_counter++;
+			switch (ers_match_counter)
+			{
+				case 1: ers_servo_set_up_position = 1000; break;
+				case 2: ers_servo_set_up_position = 1600; break;
+			}
+			HAL_Delay(500);
+		}
+		if(elev_rc.matchMinValue() && !rud_rc.matchMaxValue())
+		{
+			ers_servo_set_up_position = 540;
+			ers_match_counter = 0;
+			HAL_Delay(500);
+		}
+		//HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", ers_servo_set_up_position), 1000);
+	}
 
-			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", thr_rc.getPulseWidth()), 1000);
-			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", elev_rc.getPulseWidth()), 1000);
-			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", ail_rc.getPulseWidth()), 1000);
-			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", rud_rc.getPulseWidth()), 1000);
-			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d\n", switch_rc.getPulseWidth()), 1000);
-		#endif*/
-    /* USER CODE END WHILE */
+	//#define DEBUG
+	/*#if def DEBUG
+	ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidth());
+	ail_servo_2.setPositionMicroSeconds(ail_rc.getPusleWidthDif());
+	elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidth());
+	rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
+	ers_servo.setPositionMicroSeconds(switch_rc.getPulseWidth());
+	thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
 
-    /* USER CODE BEGIN 3 */
+	HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", thr_rc.getPulseWidth()), 1000);
+	HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", elev_rc.getPulseWidth()), 1000);
+	HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", ail_rc.getPulseWidth()), 1000);
+	HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", rud_rc.getPulseWidth()), 1000);
+	HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d\n", switch_rc.getPulseWidth()), 1000);
+	#endif*/
+	/* USER CODE END WHILE */
+
+	/* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
