@@ -11,6 +11,7 @@ RM := rm -rf
 -include Drivers/STM32F4xx_HAL_Driver/Src/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
+-include Core/Inc/subdir.mk
 -include subdir.mk
 -include objects.mk
 
@@ -39,24 +40,24 @@ endif
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-RC_read.elf \
+Plane.elf \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-RC_read.list \
+Plane.list \
 
 OBJCOPY_BIN += \
-RC_read.bin \
+Plane.bin \
 
 
 # All Target
-all: RC_read.elf secondary-outputs
+all: Plane.elf secondary-outputs
 
 # Tool invocations
-RC_read.elf: $(OBJS) $(USER_OBJS) C:\Users\mlx-0\STM32CubeIDE\workspace_1.3.0\RC_read\STM32F407VGTX_FLASH.ld
-	arm-none-eabi-g++ -o "RC_read.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\mlx-0\STM32CubeIDE\workspace_1.3.0\RC_read\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="RC_read.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+Plane.elf: $(OBJS) $(USER_OBJS) E:\Projects\UnmannedAerialVehicle\Plane\STM32F407VGTX_FLASH.ld
+	arm-none-eabi-g++ -o "Plane.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"E:\Projects\UnmannedAerialVehicle\Plane\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Plane.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -65,13 +66,13 @@ default.size.stdout: $(EXECUTABLES)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-RC_read.list: $(EXECUTABLES)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "RC_read.list"
+Plane.list: $(EXECUTABLES)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "Plane.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
-RC_read.bin: $(EXECUTABLES)
-	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "RC_read.bin"
+Plane.bin: $(EXECUTABLES)
+	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "Plane.bin"
 	@echo 'Finished building: $@'
 	@echo ' '
 

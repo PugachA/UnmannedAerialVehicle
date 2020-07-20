@@ -20,6 +20,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "RcChannel.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -48,7 +49,7 @@ TIM_HandleTypeDef htim5;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -59,7 +60,7 @@ static void MX_USART2_UART_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM5_Init(void);
 /* USER CODE BEGIN PFP */
-class RcChannel
+/*class RcChannel
 {
 	private:
 		uint16_t channel_max_value = 0;
@@ -193,7 +194,7 @@ void IcHandlerTim2(TIM_HandleTypeDef *htim)
 			rud_rc.pulseWidthCalc();
 		} break;
 	}
-}
+}*/
 void IcHandlerTim5(TIM_HandleTypeDef *htim)
 {
 	switch ( (uint8_t) htim->Channel )
