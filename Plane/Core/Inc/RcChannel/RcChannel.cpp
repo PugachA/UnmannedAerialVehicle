@@ -114,3 +114,26 @@ void IcHandlerTim2(TIM_HandleTypeDef *htim)
 		} break;
 	}
 }
+
+void IcHandlerTim5(TIM_HandleTypeDef *htim)
+{
+	switch ( (uint8_t) htim->Channel )
+	{
+		case HAL_TIM_ACTIVE_CHANNEL_1:
+		{
+			switch_rc.pulseWidthCalc();
+		} break;
+		case HAL_TIM_ACTIVE_CHANNEL_2:
+		{
+
+		} break;
+		case HAL_TIM_ACTIVE_CHANNEL_3:
+		{
+
+		} break;
+		case HAL_TIM_ACTIVE_CHANNEL_4:
+		{
+
+		} break;
+	}
+}

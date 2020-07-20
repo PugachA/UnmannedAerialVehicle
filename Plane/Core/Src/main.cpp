@@ -20,8 +20,9 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "RcChannel.h"
-
+#include "RcChannel/RcChannel.h"
+#include "Servo/Servo.h"
+//#include <./../../../libraries/RcChannel/RcChannel.h>
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
@@ -194,7 +195,7 @@ void IcHandlerTim2(TIM_HandleTypeDef *htim)
 			rud_rc.pulseWidthCalc();
 		} break;
 	}
-}*/
+}
 void IcHandlerTim5(TIM_HandleTypeDef *htim)
 {
 	switch ( (uint8_t) htim->Channel )
@@ -216,9 +217,9 @@ void IcHandlerTim5(TIM_HandleTypeDef *htim)
 
 		} break;
 	}
-}
+}*/
 
-class Servo
+/*class Servo
 {
 	private:
 		//значение скважности, при котором серво поворачивается на 180
@@ -311,7 +312,7 @@ void Servo::Set_Position(uint8_t position)
 			this->TIM->CCR4 = pwm;
 			break;
 	}
-}
+}*/
 
 class Beeper
 {

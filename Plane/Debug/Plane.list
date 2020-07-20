@@ -27,23 +27,23 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   ALLOC
  11 .ARM.attributes 00000030  00000000  00000000  0002000c  2**0
                   CONTENTS, READONLY
- 12 .debug_info   0000c4fd  00000000  00000000  0002003c  2**0
+ 12 .debug_info   0000c8c9  00000000  00000000  0002003c  2**0
                   CONTENTS, READONLY, DEBUGGING
- 13 .debug_abbrev 00001af8  00000000  00000000  0002c539  2**0
+ 13 .debug_abbrev 00001ce5  00000000  00000000  0002c905  2**0
                   CONTENTS, READONLY, DEBUGGING
- 14 .debug_aranges 00000c18  00000000  00000000  0002e038  2**3
+ 14 .debug_aranges 00000c30  00000000  00000000  0002e5f0  2**3
                   CONTENTS, READONLY, DEBUGGING
- 15 .debug_ranges 00000b50  00000000  00000000  0002ec50  2**3
+ 15 .debug_ranges 00000b58  00000000  00000000  0002f220  2**3
                   CONTENTS, READONLY, DEBUGGING
- 16 .debug_macro  000227a6  00000000  00000000  0002f7a0  2**0
+ 16 .debug_macro  0002298d  00000000  00000000  0002fd78  2**0
                   CONTENTS, READONLY, DEBUGGING
- 17 .debug_line   0000865c  00000000  00000000  00051f46  2**0
+ 17 .debug_line   00008d49  00000000  00000000  00052705  2**0
                   CONTENTS, READONLY, DEBUGGING
- 18 .debug_str    000ca54d  00000000  00000000  0005a5a2  2**0
+ 18 .debug_str    000ca57c  00000000  00000000  0005b44e  2**0
                   CONTENTS, READONLY, DEBUGGING
- 19 .comment      0000007b  00000000  00000000  00124aef  2**0
+ 19 .comment      0000007b  00000000  00000000  001259ca  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  00003314  00000000  00000000  00124b6c  2**2
+ 20 .debug_frame  00003324  00000000  00000000  00125a48  2**2
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -1011,157 +1011,154 @@ void IcHandlerTim2(TIM_HandleTypeDef *htim)
  8000924:	20000068 	.word	0x20000068
  8000928:	20000088 	.word	0x20000088
 
-0800092c <_Z41__static_initialization_and_destruction_0ii>:
- 800092c:	b580      	push	{r7, lr}
- 800092e:	b084      	sub	sp, #16
- 8000930:	af02      	add	r7, sp, #8
- 8000932:	6078      	str	r0, [r7, #4]
- 8000934:	6039      	str	r1, [r7, #0]
- 8000936:	687b      	ldr	r3, [r7, #4]
- 8000938:	2b01      	cmp	r3, #1
- 800093a:	d136      	bne.n	80009aa <_Z41__static_initialization_and_destruction_0ii+0x7e>
- 800093c:	683b      	ldr	r3, [r7, #0]
- 800093e:	f64f 72ff 	movw	r2, #65535	; 0xffff
- 8000942:	4293      	cmp	r3, r2
- 8000944:	d131      	bne.n	80009aa <_Z41__static_initialization_and_destruction_0ii+0x7e>
-RcChannel thr_rc(&htim2, 1, 885, 1850), elev_rc(&htim2, 2, 1080, 1863),
- 8000946:	f240 733a 	movw	r3, #1850	; 0x73a
- 800094a:	9300      	str	r3, [sp, #0]
- 800094c:	f240 3375 	movw	r3, #885	; 0x375
- 8000950:	2201      	movs	r2, #1
- 8000952:	4923      	ldr	r1, [pc, #140]	; (80009e0 <_Z41__static_initialization_and_destruction_0ii+0xb4>)
- 8000954:	4823      	ldr	r0, [pc, #140]	; (80009e4 <_Z41__static_initialization_and_destruction_0ii+0xb8>)
- 8000956:	f7ff fdb7 	bl	80004c8 <_ZN9RcChannelC1EP19__TIM_HandleTypeDefhtt>
- 800095a:	f240 7347 	movw	r3, #1863	; 0x747
- 800095e:	9300      	str	r3, [sp, #0]
- 8000960:	f44f 6387 	mov.w	r3, #1080	; 0x438
- 8000964:	2202      	movs	r2, #2
- 8000966:	491e      	ldr	r1, [pc, #120]	; (80009e0 <_Z41__static_initialization_and_destruction_0ii+0xb4>)
- 8000968:	481f      	ldr	r0, [pc, #124]	; (80009e8 <_Z41__static_initialization_and_destruction_0ii+0xbc>)
- 800096a:	f7ff fdad 	bl	80004c8 <_ZN9RcChannelC1EP19__TIM_HandleTypeDefhtt>
-		  ail_rc(&htim2, 3, 1083, 1863), rud_rc(&htim2, 4, 1080, 1863),
- 800096e:	f240 7347 	movw	r3, #1863	; 0x747
- 8000972:	9300      	str	r3, [sp, #0]
- 8000974:	f240 433b 	movw	r3, #1083	; 0x43b
- 8000978:	2203      	movs	r2, #3
- 800097a:	4919      	ldr	r1, [pc, #100]	; (80009e0 <_Z41__static_initialization_and_destruction_0ii+0xb4>)
- 800097c:	481b      	ldr	r0, [pc, #108]	; (80009ec <_Z41__static_initialization_and_destruction_0ii+0xc0>)
- 800097e:	f7ff fda3 	bl	80004c8 <_ZN9RcChannelC1EP19__TIM_HandleTypeDefhtt>
- 8000982:	f240 7347 	movw	r3, #1863	; 0x747
- 8000986:	9300      	str	r3, [sp, #0]
- 8000988:	f44f 6387 	mov.w	r3, #1080	; 0x438
- 800098c:	2204      	movs	r2, #4
- 800098e:	4914      	ldr	r1, [pc, #80]	; (80009e0 <_Z41__static_initialization_and_destruction_0ii+0xb4>)
- 8000990:	4817      	ldr	r0, [pc, #92]	; (80009f0 <_Z41__static_initialization_and_destruction_0ii+0xc4>)
- 8000992:	f7ff fd99 	bl	80004c8 <_ZN9RcChannelC1EP19__TIM_HandleTypeDefhtt>
-		  switch_rc(&htim5, 1, 1080, 1863);
- 8000996:	f240 7347 	movw	r3, #1863	; 0x747
- 800099a:	9300      	str	r3, [sp, #0]
- 800099c:	f44f 6387 	mov.w	r3, #1080	; 0x438
- 80009a0:	2201      	movs	r2, #1
- 80009a2:	4914      	ldr	r1, [pc, #80]	; (80009f4 <_Z41__static_initialization_and_destruction_0ii+0xc8>)
- 80009a4:	4814      	ldr	r0, [pc, #80]	; (80009f8 <_Z41__static_initialization_and_destruction_0ii+0xcc>)
- 80009a6:	f7ff fd8f 	bl	80004c8 <_ZN9RcChannelC1EP19__TIM_HandleTypeDefhtt>
- 80009aa:	687b      	ldr	r3, [r7, #4]
- 80009ac:	2b00      	cmp	r3, #0
- 80009ae:	d113      	bne.n	80009d8 <_Z41__static_initialization_and_destruction_0ii+0xac>
- 80009b0:	683b      	ldr	r3, [r7, #0]
- 80009b2:	f64f 72ff 	movw	r2, #65535	; 0xffff
- 80009b6:	4293      	cmp	r3, r2
- 80009b8:	d10e      	bne.n	80009d8 <_Z41__static_initialization_and_destruction_0ii+0xac>
- 80009ba:	480f      	ldr	r0, [pc, #60]	; (80009f8 <_Z41__static_initialization_and_destruction_0ii+0xcc>)
- 80009bc:	f7ff fde4 	bl	8000588 <_ZN9RcChannelD1Ev>
-		  ail_rc(&htim2, 3, 1083, 1863), rud_rc(&htim2, 4, 1080, 1863),
- 80009c0:	480b      	ldr	r0, [pc, #44]	; (80009f0 <_Z41__static_initialization_and_destruction_0ii+0xc4>)
- 80009c2:	f7ff fde1 	bl	8000588 <_ZN9RcChannelD1Ev>
- 80009c6:	4809      	ldr	r0, [pc, #36]	; (80009ec <_Z41__static_initialization_and_destruction_0ii+0xc0>)
- 80009c8:	f7ff fdde 	bl	8000588 <_ZN9RcChannelD1Ev>
-RcChannel thr_rc(&htim2, 1, 885, 1850), elev_rc(&htim2, 2, 1080, 1863),
- 80009cc:	4806      	ldr	r0, [pc, #24]	; (80009e8 <_Z41__static_initialization_and_destruction_0ii+0xbc>)
- 80009ce:	f7ff fddb 	bl	8000588 <_ZN9RcChannelD1Ev>
- 80009d2:	4804      	ldr	r0, [pc, #16]	; (80009e4 <_Z41__static_initialization_and_destruction_0ii+0xb8>)
- 80009d4:	f7ff fdd8 	bl	8000588 <_ZN9RcChannelD1Ev>
-}
- 80009d8:	bf00      	nop
- 80009da:	3708      	adds	r7, #8
- 80009dc:	46bd      	mov	sp, r7
- 80009de:	bd80      	pop	{r7, pc}
- 80009e0:	200000c8 	.word	0x200000c8
- 80009e4:	20000028 	.word	0x20000028
- 80009e8:	20000048 	.word	0x20000048
- 80009ec:	20000068 	.word	0x20000068
- 80009f0:	20000088 	.word	0x20000088
- 80009f4:	20000220 	.word	0x20000220
- 80009f8:	200000a8 	.word	0x200000a8
+0800092c <_Z13IcHandlerTim5P19__TIM_HandleTypeDef>:
 
-080009fc <_GLOBAL__sub_I__ZN9RcChannelC2EP19__TIM_HandleTypeDefhtt>:
- 80009fc:	b580      	push	{r7, lr}
- 80009fe:	af00      	add	r7, sp, #0
- 8000a00:	f64f 71ff 	movw	r1, #65535	; 0xffff
- 8000a04:	2001      	movs	r0, #1
- 8000a06:	f7ff ff91 	bl	800092c <_Z41__static_initialization_and_destruction_0ii>
- 8000a0a:	bd80      	pop	{r7, pc}
-
-08000a0c <_GLOBAL__sub_D__ZN9RcChannelC2EP19__TIM_HandleTypeDefhtt>:
- 8000a0c:	b580      	push	{r7, lr}
- 8000a0e:	af00      	add	r7, sp, #0
- 8000a10:	f64f 71ff 	movw	r1, #65535	; 0xffff
- 8000a14:	2000      	movs	r0, #0
- 8000a16:	f7ff ff89 	bl	800092c <_Z41__static_initialization_and_destruction_0ii>
- 8000a1a:	bd80      	pop	{r7, pc}
-
-08000a1c <_Z13IcHandlerTim5P19__TIM_HandleTypeDef>:
-			rud_rc.pulseWidthCalc();
-		} break;
-	}
-}*/
 void IcHandlerTim5(TIM_HandleTypeDef *htim)
 {
- 8000a1c:	b580      	push	{r7, lr}
- 8000a1e:	b082      	sub	sp, #8
- 8000a20:	af00      	add	r7, sp, #0
- 8000a22:	6078      	str	r0, [r7, #4]
+ 800092c:	b580      	push	{r7, lr}
+ 800092e:	b082      	sub	sp, #8
+ 8000930:	af00      	add	r7, sp, #0
+ 8000932:	6078      	str	r0, [r7, #4]
 	switch ( (uint8_t) htim->Channel )
- 8000a24:	687b      	ldr	r3, [r7, #4]
- 8000a26:	7f1b      	ldrb	r3, [r3, #28]
- 8000a28:	3b01      	subs	r3, #1
- 8000a2a:	2b07      	cmp	r3, #7
- 8000a2c:	d817      	bhi.n	8000a5e <_Z13IcHandlerTim5P19__TIM_HandleTypeDef+0x42>
- 8000a2e:	a201      	add	r2, pc, #4	; (adr r2, 8000a34 <_Z13IcHandlerTim5P19__TIM_HandleTypeDef+0x18>)
- 8000a30:	f852 f023 	ldr.w	pc, [r2, r3, lsl #2]
- 8000a34:	08000a55 	.word	0x08000a55
- 8000a38:	08000a5d 	.word	0x08000a5d
- 8000a3c:	08000a5f 	.word	0x08000a5f
- 8000a40:	08000a5d 	.word	0x08000a5d
- 8000a44:	08000a5f 	.word	0x08000a5f
- 8000a48:	08000a5f 	.word	0x08000a5f
- 8000a4c:	08000a5f 	.word	0x08000a5f
- 8000a50:	08000a5d 	.word	0x08000a5d
+ 8000934:	687b      	ldr	r3, [r7, #4]
+ 8000936:	7f1b      	ldrb	r3, [r3, #28]
+ 8000938:	3b01      	subs	r3, #1
+ 800093a:	2b07      	cmp	r3, #7
+ 800093c:	d817      	bhi.n	800096e <_Z13IcHandlerTim5P19__TIM_HandleTypeDef+0x42>
+ 800093e:	a201      	add	r2, pc, #4	; (adr r2, 8000944 <_Z13IcHandlerTim5P19__TIM_HandleTypeDef+0x18>)
+ 8000940:	f852 f023 	ldr.w	pc, [r2, r3, lsl #2]
+ 8000944:	08000965 	.word	0x08000965
+ 8000948:	0800096d 	.word	0x0800096d
+ 800094c:	0800096f 	.word	0x0800096f
+ 8000950:	0800096d 	.word	0x0800096d
+ 8000954:	0800096f 	.word	0x0800096f
+ 8000958:	0800096f 	.word	0x0800096f
+ 800095c:	0800096f 	.word	0x0800096f
+ 8000960:	0800096d 	.word	0x0800096d
 	{
 		case HAL_TIM_ACTIVE_CHANNEL_1:
 		{
 			switch_rc.pulseWidthCalc();
- 8000a54:	4804      	ldr	r0, [pc, #16]	; (8000a68 <_Z13IcHandlerTim5P19__TIM_HandleTypeDef+0x4c>)
- 8000a56:	f7ff fdc6 	bl	80005e6 <_ZN9RcChannel14pulseWidthCalcEv>
+ 8000964:	4804      	ldr	r0, [pc, #16]	; (8000978 <_Z13IcHandlerTim5P19__TIM_HandleTypeDef+0x4c>)
+ 8000966:	f7ff fe3e 	bl	80005e6 <_ZN9RcChannel14pulseWidthCalcEv>
 		} break;
- 8000a5a:	e000      	b.n	8000a5e <_Z13IcHandlerTim5P19__TIM_HandleTypeDef+0x42>
+ 800096a:	e000      	b.n	800096e <_Z13IcHandlerTim5P19__TIM_HandleTypeDef+0x42>
 		case HAL_TIM_ACTIVE_CHANNEL_2:
 		{
 
 		} break;
- 8000a5c:	bf00      	nop
+ 800096c:	bf00      	nop
 		case HAL_TIM_ACTIVE_CHANNEL_4:
 		{
 
 		} break;
 	}
 }
- 8000a5e:	bf00      	nop
- 8000a60:	3708      	adds	r7, #8
- 8000a62:	46bd      	mov	sp, r7
- 8000a64:	bd80      	pop	{r7, pc}
- 8000a66:	bf00      	nop
- 8000a68:	200000a8 	.word	0x200000a8
+ 800096e:	bf00      	nop
+ 8000970:	3708      	adds	r7, #8
+ 8000972:	46bd      	mov	sp, r7
+ 8000974:	bd80      	pop	{r7, pc}
+ 8000976:	bf00      	nop
+ 8000978:	200000a8 	.word	0x200000a8
+
+0800097c <_Z41__static_initialization_and_destruction_0ii>:
+ 800097c:	b580      	push	{r7, lr}
+ 800097e:	b084      	sub	sp, #16
+ 8000980:	af02      	add	r7, sp, #8
+ 8000982:	6078      	str	r0, [r7, #4]
+ 8000984:	6039      	str	r1, [r7, #0]
+ 8000986:	687b      	ldr	r3, [r7, #4]
+ 8000988:	2b01      	cmp	r3, #1
+ 800098a:	d136      	bne.n	80009fa <_Z41__static_initialization_and_destruction_0ii+0x7e>
+ 800098c:	683b      	ldr	r3, [r7, #0]
+ 800098e:	f64f 72ff 	movw	r2, #65535	; 0xffff
+ 8000992:	4293      	cmp	r3, r2
+ 8000994:	d131      	bne.n	80009fa <_Z41__static_initialization_and_destruction_0ii+0x7e>
+RcChannel thr_rc(&htim2, 1, 885, 1850), elev_rc(&htim2, 2, 1080, 1863),
+ 8000996:	f240 733a 	movw	r3, #1850	; 0x73a
+ 800099a:	9300      	str	r3, [sp, #0]
+ 800099c:	f240 3375 	movw	r3, #885	; 0x375
+ 80009a0:	2201      	movs	r2, #1
+ 80009a2:	4923      	ldr	r1, [pc, #140]	; (8000a30 <_Z41__static_initialization_and_destruction_0ii+0xb4>)
+ 80009a4:	4823      	ldr	r0, [pc, #140]	; (8000a34 <_Z41__static_initialization_and_destruction_0ii+0xb8>)
+ 80009a6:	f7ff fd8f 	bl	80004c8 <_ZN9RcChannelC1EP19__TIM_HandleTypeDefhtt>
+ 80009aa:	f240 7347 	movw	r3, #1863	; 0x747
+ 80009ae:	9300      	str	r3, [sp, #0]
+ 80009b0:	f44f 6387 	mov.w	r3, #1080	; 0x438
+ 80009b4:	2202      	movs	r2, #2
+ 80009b6:	491e      	ldr	r1, [pc, #120]	; (8000a30 <_Z41__static_initialization_and_destruction_0ii+0xb4>)
+ 80009b8:	481f      	ldr	r0, [pc, #124]	; (8000a38 <_Z41__static_initialization_and_destruction_0ii+0xbc>)
+ 80009ba:	f7ff fd85 	bl	80004c8 <_ZN9RcChannelC1EP19__TIM_HandleTypeDefhtt>
+		  ail_rc(&htim2, 3, 1083, 1863), rud_rc(&htim2, 4, 1080, 1863),
+ 80009be:	f240 7347 	movw	r3, #1863	; 0x747
+ 80009c2:	9300      	str	r3, [sp, #0]
+ 80009c4:	f240 433b 	movw	r3, #1083	; 0x43b
+ 80009c8:	2203      	movs	r2, #3
+ 80009ca:	4919      	ldr	r1, [pc, #100]	; (8000a30 <_Z41__static_initialization_and_destruction_0ii+0xb4>)
+ 80009cc:	481b      	ldr	r0, [pc, #108]	; (8000a3c <_Z41__static_initialization_and_destruction_0ii+0xc0>)
+ 80009ce:	f7ff fd7b 	bl	80004c8 <_ZN9RcChannelC1EP19__TIM_HandleTypeDefhtt>
+ 80009d2:	f240 7347 	movw	r3, #1863	; 0x747
+ 80009d6:	9300      	str	r3, [sp, #0]
+ 80009d8:	f44f 6387 	mov.w	r3, #1080	; 0x438
+ 80009dc:	2204      	movs	r2, #4
+ 80009de:	4914      	ldr	r1, [pc, #80]	; (8000a30 <_Z41__static_initialization_and_destruction_0ii+0xb4>)
+ 80009e0:	4817      	ldr	r0, [pc, #92]	; (8000a40 <_Z41__static_initialization_and_destruction_0ii+0xc4>)
+ 80009e2:	f7ff fd71 	bl	80004c8 <_ZN9RcChannelC1EP19__TIM_HandleTypeDefhtt>
+		  switch_rc(&htim5, 1, 1080, 1863);
+ 80009e6:	f240 7347 	movw	r3, #1863	; 0x747
+ 80009ea:	9300      	str	r3, [sp, #0]
+ 80009ec:	f44f 6387 	mov.w	r3, #1080	; 0x438
+ 80009f0:	2201      	movs	r2, #1
+ 80009f2:	4914      	ldr	r1, [pc, #80]	; (8000a44 <_Z41__static_initialization_and_destruction_0ii+0xc8>)
+ 80009f4:	4814      	ldr	r0, [pc, #80]	; (8000a48 <_Z41__static_initialization_and_destruction_0ii+0xcc>)
+ 80009f6:	f7ff fd67 	bl	80004c8 <_ZN9RcChannelC1EP19__TIM_HandleTypeDefhtt>
+ 80009fa:	687b      	ldr	r3, [r7, #4]
+ 80009fc:	2b00      	cmp	r3, #0
+ 80009fe:	d113      	bne.n	8000a28 <_Z41__static_initialization_and_destruction_0ii+0xac>
+ 8000a00:	683b      	ldr	r3, [r7, #0]
+ 8000a02:	f64f 72ff 	movw	r2, #65535	; 0xffff
+ 8000a06:	4293      	cmp	r3, r2
+ 8000a08:	d10e      	bne.n	8000a28 <_Z41__static_initialization_and_destruction_0ii+0xac>
+ 8000a0a:	480f      	ldr	r0, [pc, #60]	; (8000a48 <_Z41__static_initialization_and_destruction_0ii+0xcc>)
+ 8000a0c:	f7ff fdbc 	bl	8000588 <_ZN9RcChannelD1Ev>
+		  ail_rc(&htim2, 3, 1083, 1863), rud_rc(&htim2, 4, 1080, 1863),
+ 8000a10:	480b      	ldr	r0, [pc, #44]	; (8000a40 <_Z41__static_initialization_and_destruction_0ii+0xc4>)
+ 8000a12:	f7ff fdb9 	bl	8000588 <_ZN9RcChannelD1Ev>
+ 8000a16:	4809      	ldr	r0, [pc, #36]	; (8000a3c <_Z41__static_initialization_and_destruction_0ii+0xc0>)
+ 8000a18:	f7ff fdb6 	bl	8000588 <_ZN9RcChannelD1Ev>
+RcChannel thr_rc(&htim2, 1, 885, 1850), elev_rc(&htim2, 2, 1080, 1863),
+ 8000a1c:	4806      	ldr	r0, [pc, #24]	; (8000a38 <_Z41__static_initialization_and_destruction_0ii+0xbc>)
+ 8000a1e:	f7ff fdb3 	bl	8000588 <_ZN9RcChannelD1Ev>
+ 8000a22:	4804      	ldr	r0, [pc, #16]	; (8000a34 <_Z41__static_initialization_and_destruction_0ii+0xb8>)
+ 8000a24:	f7ff fdb0 	bl	8000588 <_ZN9RcChannelD1Ev>
+}
+ 8000a28:	bf00      	nop
+ 8000a2a:	3708      	adds	r7, #8
+ 8000a2c:	46bd      	mov	sp, r7
+ 8000a2e:	bd80      	pop	{r7, pc}
+ 8000a30:	200000c8 	.word	0x200000c8
+ 8000a34:	20000028 	.word	0x20000028
+ 8000a38:	20000048 	.word	0x20000048
+ 8000a3c:	20000068 	.word	0x20000068
+ 8000a40:	20000088 	.word	0x20000088
+ 8000a44:	20000220 	.word	0x20000220
+ 8000a48:	200000a8 	.word	0x200000a8
+
+08000a4c <_GLOBAL__sub_I__ZN9RcChannelC2EP19__TIM_HandleTypeDefhtt>:
+ 8000a4c:	b580      	push	{r7, lr}
+ 8000a4e:	af00      	add	r7, sp, #0
+ 8000a50:	f64f 71ff 	movw	r1, #65535	; 0xffff
+ 8000a54:	2001      	movs	r0, #1
+ 8000a56:	f7ff ff91 	bl	800097c <_Z41__static_initialization_and_destruction_0ii>
+ 8000a5a:	bd80      	pop	{r7, pc}
+
+08000a5c <_GLOBAL__sub_D__ZN9RcChannelC2EP19__TIM_HandleTypeDefhtt>:
+ 8000a5c:	b580      	push	{r7, lr}
+ 8000a5e:	af00      	add	r7, sp, #0
+ 8000a60:	f64f 71ff 	movw	r1, #65535	; 0xffff
+ 8000a64:	2000      	movs	r0, #0
+ 8000a66:	f7ff ff89 	bl	800097c <_Z41__static_initialization_and_destruction_0ii>
+ 8000a6a:	bd80      	pop	{r7, pc}
 
 08000a6c <_ZN5ServoC1EP11TIM_TypeDefh>:
 	this->channel = channel;
@@ -2033,7 +2030,7 @@ int main(void)
  80010b2:	e785      	b.n	8000fc0 <main+0x25c>
  80010b4:	080008bd 	.word	0x080008bd
  80010b8:	200000c8 	.word	0x200000c8
- 80010bc:	08000a1d 	.word	0x08000a1d
+ 80010bc:	0800092d 	.word	0x0800092d
  80010c0:	20000220 	.word	0x20000220
  80010c4:	20000174 	.word	0x20000174
  80010c8:	40020c00 	.word	0x40020c00

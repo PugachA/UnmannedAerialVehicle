@@ -1,8 +1,0 @@
-main.cpp:72:1:RcChannel::RcChannel(uint8_t)	0	static
-main.cpp:82:1:RcChannel::~RcChannel()	0	static
-main.cpp:86:6:void RcChannel::pulse_width_calc(TIM_HandleTypeDef*)	16	static
-main.cpp:120:6:void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef*)	0	static
-main.cpp:203:6:void SystemClock_Config()	96	static
-main.cpp:153:5:int main()	72	static
-main.cpp:366:6:void Error_Handler()	0	static
-main.cpp:372:1:cpp)	0	static

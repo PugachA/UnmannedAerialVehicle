@@ -9,6 +9,7 @@ RcChannel.cpp:67:10:uint32_t RcChannel::getPulseWidthDif()	16	static
 RcChannel.cpp:71:9:uint8_t RcChannel::matchMinValue()	16	static
 RcChannel.cpp:81:9:uint8_t RcChannel::matchMaxValue()	16	static
 RcChannel.cpp:95:6:void IcHandlerTim2(TIM_HandleTypeDef*)	16	static
-RcChannel.cpp:116:1:void __static_initialization_and_destruction_0(int, int)	24	static
-RcChannel.cpp:116:1:cpp)	8	static
-RcChannel.cpp:116:1:cpp)	8	static
+RcChannel.cpp:118:6:void IcHandlerTim5(TIM_HandleTypeDef*)	16	static
+RcChannel.cpp:139:1:void __static_initialization_and_destruction_0(int, int)	24	static
+RcChannel.cpp:139:1:cpp)	8	static
+RcChannel.cpp:139:1:cpp)	8	static

@@ -31,5 +31,6 @@ class RcChannel
 };
 
 void IcHandlerTim2(TIM_HandleTypeDef *htim);
+void IcHandlerTim5(TIM_HandleTypeDef *htim);
 
 #endif // RCCHANNEL_H
