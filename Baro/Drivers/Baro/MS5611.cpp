@@ -2,7 +2,7 @@
 #include "MS5611.h"
 #include "math.h"
 
-MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c, int number_of_points_to_average) //constructor
+MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c, int number_of_points_to_average, int overflows_to_Vy_calc) //constructor
 {
   this->MS5611_addr = ms5611_addr;
   this->hi2c = hi2c;
@@ -17,13 +17,18 @@ MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c, int number_of_points
   timeout = 100;
   comandSize = 1;
 	
-  R = 8.31;
+  R = 8.31; 
   T0 = 273.15;
   M = 0.029;
   g = 9.81;
 	
-  tempDecimation = 100.0;
-  presDecimation = 100.0;
+  temp_decimation = 100.0;
+  pres_decimation = 100.0;
+	
+	
+  k1 = 13.0;
+  k2 = 17.0;
+  dt = 0.0001*overflows_to_Vy_calc; //0.0001 is a timer period, idk how to put it universally
 	
   //------------------------MS5611 Initialising---------------------------
   // Reset
@@ -38,7 +43,7 @@ MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c, int number_of_points
   ms5611_C4 = readProm(0xA8);
   ms5611_C5 = readProm(0xAA);
   ms5611_C6 = readProm(0xAC);
-	//-----------------------------------------------------------------------
+  //-----------------------------------------------------------------------
 	
   updateQFE(); //remembering QFE pressure when creating object
 	
@@ -126,19 +131,24 @@ void MS5611::convertRaw(void)
 double MS5611::getPressure(void)
 {
   convertRaw();
-  return this->pressure/presDecimation;
+  return this->pressure/pres_decimation;
 }
 
 double MS5611::getTemperature(void)
 {
   convertRaw();
-  return this->temperature/tempDecimation;
+  return this->temperature/temp_decimation;
+}
+
+void MS5611::calcAltitude(void)
+{
+  convertRaw();
+  this->altitude = R*(T0+temperature/temp_decimation)*log((pressure/pres_decimation)/this->pressure_QFE)/(-M*g);
 }
 
 double MS5611::getAltitude(void)
 {
-  convertRaw();
-  this->altitude = R*(T0+temperature/tempDecimation)*log((pressure/presDecimation)/this->pressure_QFE)/(-M*g);
+  calcAltitude();
   return this->altitude; 
 }
 
@@ -159,3 +169,31 @@ double MS5611::getQFEpressure(void)
 {
   return this->pressure_QFE;
 }
+
+void MS5611::firstFilter(void)
+{
+	double error = 0;
+	calcAltitude();
+  error = k1*(this->altitude - this->first_filter_output);
+	this->first_filter_output += error*dt;
+}
+
+void MS5611::secondFilter(void)
+{
+	double error = 0;
+  error = k2*(this->first_filter_output - this->second_filter_output);
+	this->vertical_speed = error;
+	this->second_filter_output += error*dt;
+}
+
+void MS5611::verticalSpeedCalc(void)
+{
+	firstFilter();
+	secondFilter();
+}
+
+double MS5611::getVerticalSpeed(void)
+{
+  return this->vertical_speed;
+}
+
