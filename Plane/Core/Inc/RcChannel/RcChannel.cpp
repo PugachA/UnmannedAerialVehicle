@@ -70,7 +70,7 @@ uint32_t RcChannel::getPulseWidthDif()
 }
 uint8_t RcChannel::matchMinValue()
 {
-	if( (this->getPulseWidth() > (this->channel_min_value - 4)) && (this->getPulseWidth() < (this->channel_min_value + 4)) )
+	if( (this->Difference > (this->channel_min_value - 4)) && (this->Difference < (this->channel_min_value + 4)) )
 	{
 		return 1;
 	} else
@@ -80,7 +80,7 @@ uint8_t RcChannel::matchMinValue()
 }
 uint8_t RcChannel::matchMaxValue()
 {
-	if( (this->getPulseWidth() > (this->channel_max_value - 4)) && (this->getPulseWidth() < (this->channel_max_value + 4)) )
+	if( (this->Difference > (this->channel_max_value - 4)) && (this->Difference < (this->channel_max_value + 4)) )
 	{
 		return 1;
 	} else
