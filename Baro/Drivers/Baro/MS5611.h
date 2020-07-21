@@ -33,8 +33,8 @@ class MS5611
     double g; //acceleration of gravity
 	
     //decimation coefficients
-    double tempDecimation;
-    double presDecimation;
+    double temp_decimation;
+    double pres_decimation;
 	
     long temperature;
     long pressure;
@@ -44,17 +44,31 @@ class MS5611
     unsigned long readBaro(void); //read raw pressure
     unsigned long readTemp(void); //read raw temperature
     void convertRaw(void); //convert pressure and temp from raw
+		void calcAltitude(void); //calculating altitude depending on pressure on ground
+		
+		//Vy calc
+		double first_filter_output;
+		double second_filter_output;
+		double dt; //period between timer interrupts for integrals
+		double k1; //coefficient in the first filter
+		double k2; //coefficient in the second filter
+		double vertical_speed;
+		
+		void firstFilter();
+		void secondFilter();
 		
 		
 	
   public:
-    MS5611(uint8_t,I2C_HandleTypeDef,int); //constructor
+    MS5611(uint8_t,I2C_HandleTypeDef,int, int); //constructor
 	
     double getPressure(void); //return pressure
     double getTemperature(void); //return temperature
-    double getAltitude(void); //return altitude depending on pressure on ground
+    double getAltitude(void); //return altitude
     void updateQFE(void); //calculating and remembering QFE pressure, public in case of need to re-init QFE from main
     double getQFEpressure(void); //return rememberred QFE pressure
+    void verticalSpeedCalc(void); //calc Vy in timer interrupt
+    double getVerticalSpeed(void); //return Vy
 		
 			
 };

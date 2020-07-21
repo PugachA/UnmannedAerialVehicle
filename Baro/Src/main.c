@@ -99,10 +99,12 @@ int main(void)
   /* USER CODE BEGIN 1 */
 	
   char str[80] = "";
+	int overflows_to_Vy_calc = 10;
   
   double temperature = 0;
   double pressure = 0;
   double altitude = 0;
+	double verticalSpeed = 0;
 
   /* USER CODE END 1 */
 
@@ -131,8 +133,9 @@ int main(void)
 	
   HAL_TIM_Base_Start(&htim6);	
   HAL_TIM_Base_Start_IT(&htim6);
+	extern int tim6_counter;
 	
-  MS5611 ms5611(0x77,hi2c1,10);
+  MS5611 ms5611(0x77,hi2c1,10,overflows_to_Vy_calc);
 
   /* USER CODE END 2 */
 
@@ -140,10 +143,16 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+ 
+		if (tim6_counter > overflows_to_Vy_calc)
+		{
+			ms5611.verticalSpeedCalc();
+			HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_8); //green led blnking just to know everything is ok
+			tim6_counter = 0; 
+		}
 		
-    altitude = ms5611.getAltitude();
-
-    sprintf(str,"%lf\r\n",altitude);
+		verticalSpeed = ms5611.getVerticalSpeed();
+		sprintf(str,"%lf\r\n",verticalSpeed);
     HAL_UART_Transmit(&huart2,(uint8_t*)str,16,0xFFFF);
     HAL_Delay(100);
 		
@@ -267,7 +276,7 @@ static void MX_TIM6_Init(void)
 
   /* USER CODE END TIM6_Init 1 */
   htim6.Instance = TIM6;
-  htim6.Init.Prescaler = 199;
+  htim6.Init.Prescaler = 19;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim6.Init.Period = 199;
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
