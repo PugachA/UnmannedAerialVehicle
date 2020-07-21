@@ -1,5 +1,0 @@
-Beeper.cpp:3:1:Beeper::Beeper(GPIO_TypeDef*, uint32_t)	24	static
-Beeper.cpp:8:1:Beeper::~Beeper()	16	static
-Beeper.cpp:11:6:void Beeper::shortBeep()	16	static
-Beeper.cpp:17:6:void Beeper::longBeep()	16	static
-Beeper.cpp:23:6:void Beeper::seriesBeep()	16	static
