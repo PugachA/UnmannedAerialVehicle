@@ -24,6 +24,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "FileManager\FileManager.h"
 
 /* USER CODE END Includes */
 
@@ -95,7 +96,7 @@ int main(void)
   MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
 
-  res=f_mount(&SDFatFS, (char*)SDPath, 0);
+  res=f_mount(&SDFatFS, (char*)SDPath, 1);
   if(res == FR_OK)
   {
 	  res=f_open(&SDFile, "test.txt", FA_WRITE|FA_CREATE_ALWAYS);
