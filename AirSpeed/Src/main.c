@@ -130,7 +130,7 @@ int main(void)
   {
 		adcValue = mpxv7002.getRawData();
 		speed = mpxv7002.getAirSpeed();
-		sprintf(str,"%lf\n",speed);
+		sprintf(str,"%lf\n",double(adcValue));
 		
 		
 		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_8);
