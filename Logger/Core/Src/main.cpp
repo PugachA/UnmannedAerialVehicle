@@ -24,7 +24,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "FileManager\FileManager.h"
+#include "SDFileManager\SDFileManager.h"
 
 /* USER CODE END Includes */
 
@@ -59,6 +59,7 @@ static void MX_SDIO_SD_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+SDFileManager sdFileManager("/");
 /* USER CODE END 0 */
 
 /**
@@ -95,21 +96,21 @@ int main(void)
   MX_SDIO_SD_Init();
   MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
-
-  res=f_mount(&SDFatFS, (char*)SDPath, 1);
+  res = sdFileManager.MountSD();
+  //res=f_mount(&SDFatFS, (char*)SDPath, 1);
   if(res == FR_OK)
   {
-	  res=f_open(&SDFile, "test.txt", FA_WRITE|FA_CREATE_ALWAYS);
-
+	  //res=f_open(&SDFile, "test.txt", FA_WRITE|FA_CREATE_ALWAYS);
+	  res = sdFileManager.CreateFile("test.txt", false);
 	  if(res == FR_OK)
 	  {
-		  res = f_write(&SDFile, wtext, sizeof(wtext),(void*)&byteswritten);
+		  //res = f_write(&SDFile, wtext, sizeof(wtext),(UINT*)&byteswritten);
 
-		  if(byteswritten != 0 && res == FR_OK)
+		  //if(byteswritten != 0 && res == FR_OK)
 			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
 	  }
 
-	  f_close(&SDFile);
+	  //f_close(&SDFile);
   }
 
   /* USER CODE END 2 */
