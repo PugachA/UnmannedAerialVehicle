@@ -103,7 +103,7 @@ int main(void)
   if(res == FR_OK)
   {
 	  //res=f_open(&SDFile, "test.txt", FA_WRITE|FA_CREATE_ALWAYS);
-	  res = sdFileManager.CreateFile("test.txt", true);
+	  res = sdFileManager.AppendToFile("test.txt", "Hello",  true);
 	  if(res == FR_OK)
 	  {
   		  //res = f_write(&SDFile, wtext, sizeof(wtext),(UINT*)&byteswritten);

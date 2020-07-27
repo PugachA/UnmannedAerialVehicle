@@ -1,4 +1,5 @@
 #include "fatfs.h"
+#include "string.h"
 
 class SDFileManager
 {
@@ -14,7 +15,8 @@ class SDFileManager
 		FRESULT UnMountSD();
 		FRESULT CreateFile(const char* name, bool force);
 		FRESULT RemoveFile(char* name);
-		FRESULT AppendToFile(char* name, char* data);
+		FRESULT AppendToFile(const char* name, char* data, bool force);
+		FRESULT AppendLineToFile(const char* name, char* data, bool force);
 		FRESULT CreateDirectory(char* name);
 		FRESULT CheckSpace(char* name);
 		//TODO Добавить ReadFile
