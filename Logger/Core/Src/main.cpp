@@ -102,10 +102,10 @@ int main(void)
   //res=f_mount(&SDFatFS, (char*)SDPath, 1);
   if(res == FR_OK)
   {
-   //res=f_open(&SDFile, "test.txt", FA_WRITE|FA_CREATE_ALWAYS);
-  	res = sdFileManager.CreateFile("test.txt", true);
-  if(res == FR_OK)
-  	{
+	  //res=f_open(&SDFile, "test.txt", FA_WRITE|FA_CREATE_ALWAYS);
+	  res = sdFileManager.CreateFile("test.txt", true);
+	  if(res == FR_OK)
+	  {
   		  //res = f_write(&SDFile, wtext, sizeof(wtext),(UINT*)&byteswritten);
 
   		  //if(byteswritten != 0 && res == FR_OK)
