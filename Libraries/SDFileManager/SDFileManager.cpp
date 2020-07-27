@@ -24,13 +24,16 @@ FRESULT SDFileManager::CreateFile(const char* name, bool force)
 	FRESULT fileResult = f_stat(name, &fileInfo);
 
 	if(fileResult == FR_OK && !force)
-		return FR_NO_FILE;
+		return FR_EXIST;
 
 	FIL file;
 	fileResult = f_open(&file, name, FA_CREATE_ALWAYS|FA_READ|FA_WRITE);
 
 	if (fileResult != FR_OK)
+	{
+		f_close(&file);
 		return fileResult;
+	}
 
 	fileResult = f_close(&file);
 
