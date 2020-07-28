@@ -25,6 +25,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "SDFileManager\SDFileManager.h"
+#include "stdio.h"
 
 /* USER CODE END Includes */
 
@@ -70,8 +71,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	FRESULT res;
-	uint32_t byteswritten;
-	uint8_t wtext[]="Hello world";
+	uint32_t counter = 0;
 
   /* USER CODE END 1 */
 
@@ -99,21 +99,16 @@ int main(void)
 
   SDFileManager sdFileManager(SDPath);
   res = sdFileManager.MountSD();
-  //res=f_mount(&SDFatFS, (char*)SDPath, 1);
+
   if(res == FR_OK)
   {
-	  //res=f_open(&SDFile, "test.txt", FA_WRITE|FA_CREATE_ALWAYS);
-	  res = sdFileManager.AppendToFile("test.txt", "Hello",  true);
+	  uint32_t t = sdFileManager.GetFreeSpace();
+
 	  if(res == FR_OK)
-	  {
-  		  //res = f_write(&SDFile, wtext, sizeof(wtext),(UINT*)&byteswritten);
+		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
+  }
 
-  		  //if(byteswritten != 0 && res == FR_OK)
-  			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
-  	  }
-
-  	  //f_close(&SDFile);
-    }
+  sdFileManager.RemoveFile("TEST/Test.txt");
 
   /* USER CODE END 2 */
 
@@ -122,6 +117,17 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+	  char *buf = (char *)malloc(100*sizeof(char));
+	  sprintf(buf, "%lu-Hello world!", counter);
+	  counter++;
+
+	  res = sdFileManager.AppendLineToFile("TEST/Test.txt", buf, true);
+	  free(buf);
+
+	  if(res == FR_OK)
+		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
+
+	  HAL_Delay(1000);
 
     /* USER CODE BEGIN 3 */
   }
