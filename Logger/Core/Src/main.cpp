@@ -117,6 +117,8 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
 	  char *buf = (char *)malloc(100*sizeof(char));
 	  sprintf(buf, "%lu-Hello world!", counter);
 	  counter++;
@@ -128,8 +130,6 @@ int main(void)
 		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
 
 	  HAL_Delay(1000);
-
-    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
@@ -198,7 +198,7 @@ static void MX_SDIO_SD_Init(void)
   hsd.Init.ClockPowerSave = SDIO_CLOCK_POWER_SAVE_DISABLE;
   hsd.Init.BusWide = SDIO_BUS_WIDE_1B;
   hsd.Init.HardwareFlowControl = SDIO_HARDWARE_FLOW_CONTROL_DISABLE;
-  hsd.Init.ClockDiv = 5;
+  hsd.Init.ClockDiv = 4;
   /* USER CODE BEGIN SDIO_Init 2 */
 
   /* USER CODE END SDIO_Init 2 */
