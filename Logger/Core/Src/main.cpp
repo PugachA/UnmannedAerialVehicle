@@ -48,6 +48,7 @@
 SD_HandleTypeDef hsd;
 
 /* USER CODE BEGIN PV */
+Logger logger;
 
 /* USER CODE END PV */
 
@@ -98,9 +99,10 @@ int main(void)
   /* USER CODE BEGIN 2 */
   SDFileManager sdFileManager(SDPath);
   res = sdFileManager.MountSD();
+
   if(res == FR_OK)
   {
-	  Logger logger("Test", sdFileManager);
+	  logger = Logger("Test", sdFileManager, GPIOE, GPIO_PIN_7, GPIOA, GPIO_PIN_1);
   }
 
   /* USER CODE END 2 */
@@ -112,6 +114,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	logger.Info("test");
+
+	HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
@@ -199,11 +204,15 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PA1 */
   GPIO_InitStruct.Pin = GPIO_PIN_1;
@@ -211,6 +220,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PE7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
 }
 

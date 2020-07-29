@@ -7,6 +7,7 @@
 
 #include "SDFileManager\SDFileManager.h"
 #include "stdio.h"
+#include "stm32f4xx_hal.h"
 
 #ifndef Logger_H_
 #define Logger_H_
@@ -15,8 +16,17 @@ class Logger
 {
 	public:
 		Logger(const char* loggerName,
-				SDFileManager& fileManager);
+				SDFileManager& fileManager,
+				GPIO_TypeDef* successGPIO,
+				uint16_t successPin,
+				GPIO_TypeDef* errorGPIO,
+				uint16_t errorPin);
+		Logger();
 		virtual ~Logger();
+		void Info(const char* message);
+		void Error(char* message);
+		void Warn(char* message);
+		void Debug(char* message);
 
 	private:
 		const char* loggerName;
@@ -28,6 +38,8 @@ class Logger
 		uint16_t errorPin;
 
 		void CreateLogFile();
+		void ErrorMonitor();
+		void SuccessMonitor();
 };
 
 #endif /* Logger_H_ */
