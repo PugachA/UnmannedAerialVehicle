@@ -1,6 +1,9 @@
 #include "fatfs.h"
 #include "string.h"
 
+#ifndef SDFileManager_H_
+#define SDFileManager_H_
+
 class SDFileManager
 {
 	private:
@@ -19,5 +22,7 @@ class SDFileManager
 		FRESULT AppendLineToFile(const char* name, char* data, bool force);
 		FRESULT CreateDirectory(const char* name);
 		uint32_t GetFreeSpace();
+		bool IsPathExists(const char* name);
 		//TODO Добавить ReadFile с заданным объемом
 };
+#endif /* SDFileManager_H_ */

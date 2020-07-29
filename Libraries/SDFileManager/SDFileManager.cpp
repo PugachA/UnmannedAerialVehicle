@@ -108,3 +108,14 @@ uint32_t SDFileManager::GetFreeSpace()
 
     return (uint32_t)(freeClustersCount * pFileSystem->csize * 0.5);
 }
+
+bool SDFileManager::IsPathExists(const char* name)
+{
+	FILINFO fileInfo;
+	FRESULT fileResult = f_stat(name, &fileInfo);
+
+	if (fileResult == FR_OK)
+		return true;
+
+	return false;
+}

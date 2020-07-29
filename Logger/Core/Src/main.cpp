@@ -25,6 +25,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "SDFileManager\SDFileManager.h"
+#include "Logger\Logger.h"
 #include "stdio.h"
 
 /* USER CODE END Includes */
@@ -71,7 +72,6 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	FRESULT res;
-	uint32_t counter = 0;
 
   /* USER CODE END 1 */
 
@@ -96,19 +96,12 @@ int main(void)
   MX_SDIO_SD_Init();
   MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
-
   SDFileManager sdFileManager(SDPath);
   res = sdFileManager.MountSD();
-
   if(res == FR_OK)
   {
-	  uint32_t t = sdFileManager.GetFreeSpace();
-
-	  if(res == FR_OK)
-		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
+	  Logger logger("Test", sdFileManager);
   }
-
-  sdFileManager.RemoveFile("TEST/Test.txt");
 
   /* USER CODE END 2 */
 
@@ -119,17 +112,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  char *buf = (char *)malloc(100*sizeof(char));
-	  sprintf(buf, "%lu-Hello world!", counter);
-	  counter++;
-
-	  res = sdFileManager.AppendLineToFile("TEST/Test.txt", buf, true);
-	  free(buf);
-
-	  if(res == FR_OK)
-		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
-
-	  HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
