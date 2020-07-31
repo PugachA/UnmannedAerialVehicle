@@ -1,6 +1,7 @@
 #MicroXplorer Configuration settings - do not modify
-FATFS.IPParameters=_MAX_SS,_USE_LFN,_FS_RPATH
+FATFS.IPParameters=_MAX_SS,_USE_LFN,_FS_RPATH,_FS_TIMEOUT
 FATFS._FS_RPATH=0
+FATFS._FS_TIMEOUT=250
 FATFS._MAX_SS=4096
 FATFS._USE_LFN=3
 File.Version=6
