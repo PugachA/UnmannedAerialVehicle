@@ -64,10 +64,7 @@ FRESULT SDFileManager::AppendToFile(const char* name, char* data, bool force = f
 	FIL file;
 	fileResult = f_open(&file, name, FA_OPEN_APPEND | FA_WRITE);
 	if (fileResult != FR_OK)
-	{
-		f_close(&file);
 		return fileResult;
-	}
 
 	UINT bytesWritten;
 	fileResult = f_write(&file, data, strlen(data), &bytesWritten);
