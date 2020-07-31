@@ -82,7 +82,7 @@ void Logger::SuccessMonitor()
 
 void Logger::Info(const char* message)
 {
-	uint32_t bufferSize = 200 * strlen(message) * sizeof(char);
+	uint32_t bufferSize = (200 + strlen(message)) * sizeof(char);
 	char *buffer = (char*)malloc(bufferSize);
 	sprintf(buffer, "{ \"timestamp\": \"%lu\", \"logger\": \"%s\", \"level\": \"%s\", \"message\": \"%s\" }",
 			HAL_GetTick(),
