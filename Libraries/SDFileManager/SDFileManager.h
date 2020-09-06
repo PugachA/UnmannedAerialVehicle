@@ -18,8 +18,8 @@ class SDFileManager
 		FRESULT UnMountSD();
 		FRESULT CreateFile(const char* name, bool force);
 		FRESULT RemoveFile(const char* name);
-		FRESULT AppendToFile(const char* name, char* data, bool force);
-		FRESULT AppendLineToFile(const char* name, char* data, bool force);
+		int AppendToFile(const char* name, char* data, bool force);
+		int AppendLineToFile(const char* name, char* data, bool force);
 		FRESULT CreateDirectory(const char* name);
 		uint32_t GetFreeSpace();
 		bool IsPathExists(const char* name);

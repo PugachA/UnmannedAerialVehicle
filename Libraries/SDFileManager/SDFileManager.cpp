@@ -30,10 +30,7 @@ FRESULT SDFileManager::CreateFile(const char* name, bool force = false)
 	fileResult = f_open(&file, name, FA_CREATE_ALWAYS|FA_READ|FA_WRITE);
 
 	if (fileResult != FR_OK)
-	{
-		f_close(&file);
 		return fileResult;
-	}
 
 	fileResult = f_close(&file);
 
@@ -53,7 +50,7 @@ FRESULT SDFileManager::RemoveFile(const char* name)
 }
 
 //Add data to file
-FRESULT SDFileManager::AppendToFile(const char* name, char* data, bool force = false)
+int SDFileManager::AppendToFile(const char* name, char* data, bool force = false)
 {
 	FILINFO fileInfo;
 	FRESULT fileResult = f_stat(name, &fileInfo);
@@ -64,31 +61,27 @@ FRESULT SDFileManager::AppendToFile(const char* name, char* data, bool force = f
 	FIL file;
 	fileResult = f_open(&file, name, FA_OPEN_APPEND | FA_WRITE);
 	if (fileResult != FR_OK)
-		return fileResult;
+		return EOF;
 
-	UINT bytesWritten;
-	fileResult = f_write(&file, data, strlen(data), &bytesWritten);
-	if (fileResult != FR_OK)
-	{
-		f_close(&file);
-		return fileResult;
-	}
+	int bytesWritten = f_puts(data, &file);
 
 	fileResult = f_close(&file);
+	if(fileResult != FR_OK)
+		return EOF;
 
-	return fileResult;
+	return bytesWritten;
 }
 
-FRESULT SDFileManager::AppendLineToFile(const char* name, char* data, bool force = false)
+int SDFileManager::AppendLineToFile(const char* name, char* data, bool force = false)
 {
 	char *buf = (char *)malloc((strlen(data) + 2)*sizeof(char));
 	strcpy(buf, data);
-	strcat(buf, "\r\n");
+	strcat(buf, "\n");
 
-	FRESULT fileResult = this->AppendToFile(name, buf, force);
+	int bytesWritten = this->AppendToFile(name, buf, force);
 	free(buf);
 
-	return fileResult;
+	return bytesWritten;
 }
 
 FRESULT SDFileManager::CreateDirectory(const char* name)
