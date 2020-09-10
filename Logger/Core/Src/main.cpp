@@ -24,9 +24,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "SDFileManager\SDFileManager.h"
-#include "Logger\Logger.h"
 #include "stdio.h"
+#include "string.h"
+#include "SDFileManager\SDFileManager.h"
 
 /* USER CODE END Includes */
 
@@ -48,7 +48,7 @@
 SD_HandleTypeDef hsd;
 
 /* USER CODE BEGIN PV */
-Logger logger;
+
 
 /* USER CODE END PV */
 
@@ -72,7 +72,6 @@ static void MX_SDIO_SD_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	FRESULT res;
 
   /* USER CODE END 1 */
 
@@ -82,6 +81,12 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+  FRESULT fileResult;
+  int bytesWritten;
+  char* message = "Test";
+  char filename[10] = "file";
+  uint32_t bufferSize;
+  uint32_t counter;
 
   /* USER CODE END Init */
 
@@ -97,13 +102,11 @@ int main(void)
   MX_SDIO_SD_Init();
   MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
-  SDFileManager sdFileManager(SDPath);
-  res = sdFileManager.MountSD();
+  SDFileManager fileManager = SDFileManager(SDPath);
+  fileResult = fileManager.MountSD();
 
-  if(res == FR_OK)
-  {
-	  logger = Logger("Test", sdFileManager, GPIOE, GPIO_PIN_7, GPIOA, GPIO_PIN_1);
-  }
+  if(fileResult != FR_OK)
+	  Error_Handler();
 
   /* USER CODE END 2 */
 
@@ -114,9 +117,31 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	logger.Info("test");
+	  bufferSize = (200 + strlen(message)) * sizeof(char);
+	  char *buffer = new char(bufferSize);
+	  sprintf(buffer, "{ \"timestamp\": \"%lu\", \"logger\": \"%s\", \"level\": \"%s\", \"message\": \"%s\" }",
+	  			HAL_GetTick(),
+	  			"Logger",
+	  			"Info",
+	  			message);
 
-	HAL_Delay(1000);
+	  bytesWritten = fileManager.AppendLineToFile(filename, buffer, true);
+
+	  if(bytesWritten != -1)
+	  {
+		  counter += bytesWritten;
+		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
+	  }
+
+	  if(counter >= 256000)
+	  {
+		  strcat(filename, "1");
+		  counter = 0;
+	  }
+
+	  delete buffer;
+
+	  HAL_Delay(50);
   }
   /* USER CODE END 3 */
 }
@@ -136,12 +161,11 @@ void SystemClock_Config(void)
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
   /** Initializes the CPU, AHB and APB busses clocks 
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 4;
   RCC_OscInitStruct.PLL.PLLN = 168;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 7;

@@ -110,7 +110,7 @@
 /   950 - Traditional Chinese (DBCS)
 */
 
-#define _USE_LFN     3    /* 0 to 3 */
+#define _USE_LFN     2    /* 0 to 3 */
 #define _MAX_LFN     255  /* Maximum LFN length to handle (12 to 255) */
 /* The _USE_LFN switches the support of long file name (LFN).
 /
@@ -240,7 +240,7 @@
 /      lock control is independent of re-entrancy. */
 
 #define _FS_REENTRANT    0  /* 0:Disable or 1:Enable */
-#define _FS_TIMEOUT      250 /* Timeout period in unit of time ticks */
+#define _FS_TIMEOUT      500 /* Timeout period in unit of time ticks */
 #define _SYNC_t          NULL
 /* The option _FS_REENTRANT switches the re-entrancy (thread safe) of the FatFs
 /  module itself. Note that regardless of this option, file access to different
