@@ -21,12 +21,18 @@ class Logger
 				uint16_t successPin,
 				GPIO_TypeDef* errorGPIO,
 				uint16_t errorPin);
-		Logger();
+		Logger(const char* fileName,
+				const char* loggerName,
+				SDFileManager& fileManager,
+				GPIO_TypeDef* successGPIO,
+				uint16_t successPin,
+				GPIO_TypeDef* errorGPIO,
+				uint16_t errorPin);
 		virtual ~Logger();
 		void Info(const char* message);
-		void Error(char* message);
-		void Warn(char* message);
-		void Debug(char* message);
+		void Error(const char* message);
+		void Warn(const char* message);
+		void Debug(const char* message);
 
 	private:
 		const char* loggerName;

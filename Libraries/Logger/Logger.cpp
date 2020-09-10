@@ -19,14 +19,29 @@ Logger::Logger(const char* loggerName,
 	this->errorGPIO = errorGPIO;
 	this->errorPin = errorPin;
 
-	CreateLogFile();
+	char* buf = new char[100*sizeof(char)];
+	sprintf(buf, "log-file-%s.log", this->loggerName);
+
+	CreateLogFile(buf);
+
+	delete[] buf;
 }
 
-Logger::Logger():fileManager(fileManager)
+Logger::Logger(const char* fileName,
+		const char* loggerName,
+		SDFileManager& fileManager,
+		GPIO_TypeDef* successGPIO,
+		uint16_t successPin,
+		GPIO_TypeDef* errorGPIO,
+		uint16_t errorPin) : loggerName(loggerName), fileManager(fileManager)
 {
-	// TODO Auto-generated destructor stub
-}
+	this->successGPIO = successGPIO;
+	this->successPin = successPin;
+	this->errorGPIO = errorGPIO;
+	this->errorPin = errorPin;
 
+	CreateLogFile(fileName);
+}
 
 Logger::~Logger()
 {
@@ -34,33 +49,24 @@ Logger::~Logger()
 	// TODO Auto-generated destructor stub
 }
 
-void Logger::CreateLogFile()
+void Logger::CreateLogFile(const char* fileName)
 {
 	if(!this->fileManager.IsPathExists("/logs"))
 		this->fileManager.CreateDirectory("logs");
 
-	bool createLogFile = false;
-	uint16_t counter = 0;
+	this->filePath = new char[100*sizeof(char)];
+	strcpy(this->filePath, "logs/");
+	strcat(this->filePath, fileName);
 
-	char* buf = new char[100*sizeof(char)];
-	sprintf(buf, "logs/log-file-%d.log", this->loggerName);
-
-	if(!this->fileManager.IsPathExists(buf))
+	if(!this->fileManager.IsPathExists(this->filePath))
 	{
-		FRESULT result = this->fileManager.CreateFile(buf, false);
+		FRESULT result = this->fileManager.CreateFile(this->filePath, false);
 
 		if(result == FR_OK)
-		{
-			filePath = new char[sizeof(buf)];
-			strcpy(filePath, buf);
-			createLogFile = true;
-		}
+			this->SuccessMonitor();
+		else
+			this->ErrorMonitor();
 	}
-
-	if(createLogFile)
-		this->SuccessMonitor();
-	else
-		this->ErrorMonitor();
 }
 
 void Logger::ErrorMonitor()
@@ -92,5 +98,25 @@ void Logger::Info(const char* message)
 	else
 		this->ErrorMonitor();
 
-	delete buffer;
+	delete[] buffer;
+}
+
+void Logger::Error(const char* message)
+{
+	uint32_t bufferSize = (200 + strlen(message)) * sizeof(char);
+	char *buffer = new char(bufferSize);
+	sprintf(buffer, "{ \"timestamp\": \"%lu\", \"logger\": \"%s\", \"level\": \"%s\", \"message\": \"%s\" }",
+			HAL_GetTick(),
+			this->loggerName,
+			"Error",
+			message);
+
+	int bytesWritten = this->fileManager.AppendLineToFile(this->filePath, buffer, false);
+
+	if(bytesWritten != -1)
+		this->SuccessMonitor();
+	else
+		this->ErrorMonitor();
+
+	delete[] buffer;
 }
