@@ -30,6 +30,7 @@ Logger::Logger():fileManager(fileManager)
 
 Logger::~Logger()
 {
+	delete[] filePath;
 	// TODO Auto-generated destructor stub
 }
 
@@ -41,31 +42,25 @@ void Logger::CreateLogFile()
 	bool createLogFile = false;
 	uint16_t counter = 0;
 
-	char *buf = (char*)malloc(100*sizeof(char));
-	while(!createLogFile && counter < 100000)
+	char* buf = new char[100*sizeof(char)];
+	sprintf(buf, "logs/log-file-%d.log", this->loggerName);
+
+	if(!this->fileManager.IsPathExists(buf))
 	{
-		sprintf(buf, "logs/log-file-%d.log", counter);
+		FRESULT result = this->fileManager.CreateFile(buf, false);
 
-		if(!this->fileManager.IsPathExists(buf))
+		if(result == FR_OK)
 		{
-			FRESULT result = this->fileManager.CreateFile(buf, false);
-
-			if(result == FR_OK)
-			{
-				this->filePath = buf;
-				createLogFile = true;
-			}
+			filePath = new char[sizeof(buf)];
+			strcpy(filePath, buf);
+			createLogFile = true;
 		}
-
-		counter++;
 	}
 
 	if(createLogFile)
 		this->SuccessMonitor();
 	else
 		this->ErrorMonitor();
-
-	free(buf);
 }
 
 void Logger::ErrorMonitor()
@@ -82,20 +77,20 @@ void Logger::SuccessMonitor()
 
 void Logger::Info(const char* message)
 {
-	/*uint32_t bufferSize = (200 + strlen(message)) * sizeof(char);
-	char *buffer = (char*)malloc(bufferSize);
+	uint32_t bufferSize = (200 + strlen(message)) * sizeof(char);
+	char *buffer = new char(bufferSize);
 	sprintf(buffer, "{ \"timestamp\": \"%lu\", \"logger\": \"%s\", \"level\": \"%s\", \"message\": \"%s\" }",
 			HAL_GetTick(),
 			this->loggerName,
 			"Info",
 			message);
 
-	FRESULT result = this->fileManager.AppendLineToFile(this->filePath, buffer, false);
+	int bytesWritten = this->fileManager.AppendLineToFile(this->filePath, buffer, false);
 
-	if(result == FR_OK)
+	if(bytesWritten != -1)
 		this->SuccessMonitor();
 	else
 		this->ErrorMonitor();
 
-	free(buffer);*/
+	delete buffer;
 }

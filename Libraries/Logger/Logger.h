@@ -37,7 +37,7 @@ class Logger
 		GPIO_TypeDef* errorGPIO;
 		uint16_t errorPin;
 
-		void CreateLogFile();
+		void CreateLogFile(const char* fileName);
 		void ErrorMonitor();
 		void SuccessMonitor();
 };

@@ -44,7 +44,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim`2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim5;
 

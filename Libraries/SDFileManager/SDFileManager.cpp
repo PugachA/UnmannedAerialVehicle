@@ -74,12 +74,12 @@ int SDFileManager::AppendToFile(const char* name, char* data, bool force = false
 
 int SDFileManager::AppendLineToFile(const char* name, char* data, bool force = false)
 {
-	char *buf = (char *)malloc((strlen(data) + 2)*sizeof(char));
+	char *buf = new char[(strlen(data) + 2)*sizeof(char)];
 	strcpy(buf, data);
 	strcat(buf, "\n");
 
 	int bytesWritten = this->AppendToFile(name, buf, force);
-	free(buf);
+	delete[] buf;
 
 	return bytesWritten;
 }

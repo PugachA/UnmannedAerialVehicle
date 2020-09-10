@@ -26,7 +26,7 @@
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
 #include "string.h"
-#include "SDFileManager\SDFileManager.h"
+#include "Logger\Logger.h"
 
 /* USER CODE END Includes */
 
@@ -82,12 +82,6 @@ int main(void)
 
   /* USER CODE BEGIN Init */
   FRESULT fileResult;
-  int bytesWritten;
-  char* message = "Test";
-  char filename[10] = "file";
-  uint32_t bufferSize;
-  uint32_t counter;
-
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -108,6 +102,8 @@ int main(void)
   if(fileResult != FR_OK)
 	  Error_Handler();
 
+  Logger logger = Logger("Test", fileManager, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_1);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -117,29 +113,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  bufferSize = (200 + strlen(message)) * sizeof(char);
-	  char *buffer = new char(bufferSize);
-	  sprintf(buffer, "{ \"timestamp\": \"%lu\", \"logger\": \"%s\", \"level\": \"%s\", \"message\": \"%s\" }",
-	  			HAL_GetTick(),
-	  			"Logger",
-	  			"Info",
-	  			message);
-
-	  bytesWritten = fileManager.AppendLineToFile(filename, buffer, true);
-
-	  if(bytesWritten != -1)
-	  {
-		  counter += bytesWritten;
-		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
-	  }
-
-	  if(counter >= 256000)
-	  {
-		  strcat(filename, "1");
-		  counter = 0;
-	  }
-
-	  delete buffer;
+	  logger.Info("Hello");
 
 	  HAL_Delay(50);
   }
