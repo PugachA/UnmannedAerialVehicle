@@ -66,13 +66,13 @@ static void MX_TIM5_Init(void);
 uint8_t Armed(Beeper* beeper)
 {
 	static uint8_t flag = 0;
-	if(thr_rc.matchMinValue() && rud_rc.matchMinValue() && elev_rc.matchMinValue() && ail_rc.matchMaxValue())
+	if(switch_rc.matchMidValue())
 	{
 		flag = 1;
 		beeper->longBeep();
 		//HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);
 	}
-	if(thr_rc.matchMinValue() && rud_rc.matchMaxValue() && elev_rc.matchMinValue() && ail_rc.matchMinValue())
+	if(switch_rc.matchMinValue())
 	{
 		flag = 0;
 		beeper->longBeep();
