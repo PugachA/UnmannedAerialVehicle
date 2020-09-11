@@ -80,23 +80,6 @@ uint8_t Armed(Beeper* beeper)
 	}
 	return flag;
 }
-uint8_t ERSarming(Beeper* beeper)
-{
-	static uint8_t flag = 0;
-	if(thr_rc.matchMinValue() && rud_rc.matchMinValue() && elev_rc.matchMinValue() && ail_rc.matchMinValue())
-	{
-		flag = 1;
-		beeper->shortBeep();
-		//HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);
-	}
-	if(thr_rc.matchMinValue() && rud_rc.matchMaxValue() && elev_rc.matchMinValue() && ail_rc.matchMaxValue())
-	{
-		flag = 0;
-		beeper->shortBeep();
-		//HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_RESET);
-	}
-	return flag;
-}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
