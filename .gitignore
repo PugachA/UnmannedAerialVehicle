@@ -36,13 +36,9 @@ BUILDS/
 mbed-os/
 ESS/MDK-ARM/ESS/
 Baro/MDK-ARM/Baro/
-<<<<<<< HEAD
-.metadata/
 [Dd]ebug/ 
 [Rr]elease/ 
-=======
 AirSpeed/MDK-ARM/AirSpeed/
->>>>>>> origin/feature/add-MPXV7002-lib
 
 # User settings
 *.uvguix.*
