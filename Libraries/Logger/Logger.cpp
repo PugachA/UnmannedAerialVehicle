@@ -71,8 +71,14 @@ void Logger::CreateLogFile(const char* fileName)
 
 void Logger::ErrorMonitor()
 {
-	HAL_GPIO_WritePin(this->errorGPIO, this->errorPin, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(this->successGPIO, this->successPin, GPIO_PIN_RESET);
+	this->fileManager.UnMountSD();
+	FRESULT result = this->fileManager.MountSD();
+
+	if(result != FR_OK)
+	{
+	  HAL_GPIO_WritePin(this->errorGPIO, this->errorPin, GPIO_PIN_SET);
+	  HAL_GPIO_WritePin(this->successGPIO, this->successPin, GPIO_PIN_RESET);
+	}
 }
 
 void Logger::SuccessMonitor()
