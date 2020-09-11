@@ -32,6 +32,7 @@
 *.app
 
 # Folders
+.metadata/
 BUILDS/
 mbed-os/
 ESS/MDK-ARM/ESS/
