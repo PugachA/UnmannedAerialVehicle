@@ -102,7 +102,7 @@ int main(void)
   if(fileResult != FR_OK)
 	  Error_Handler();
 
-  Logger logger = Logger("Test", fileManager, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_1);
+  Logger logger = Logger("test.log","Test", fileManager, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_1);
 
   /* USER CODE END 2 */
 
