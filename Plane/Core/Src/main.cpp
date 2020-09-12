@@ -65,20 +65,32 @@ static void MX_TIM5_Init(void);
 
 uint8_t Armed(Beeper* beeper)
 {
-	static uint8_t flag = 0;
+	static uint8_t arm_flag = 0;
 	if(switch_rc.matchMidValue())
 	{
-		flag = 1;
+		arm_flag = 1;
 		beeper->longBeep();
-		//HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);
 	}
 	if(switch_rc.matchMinValue())
 	{
-		flag = 0;
+		arm_flag = 0;
 		beeper->longBeep();
-		//HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_RESET);
 	}
-	return flag;
+	return arm_flag;
+}
+uint8_t ERS(Beeper* beeper)
+{
+	static uint8_t ers_flag = 0;
+	if(switch_rc.matchMaxValue())
+	{
+		ers_flag = 1;
+		beeper->longBeep();
+	}
+	else
+	{
+		ers_flag = 0;
+	}
+	return ers_flag;
 }
 /* USER CODE END PFP */
 
@@ -160,14 +172,10 @@ int main(void)
 		ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
 		rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
 
-		if(switch_rc.getPulseWidth() > 1500)
-		{
-			thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
+		while(ERS(&beeper))
+			{thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
 			HAL_Delay(1000);
 			ers_servo.setPositionMicroSeconds(540);
-		}
-		while(switch_rc.getPulseWidth() > 1500)
-		{
 			beeper.seriesBeep();
 		}
 	}
