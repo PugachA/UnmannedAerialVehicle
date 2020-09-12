@@ -115,7 +115,7 @@ uint8_t RcChannel::matchMaxValue()
 }
 RcChannel thr_rc(&htim2, 1, 885, 1850), elev_rc(&htim2, 2, 1080, 1863),
 		  ail_rc(&htim2, 3, 1083, 1863), rud_rc(&htim2, 4, 1080, 1863),
-		  switch_rc(&htim5, 1, 988, 1500, 2012);
+		  switch_rc(&htim5, 1, 988, 1500, 2012), slider_rc(&htim5, 2, 988, 2012);
 		  
 void IcHandlerTim2(TIM_HandleTypeDef *htim)
 {
@@ -150,7 +150,7 @@ void IcHandlerTim5(TIM_HandleTypeDef *htim)
 		} break;
 		case HAL_TIM_ACTIVE_CHANNEL_2:
 		{
-
+			slider_rc.pulseWidthCalc();
 		} break;
 		case HAL_TIM_ACTIVE_CHANNEL_3:
 		{
