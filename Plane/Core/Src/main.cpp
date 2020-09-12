@@ -23,7 +23,6 @@
 #include "RcChannel/RcChannel.h"
 #include "Servo/Servo.h"
 #include "Beeper/Beeper.h"
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
@@ -51,7 +50,7 @@ TIM_HandleTypeDef htim5;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc;
+extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -62,33 +61,38 @@ static void MX_USART2_UART_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM5_Init(void);
 /* USER CODE BEGIN PFP */
-
 uint8_t Armed(Beeper* beeper)
 {
 	static uint8_t arm_flag = 0;
-	if(switch_rc.matchMidValue())
+	static uint8_t enter_once = 0;
+	if(switch_rc.matchMidValue() && (enter_once == 0))
 	{
 		arm_flag = 1;
 		beeper->longBeep();
+		enter_once = 1;
 	}
-	if(switch_rc.matchMinValue())
+	if(switch_rc.matchMinValue() && (enter_once == 1))
 	{
 		arm_flag = 0;
 		beeper->longBeep();
+		enter_once = 0;
 	}
 	return arm_flag;
 }
 uint8_t ERS(Beeper* beeper)
 {
 	static uint8_t ers_flag = 0;
-	if(switch_rc.matchMaxValue())
+	static uint8_t enter_once = 0;
+	if(switch_rc.matchMaxValue() && (enter_once == 0))
 	{
 		ers_flag = 1;
 		beeper->longBeep();
+		enter_once = 1;
 	}
-	else
+	if((switch_rc.matchMidValue() || switch_rc.matchMinValue()) && (enter_once == 1))
 	{
 		ers_flag = 0;
+		enter_once = 0;
 	}
 	return ers_flag;
 }
@@ -140,6 +144,7 @@ int main(void)
   HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_3);//PB10 ail input
   HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_4);//PB11 rud input
   HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_1);//PA0 switch input
+  HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_2);//PA1 slider input
 
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);//PA6 thr output
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);//PA7 elev servo output
@@ -154,7 +159,6 @@ int main(void)
 			rud_servo(htim5.Instance, 4), ers_servo(htim5.Instance, 3);
 
   uint32_t ers_servo_set_up_position = 1600;
-  uint8_t ers_match_counter = 0;
   ers_servo.setPositionMicroSeconds(ers_servo_set_up_position);
 
   Beeper beeper(GPIOD, GPIO_PIN_13);
@@ -164,71 +168,47 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	while(Armed(&beeper))
-	{
-		thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
+		while(Armed(&beeper))
+		{
+			thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
+			elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
+			ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
+			ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
+			rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
+
+			while(ERS(&beeper))
+			{
+				thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
+				HAL_Delay(1000);
+				ers_servo.setPositionMicroSeconds(540);//(540 - 1600 мкс диапазон дивжения планки САС)
+				beeper.seriesBeep();
+			}
+		}
 		elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
 		ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
 		ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
 		rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
+		thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
+		ers_servo.setPositionMicroSeconds(slider_rc.getPulseWidth() - 448);
 
-		while(ERS(&beeper))
-			{thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
-			HAL_Delay(1000);
-			ers_servo.setPositionMicroSeconds(540);
-			beeper.seriesBeep();
-		}
-	}
-	elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
-	ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
-	ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
-	rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
-	thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
+		//#define DEBUG
+		/*#if def DEBUG
+		ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidth());
+		ail_servo_2.setPositionMicroSeconds(ail_rc.getPusleWidthDif());
+		elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidth());
+		rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
+		ers_servo.setPositionMicroSeconds(switch_rc.getPulseWidth());
+		thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
 
-	while(ERSarming(&beeper))
-	{
-		elev_servo.setPositionMicroSeconds(elev_rc.getChannelMidWidth());
-		ail_servo_1.setPositionMicroSeconds(ail_rc.getChannelMidWidth());
-		ail_servo_2.setPositionMicroSeconds(ail_rc.getChannelMidWidth());
-		rud_servo.setPositionMicroSeconds(rud_rc.getChannelMidWidth());
-		ers_servo.setPositionMicroSeconds(ers_servo_set_up_position);
-		if(elev_rc.matchMaxValue())
-		{
-			ers_match_counter++;
-			switch (ers_match_counter)
-			{
-				case 1: ers_servo_set_up_position = 1000; break;
-				case 2: ers_servo_set_up_position = 1600; break;
-			}
-			HAL_Delay(500);
-		}
-		if(elev_rc.matchMinValue() && !rud_rc.matchMaxValue())
-		{
-			ers_servo_set_up_position = 540;
-			ers_match_counter = 0;
-			HAL_Delay(500);
-		}
-		//HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", ers_servo_set_up_position), 1000);
-	}
+		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", thr_rc.getPulseWidth()), 1000);
+		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", elev_rc.getPulseWidth()), 1000);
+		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", ail_rc.getPulseWidth()), 1000);
+		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", rud_rc.getPulseWidth()), 1000);
+		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d\n", switch_rc.getPulseWidth()), 1000);
+		#endif*/
+    /* USER CODE END WHILE */
 
-	//#define DEBUG
-	/*#if def DEBUG
-	ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidth());
-	ail_servo_2.setPositionMicroSeconds(ail_rc.getPusleWidthDif());
-	elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidth());
-	rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
-	ers_servo.setPositionMicroSeconds(switch_rc.getPulseWidth());
-	thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
-
-	HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", thr_rc.getPulseWidth()), 1000);
-	HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", elev_rc.getPulseWidth()), 1000);
-	HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", ail_rc.getPulseWidth()), 1000);
-	HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", rud_rc.getPulseWidth()), 1000);
-	HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d\n", switch_rc.getPulseWidth()), 1000);
-	#endif*/
-	/* USER CODE END WHILE */
-
-	/* USER CODE BEGIN 3 */
+    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
@@ -471,6 +451,10 @@ static void MX_TIM5_Init(void)
   sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
   sConfigIC.ICFilter = 0;
   if (HAL_TIM_IC_ConfigChannel(&htim5, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_IC_ConfigChannel(&htim5, &sConfigIC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
   }
