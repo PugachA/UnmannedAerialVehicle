@@ -175,14 +175,13 @@ int main(void)
 			ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
 			ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
 			rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
-
-			while(ERS(&beeper))
-			{
-				thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
-				HAL_Delay(1000);
-				ers_servo.setPositionMicroSeconds(540);//(540 - 1600 мкс диапазон дивжения планки САС)
-				beeper.seriesBeep();
-			}
+		}
+		while(ERS(&beeper))
+		{
+			thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
+			HAL_Delay(1000);
+			ers_servo.setPositionMicroSeconds(540);//(540 - 1600 мкс диапазон дивжения планки САС)
+			beeper.seriesBeep();
 		}
 		elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
 		ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
