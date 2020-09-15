@@ -20,6 +20,21 @@ RcChannel::RcChannel(TIM_HandleTypeDef *htim, uint8_t channel_num, uint16_t chan
 		case 4: tim_channel = TIM_CHANNEL_4; break;
 	}
 }
+RcChannel::RcChannel(TIM_HandleTypeDef *htim, uint8_t channel_num, uint16_t channel_min_value, uint16_t channel_mid_value, uint16_t channel_max_value)
+{
+	this->channel_min_value = channel_min_value;
+	this->channel_max_value = channel_max_value;
+	this->channel_mid_value = channel_mid_value;
+
+	this->htim = htim;
+	switch(channel_num)
+	{
+		case 1: tim_channel = TIM_CHANNEL_1; break;
+		case 2: tim_channel = TIM_CHANNEL_2; break;
+		case 3: tim_channel = TIM_CHANNEL_3; break;
+		case 4: tim_channel = TIM_CHANNEL_4; break;
+	}
+}
 RcChannel::~RcChannel()
 {
 
@@ -78,6 +93,16 @@ uint8_t RcChannel::matchMinValue()
 		return 0;
 	}
 }
+uint8_t RcChannel::matchMidValue()
+{
+	if( (this->Difference > (this->channel_mid_value - 4)) && (this->Difference < (this->channel_mid_value + 4)) )
+	{
+		return 1;
+	} else
+	{
+		return 0;
+	}
+}
 uint8_t RcChannel::matchMaxValue()
 {
 	if( (this->Difference > (this->channel_max_value - 4)) && (this->Difference < (this->channel_max_value + 4)) )
@@ -88,9 +113,9 @@ uint8_t RcChannel::matchMaxValue()
 		return 0;
 	}
 }
-RcChannel thr_rc(&htim2, 1, 885, 1850), elev_rc(&htim2, 2, 1080, 1863),
-		  ail_rc(&htim2, 3, 1083, 1863), rud_rc(&htim2, 4, 1080, 1863),
-		  switch_rc(&htim5, 1, 1080, 1863);
+RcChannel thr_rc(&htim2, 1, 1000, 1500, 1976), elev_rc(&htim2, 2, 1000, 1500, 1977),
+		  ail_rc(&htim2, 3, 995, 1500, 1975), rud_rc(&htim2, 4, 1000, 1977),
+		  switch_rc(&htim5, 1, 1000, 1500, 1976), slider_rc(&htim5, 2, 990, 1976);
 		  
 void IcHandlerTim2(TIM_HandleTypeDef *htim)
 {
@@ -125,7 +150,7 @@ void IcHandlerTim5(TIM_HandleTypeDef *htim)
 		} break;
 		case HAL_TIM_ACTIVE_CHANNEL_2:
 		{
-
+			slider_rc.pulseWidthCalc();
 		} break;
 		case HAL_TIM_ACTIVE_CHANNEL_3:
 		{

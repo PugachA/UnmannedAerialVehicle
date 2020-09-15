@@ -23,7 +23,6 @@
 #include "RcChannel/RcChannel.h"
 #include "Servo/Servo.h"
 #include "Beeper/Beeper.h"
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
@@ -51,7 +50,7 @@ TIM_HandleTypeDef htim5;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc;
+extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -62,337 +61,40 @@ static void MX_USART2_UART_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM5_Init(void);
 /* USER CODE BEGIN PFP */
-/*class RcChannel
-{
-	private:
-		uint16_t channel_max_value = 0;
-		uint16_t channel_mid_value = 0;
-		uint16_t channel_min_value = 0;
-		uint32_t IC_Val1 = 0;
-		uint32_t IC_Val2 = 0;
-		uint32_t Difference = 0;
-		uint8_t Is_First_Captured = 0;
-		uint32_t tim_channel = 0;
-		TIM_HandleTypeDef *htim;
-	public:
-		void pulseWidthCalc();
-		uint32_t getPulseWidthDif();
-		uint32_t getPulseWidth();
-		uint32_t getChannelMaxWidth();
-		uint32_t getChannelMinWidth();
-		uint32_t getChannelMidWidth();
-		RcChannel(TIM_HandleTypeDef *htim, uint8_t channel_num, uint16_t channel_min_value, uint16_t channel_max_value);
-		uint8_t matchMinValue();
-		uint8_t matchMaxValue();
-		~RcChannel();
-
-};
-RcChannel::RcChannel(TIM_HandleTypeDef *htim, uint8_t channel_num, uint16_t channel_min_value, uint16_t channel_max_value)
-{
-	this->channel_min_value = channel_min_value;
-	this->channel_max_value = channel_max_value;
-	this->channel_mid_value = channel_min_value + (channel_max_value - channel_min_value)/2;
-
-	this->htim = htim;
-	switch(channel_num)
-	{
-		case 1: tim_channel = TIM_CHANNEL_1; break;
-		case 2: tim_channel = TIM_CHANNEL_2; break;
-		case 3: tim_channel = TIM_CHANNEL_3; break;
-		case 4: tim_channel = TIM_CHANNEL_4; break;
-	}
-}
-RcChannel::~RcChannel()
-{
-
-}
-
-uint32_t RcChannel::getPulseWidth()
-{
-	return Difference;
-}
-uint32_t RcChannel::getChannelMaxWidth()
-{
-	return channel_max_value;
-}
-uint32_t RcChannel::getChannelMinWidth()
-{
-	return channel_min_value;
-}
-uint32_t RcChannel::getChannelMidWidth()
-{
-	return channel_mid_value;
-}
-void RcChannel::pulseWidthCalc()
-{
-	if (Is_First_Captured==0) // if the first value is not captured
-	{
-		IC_Val1 = HAL_TIM_ReadCapturedValue(this->htim, tim_channel); // read the first value
-		Is_First_Captured = 1;  // set the first captured as true
-		// Now change the polarity to falling edge
-		__HAL_TIM_SET_CAPTUREPOLARITY(this->htim, tim_channel, TIM_INPUTCHANNELPOLARITY_FALLING);
-	}
-	else
-		if (Is_First_Captured==1)   // if the first is already captured
-		{
-			IC_Val2 = HAL_TIM_ReadCapturedValue(this->htim, tim_channel);  // read second value
-			//__HAL_TIM_SET_COUNTER(htim, 0);  // reset the counter
-
-			if (IC_Val2 > IC_Val1)
-			{
-				Difference = IC_Val2-IC_Val1;
-			}
-			Is_First_Captured = 0; // set it back to false
-			// set polarity to rising edge
-			__HAL_TIM_SET_CAPTUREPOLARITY(this->htim, tim_channel, TIM_INPUTCHANNELPOLARITY_RISING);
-		}
-}
-uint32_t RcChannel::getPulseWidthDif()
-{
-	return  ((int16_t)(this->channel_mid_value) - ((int16_t)(this->Difference) - (int16_t)(this->channel_mid_value)));
-}
-uint8_t RcChannel::matchMinValue()
-{
-	if( (this->getPulseWidth() > (this->channel_min_value - 4)) && (this->getPulseWidth() < (this->channel_min_value + 4)) )
-	{
-		return 1;
-	} else
-	{
-		return 0;
-	}
-}
-uint8_t RcChannel::matchMaxValue()
-{
-	if( (this->getPulseWidth() > (this->channel_max_value - 4)) && (this->getPulseWidth() < (this->channel_max_value + 4)) )
-	{
-		return 1;
-	} else
-	{
-		return 0;
-	}
-}
-RcChannel thr_rc(&htim2, 1, 885, 1850), elev_rc(&htim2, 2, 1080, 1863),
-		  ail_rc(&htim2, 3, 1083, 1863), rud_rc(&htim2, 4, 1080, 1863),
-		  switch_rc(&htim5, 1, 1080, 1863);
-
-void IcHandlerTim2(TIM_HandleTypeDef *htim)
-{
-	switch ( (uint8_t) htim->Channel )
-	{
-		case HAL_TIM_ACTIVE_CHANNEL_1:
-		{
-			thr_rc.pulseWidthCalc();
-		} break;
-		case HAL_TIM_ACTIVE_CHANNEL_2:
-		{
-			elev_rc.pulseWidthCalc();
-		} break;
-		case HAL_TIM_ACTIVE_CHANNEL_3:
-		{
-			ail_rc.pulseWidthCalc();
-		} break;
-		case HAL_TIM_ACTIVE_CHANNEL_4:
-		{
-			rud_rc.pulseWidthCalc();
-		} break;
-	}
-}
-void IcHandlerTim5(TIM_HandleTypeDef *htim)
-{
-	switch ( (uint8_t) htim->Channel )
-	{
-		case HAL_TIM_ACTIVE_CHANNEL_1:
-		{
-			switch_rc.pulseWidthCalc();
-		} break;
-		case HAL_TIM_ACTIVE_CHANNEL_2:
-		{
-
-		} break;
-		case HAL_TIM_ACTIVE_CHANNEL_3:
-		{
-
-		} break;
-		case HAL_TIM_ACTIVE_CHANNEL_4:
-		{
-
-		} break;
-	}
-}*/
-
-/*class Servo
-{
-	private:
-		//значение скважности, при котором серво поворачивается на 180
-		uint16_t max_PWM_value;
-
-		//значение скважности, при котором серво поворачивается на 0
-		uint16_t min_PWM_value;
-
-		//таймер
-		TIM_TypeDef* TIM;
-
-		//канал таймера
-		uint8_t channel;
-
-		//максимальный угол поворота сервопривода
-		uint16_t max_Angle;
-
-	public:
-		Servo(TIM_TypeDef* TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t max_PWM_value, uint16_t max_Angle);
-		Servo(TIM_TypeDef* TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t max_PWM_value);
-		Servo(TIM_TypeDef* TIM, uint8_t channel);
-		//Поварачивает сервопривод на заданный угол
-		void Set_Position(uint8_t position);
-		void setPositionMicroSeconds(uint32_t position);
-};
-Servo::Servo(TIM_TypeDef* TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t max_PWM_value, uint16_t max_Angle)
-{
-	this->TIM = TIM;
-	this->channel = channel;
-	this->min_PWM_value = min_PWM_value;
-	this->max_PWM_value = max_PWM_value;
-	this->max_Angle = max_Angle;
-}
-
-Servo::Servo(TIM_TypeDef* TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t max_PWM_value)
-{
-	this->TIM = TIM;
-	this->channel = channel;
-	this->min_PWM_value = min_PWM_value;
-	this->max_PWM_value = max_PWM_value;
-	this->max_Angle = 180;
-}
-Servo::Servo(TIM_TypeDef* TIM, uint8_t channel)
-{
-	this->TIM = TIM;
-	this->channel = channel;
-	this->min_PWM_value = 0;
-	this->max_PWM_value = 0;
-	this->max_Angle = 0;
-}
-void Servo::setPositionMicroSeconds(uint32_t position)
-{
-	switch (this->channel)
-	{
-		case 1:
-			this->TIM->CCR1 = position;
-			break;
-		case 2:
-			this->TIM->CCR2 = position;
-			break;
-		case 3:
-			this->TIM->CCR3 = position;
-			break;
-		case 4:
-			this->TIM->CCR4 = position;
-			break;
-	}
-}
-void Servo::Set_Position(uint8_t position)
-{
-  double multiplier = (double)(this->max_PWM_value - this->min_PWM_value)/this->max_Angle;
-
-	if(position > this->max_Angle)
-		position = this->max_Angle;
-
-	uint16_t pwm = min_PWM_value + multiplier * position;
-
-	switch (this->channel)
-	{
-		case 1:
-			this->TIM->CCR1 = pwm;
-			break;
-		case 2:
-			this->TIM->CCR2 = pwm;
-			break;
-		case 3:
-			this->TIM->CCR3 = pwm;
-			break;
-		case 4:
-			this->TIM->CCR4 = pwm;
-			break;
-	}
-}*/
-
-/*class Beeper
-{
-	private:
-		GPIO_TypeDef * port = 0;
-		uint32_t pin = 0;
-		const uint16_t LONG_BEEP_TIME_MS = 1000;
-		const uint16_t SHORT_BEEP_TIME_MS = 100;
-
-	public:
-		Beeper(GPIO_TypeDef * port, uint32_t pin);
-		~Beeper();
-		void shortBeep();
-		void longBeep();
-		void seriesBeep();
-
-};
-Beeper::Beeper(GPIO_TypeDef * port, uint32_t pin)
-{
-	this->port = port;
-	this->pin = pin;
-}
-Beeper::~Beeper()
-{
-}
-void Beeper::shortBeep()
-{
-	HAL_GPIO_WritePin(port, pin, GPIO_PIN_SET);
-	HAL_Delay(SHORT_BEEP_TIME_MS);
-	HAL_GPIO_WritePin(port, pin, GPIO_PIN_RESET);
-}
-void Beeper::longBeep()
-{
-	HAL_GPIO_WritePin(port, pin, GPIO_PIN_SET);
-	HAL_Delay(LONG_BEEP_TIME_MS);
-	HAL_GPIO_WritePin(port, pin, GPIO_PIN_RESET);
-}
-void Beeper::seriesBeep()
-{
-	shortBeep();
-	HAL_Delay(SHORT_BEEP_TIME_MS);
-	shortBeep();
-	HAL_Delay(SHORT_BEEP_TIME_MS);
-	shortBeep();
-}*/
-
 uint8_t Armed(Beeper* beeper)
 {
-	static uint8_t flag = 0;
-	if(thr_rc.matchMinValue() && rud_rc.matchMinValue() && elev_rc.matchMinValue() && ail_rc.matchMaxValue())
+	static uint8_t arm_flag = 0;
+	static uint8_t enter_once = 0;
+	if(switch_rc.matchMidValue() && (enter_once == 0))
 	{
-		flag = 1;
+		arm_flag = 1;
 		beeper->longBeep();
-		//HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);
+		enter_once = 1;
 	}
-	if(thr_rc.matchMinValue() && rud_rc.matchMaxValue() && elev_rc.matchMinValue() && ail_rc.matchMinValue())
+	if(switch_rc.matchMinValue() && (enter_once == 1))
 	{
-		flag = 0;
+		arm_flag = 0;
 		beeper->longBeep();
-		//HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_RESET);
+		enter_once = 0;
 	}
-	return flag;
+	return arm_flag;
 }
-uint8_t ERSarming(Beeper* beeper)
+uint8_t ERS(Beeper* beeper)
 {
-	static uint8_t flag = 0;
-	if(thr_rc.matchMinValue() && rud_rc.matchMinValue() && elev_rc.matchMinValue() && ail_rc.matchMinValue())
+	static uint8_t ers_flag = 0;
+	static uint8_t enter_once = 0;
+	if(switch_rc.matchMaxValue() && (enter_once == 0))
 	{
-		flag = 1;
-		beeper->shortBeep();
-		//HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);
+		ers_flag = 1;
+		beeper->longBeep();
+		enter_once = 1;
 	}
-	if(thr_rc.matchMinValue() && rud_rc.matchMaxValue() && elev_rc.matchMinValue() && ail_rc.matchMaxValue())
+	if((switch_rc.matchMidValue() || switch_rc.matchMinValue()) && (enter_once == 1))
 	{
-		flag = 0;
-		beeper->shortBeep();
-		//HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_RESET);
+		ers_flag = 0;
+		enter_once = 0;
 	}
-	return flag;
+	return ers_flag;
 }
 /* USER CODE END PFP */
 
@@ -442,6 +144,7 @@ int main(void)
   HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_3);//PB10 ail input
   HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_4);//PB11 rud input
   HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_1);//PA0 switch input
+  HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_2);//PA1 slider input
 
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);//PA6 thr output
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);//PA7 elev servo output
@@ -456,7 +159,6 @@ int main(void)
 			rud_servo(htim5.Instance, 4), ers_servo(htim5.Instance, 3);
 
   uint32_t ers_servo_set_up_position = 1600;
-  uint8_t ers_match_counter = 0;
   ers_servo.setPositionMicroSeconds(ers_servo_set_up_position);
 
   Beeper beeper(GPIOD, GPIO_PIN_13);
@@ -466,75 +168,46 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	while(Armed(&beeper))
-	{
-		thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
+		while(Armed(&beeper))
+		{
+			thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
+			elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
+			ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
+			ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
+			rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
+		}
+		while(ERS(&beeper))
+		{
+			thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
+			HAL_Delay(1000);
+			ers_servo.setPositionMicroSeconds(540);//(540 - 1600 мкс диапазон дивжения планки САС)
+			beeper.seriesBeep();
+		}
 		elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
 		ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
 		ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
 		rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
+		thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
+		ers_servo.setPositionMicroSeconds(slider_rc.getPulseWidth() - 448);
 
-		if(switch_rc.getPulseWidth() > 1500)
-		{
-			thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
-			HAL_Delay(1000);
-			ers_servo.setPositionMicroSeconds(540);
-		}
-		while(switch_rc.getPulseWidth() > 1500)
-		{
-			beeper.seriesBeep();
-		}
-	}
-	elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
-	ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
-	ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
-	rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
-	thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
+		//#define DEBUG
+		/*#if def DEBUG
+		ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidth());
+		ail_servo_2.setPositionMicroSeconds(ail_rc.getPusleWidthDif());
+		elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidth());
+		rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
+		ers_servo.setPositionMicroSeconds(switch_rc.getPulseWidth());
+		thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
 
-	while(ERSarming(&beeper))
-	{
-		elev_servo.setPositionMicroSeconds(elev_rc.getChannelMidWidth());
-		ail_servo_1.setPositionMicroSeconds(ail_rc.getChannelMidWidth());
-		ail_servo_2.setPositionMicroSeconds(ail_rc.getChannelMidWidth());
-		rud_servo.setPositionMicroSeconds(rud_rc.getChannelMidWidth());
-		ers_servo.setPositionMicroSeconds(ers_servo_set_up_position);
-		if(elev_rc.matchMaxValue())
-		{
-			ers_match_counter++;
-			switch (ers_match_counter)
-			{
-				case 1: ers_servo_set_up_position = 1000; break;
-				case 2: ers_servo_set_up_position = 1600; break;
-			}
-			HAL_Delay(500);
-		}
-		if(elev_rc.matchMinValue() && !rud_rc.matchMaxValue())
-		{
-			ers_servo_set_up_position = 540;
-			ers_match_counter = 0;
-			HAL_Delay(500);
-		}
-		//HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", ers_servo_set_up_position), 1000);
-	}
+		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", thr_rc.getPulseWidth()), 1000);
+		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", elev_rc.getPulseWidth()), 1000);
+		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", ail_rc.getPulseWidth()), 1000);
+		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", rud_rc.getPulseWidth()), 1000);
+		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d\n", switch_rc.getPulseWidth()), 1000);
+		#endif*/
+    /* USER CODE END WHILE */
 
-	//#define DEBUG
-	/*#if def DEBUG
-	ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidth());
-	ail_servo_2.setPositionMicroSeconds(ail_rc.getPusleWidthDif());
-	elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidth());
-	rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
-	ers_servo.setPositionMicroSeconds(switch_rc.getPulseWidth());
-	thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
-
-	HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", thr_rc.getPulseWidth()), 1000);
-	HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", elev_rc.getPulseWidth()), 1000);
-	HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", ail_rc.getPulseWidth()), 1000);
-	HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", rud_rc.getPulseWidth()), 1000);
-	HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d\n", switch_rc.getPulseWidth()), 1000);
-	#endif*/
-	/* USER CODE END WHILE */
-
-	/* USER CODE BEGIN 3 */
+    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
@@ -777,6 +450,10 @@ static void MX_TIM5_Init(void)
   sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
   sConfigIC.ICFilter = 0;
   if (HAL_TIM_IC_ConfigChannel(&htim5, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_IC_ConfigChannel(&htim5, &sConfigIC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
   }

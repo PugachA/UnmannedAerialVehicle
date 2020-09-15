@@ -32,6 +32,7 @@
 *.app
 
 # Folders
+RemoteSystemsTempFiles/
 BUILDS/
 mbed-os/
 ESS/MDK-ARM/ESS/

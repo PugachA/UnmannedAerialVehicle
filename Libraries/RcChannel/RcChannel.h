@@ -23,9 +23,11 @@ class RcChannel
 		uint32_t getChannelMinWidth();
 		uint32_t getChannelMidWidth();
 		uint8_t matchMinValue();
+		uint8_t matchMidValue();
 		uint8_t matchMaxValue();
 		
 		RcChannel(TIM_HandleTypeDef *htim, uint8_t channel_num, uint16_t channel_min_value, uint16_t channel_max_value);
+		RcChannel(TIM_HandleTypeDef *htim, uint8_t channel_num, uint16_t channel_min_value, uint16_t channel_mid_value, uint16_t channel_max_value);
 		~RcChannel();
 
 };
