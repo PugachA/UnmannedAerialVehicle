@@ -31,15 +31,16 @@
 *.out
 *.app
 
-# Folders
-RemoteSystemsTempFiles/
+
+.metadata/
+
 BUILDS/
 mbed-os/
 ESS/MDK-ARM/ESS/
 Baro/MDK-ARM/Baro/
-.metadata/
 [Dd]ebug/ 
 [Rr]elease/ 
+AirSpeed/MDK-ARM/AirSpeed/
 
 # User settings
 *.uvguix.*

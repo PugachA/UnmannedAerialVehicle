@@ -146,13 +146,14 @@ int main(void)
  
 		if (tim6_counter > overflows_to_Vy_calc)
 		{
-			ms5611.verticalSpeedCalc();
+			//ms5611.verticalSpeedCalc();
 			HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_8); //green led blnking just to know everything is ok
 			tim6_counter = 0; 
 		}
 		
-		verticalSpeed = ms5611.getVerticalSpeed();
-		sprintf(str,"%lf\r\n",verticalSpeed);
+		altitude = ms5611.getAltitude();
+		//verticalSpeed = ms5611.getVerticalSpeed();
+		sprintf(str,"%lf\r\n",altitude);
     HAL_UART_Transmit(&huart2,(uint8_t*)str,16,0xFFFF);
     HAL_Delay(100);
 		
