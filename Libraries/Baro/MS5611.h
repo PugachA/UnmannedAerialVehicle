@@ -39,23 +39,28 @@ class MS5611
     long temperature;
     long pressure;
     double altitude;
+
+    double dt; //period between timer interrupts for integrals
 	
     short readProm(unsigned char); //read one of calibration coeffecients 
     unsigned long readBaro(void); //read raw pressure
     unsigned long readTemp(void); //read raw temperature
     void convertRaw(void); //convert pressure and temp from raw
-		void calcAltitude(void); //calculating altitude depending on pressure on ground
+	void calcAltitude(void); //calculating altitude depending on pressure on ground
+
+	void lpAltFilter(); //low pass filter for raw altitude
+	double lpFilterOutput;
+	double k_lp_alt; //coefficient for altitude low pass filter
 		
-		//Vy calc
-		double first_filter_output;
-		double second_filter_output;
-		double dt; //period between timer interrupts for integrals
-		double k1; //coefficient in the first filter
-		double k2; //coefficient in the second filter
-		double vertical_speed;
+	//Vy calc
+	double first_filter_output;
+	double second_filter_output;
+	double k1; //coefficient in the first filter for Vy calculation
+	double k2; //coefficient in the second filter for Vy calculation
+	double vertical_speed;
 		
-		void firstFilter();
-		void secondFilter();
+	void firstVsFilter();
+	void secondVsFilter();
 		
 		
 	
@@ -64,10 +69,11 @@ class MS5611
 	
     double getPressure(void); //return pressure
     double getTemperature(void); //return temperature
-    double getAltitude(void); //return altitude
+    double getRawAltitude(void); //return raw altitude
+    double getFiltAltitude(void); //return filtered altitude
     void updateQFE(void); //calculating and remembering QFE pressure, public in case of need to re-init QFE from main
     double getQFEpressure(void); //return rememberred QFE pressure
-    void verticalSpeedCalc(void); //calc Vy in timer interrupt
+    void calcVerticalSpeed(void); //calc Vy in timer interrupt
     double getVerticalSpeed(void); //return Vy
 		
 			
