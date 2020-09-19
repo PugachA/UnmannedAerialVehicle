@@ -20,7 +20,6 @@
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef STM32F4xx_HAL_TIM_H
 #define STM32F4xx_HAL_TIM_H
-
 #define USE_HAL_TIM_REGISTER_CALLBACKS 1
 
 #ifdef __cplusplus
