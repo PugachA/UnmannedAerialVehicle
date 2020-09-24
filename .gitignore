@@ -44,3 +44,4 @@ AirSpeed/MDK-ARM/AirSpeed/
 
 # User settings
 *.uvguix.*
+.settings/
