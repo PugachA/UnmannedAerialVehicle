@@ -36,7 +36,7 @@ class Logger
 
 	private:
 		const char* loggerName;
-		char* filePath;
+		char filePath[150];
 		SDFileManager fileManager;
 		GPIO_TypeDef* successGPIO;
 		uint16_t successPin;

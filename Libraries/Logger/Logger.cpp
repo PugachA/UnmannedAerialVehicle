@@ -19,12 +19,10 @@ Logger::Logger(const char* loggerName,
 	this->errorGPIO = errorGPIO;
 	this->errorPin = errorPin;
 
-	char* buf = new char[100*sizeof(char)];
+	char buf[100];
 	sprintf(buf, "log-file-%s.log", this->loggerName);
 
 	CreateLogFile(buf);
-
-	//delete[] buf;
 }
 
 Logger::Logger(const char* fileName,
@@ -44,19 +42,14 @@ Logger::Logger(const char* fileName,
 }
 
 Logger::~Logger()
-{
-	delete[] filePath;
-	// TODO Auto-generated destructor stub
-}
+{}
 
 void Logger::CreateLogFile(const char* fileName)
 {
 	if(!this->fileManager.IsPathExists("/logs"))
 		this->fileManager.CreateDirectory("logs");
 
-	this->filePath = new char[100*sizeof(char)];
-	strcpy(this->filePath, "logs/");
-	strcat(this->filePath, fileName);
+	sprintf(this->filePath, "logs/%s", fileName);
 
 	if(!this->fileManager.IsPathExists(this->filePath))
 	{
@@ -89,8 +82,8 @@ void Logger::SuccessMonitor()
 
 void Logger::Info(const char* message)
 {
-	uint32_t bufferSize = (200 + strlen(message)) * sizeof(char);
-	char *buffer = new char(bufferSize);
+	uint32_t bufferSize = 200 + strlen(message);
+	char buffer[bufferSize];
 	sprintf(buffer, "{ \"timestamp\": \"%lu\", \"logger\": \"%s\", \"level\": \"%s\", \"message\": \"%s\" }",
 			HAL_GetTick(),
 			this->loggerName,
@@ -103,8 +96,6 @@ void Logger::Info(const char* message)
 		this->SuccessMonitor();
 	else
 		this->ErrorMonitor();
-
-	delete[] buffer;
 }
 
 void Logger::Error(const char* message)
