@@ -18,13 +18,12 @@ Logger::Logger(const char* loggerName,
 	this->successPin = successPin;
 	this->errorGPIO = errorGPIO;
 	this->errorPin = errorPin;
+	this->errorCount = 0;
 
-	char* buf = new char[100*sizeof(char)];
+	char buf[100];
 	sprintf(buf, "log-file-%s.log", this->loggerName);
 
 	CreateLogFile(buf);
-
-	//delete[] buf;
 }
 
 Logger::Logger(const char* fileName,
@@ -39,24 +38,20 @@ Logger::Logger(const char* fileName,
 	this->successPin = successPin;
 	this->errorGPIO = errorGPIO;
 	this->errorPin = errorPin;
+	this->errorCount = 0;
 
 	CreateLogFile(fileName);
 }
 
 Logger::~Logger()
-{
-	delete[] filePath;
-	// TODO Auto-generated destructor stub
-}
+{}
 
 void Logger::CreateLogFile(const char* fileName)
 {
 	if(!this->fileManager.IsPathExists("/logs"))
 		this->fileManager.CreateDirectory("logs");
 
-	this->filePath = new char[100*sizeof(char)];
-	strcpy(this->filePath, "logs/");
-	strcat(this->filePath, fileName);
+	sprintf(this->filePath, "logs/%s", fileName);
 
 	if(!this->fileManager.IsPathExists(this->filePath))
 	{
@@ -65,12 +60,16 @@ void Logger::CreateLogFile(const char* fileName)
 		if(result == FR_OK)
 			this->SuccessMonitor();
 		else
-			this->ErrorMonitor();
+			this->ErrorMonitor("");
 	}
 }
 
-void Logger::ErrorMonitor()
+void Logger::ErrorMonitor(const char* message)
 {
+	strcat(this->errorQueue, message);
+	strcat(this->errorQueue, "\n");
+	this->errorCount++;
+
 	this->fileManager.UnMountSD();
 	FRESULT result = this->fileManager.MountSD();
 
@@ -87,42 +86,52 @@ void Logger::SuccessMonitor()
 	HAL_GPIO_WritePin(this->errorGPIO, this->errorPin, GPIO_PIN_RESET);
 }
 
-void Logger::Info(const char* message)
+void Logger::WriteToLog(const char* message, const char* messageType)
 {
-	uint32_t bufferSize = (200 + strlen(message)) * sizeof(char);
-	char *buffer = new char(bufferSize);
+	uint32_t bufferSize = 200 + strlen(message);
+	char buffer[bufferSize];
 	sprintf(buffer, "{ \"timestamp\": \"%lu\", \"logger\": \"%s\", \"level\": \"%s\", \"message\": \"%s\" }",
 			HAL_GetTick(),
 			this->loggerName,
-			"Info",
+			messageType,
 			message);
 
-	int bytesWritten = this->fileManager.AppendLineToFile(this->filePath, buffer, false);
+	int bytesWritten;
+	if(this->errorCount > 0)
+	{
+		bytesWritten = this->fileManager.AppendLineToFile(this->filePath, this->errorQueue, false);
+
+		if(bytesWritten != -1)
+		{
+			memset(this->errorQueue, 0, sizeof(this->errorQueue));
+			this->errorCount = 0;
+		}
+	}
+
+	bytesWritten = this->fileManager.AppendLineToFile(this->filePath, buffer, false);
 
 	if(bytesWritten != -1)
 		this->SuccessMonitor();
 	else
-		this->ErrorMonitor();
+		this->ErrorMonitor(buffer);
+}
 
-	delete[] buffer;
+void Logger::Info(const char* message)
+{
+	WriteToLog(message, "Info");
 }
 
 void Logger::Error(const char* message)
 {
-	uint32_t bufferSize = (200 + strlen(message)) * sizeof(char);
-	char *buffer = new char(bufferSize);
-	sprintf(buffer, "{ \"timestamp\": \"%lu\", \"logger\": \"%s\", \"level\": \"%s\", \"message\": \"%s\" }",
-			HAL_GetTick(),
-			this->loggerName,
-			"Error",
-			message);
+	WriteToLog(message, "Error");
+}
 
-	int bytesWritten = this->fileManager.AppendLineToFile(this->filePath, buffer, false);
+void Logger::Warn(const char* message)
+{
+	WriteToLog(message, "Warn");
+}
 
-	if(bytesWritten != -1)
-		this->SuccessMonitor();
-	else
-		this->ErrorMonitor();
-
-	delete[] buffer;
+void Logger::Debug(const char* message)
+{
+	WriteToLog(message, "Debug");
 }

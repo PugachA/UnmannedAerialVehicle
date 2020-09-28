@@ -36,15 +36,18 @@ class Logger
 
 	private:
 		const char* loggerName;
-		char* filePath;
+		char filePath[150];
+		char errorQueue[3000] = ""; //расчитываю на 10 записей по 300 символов
+		uint8_t errorCount;
 		SDFileManager fileManager;
 		GPIO_TypeDef* successGPIO;
 		uint16_t successPin;
 		GPIO_TypeDef* errorGPIO;
 		uint16_t errorPin;
 
+		void WriteToLog(const char* message, const char* messageType);
 		void CreateLogFile(const char* fileName);
-		void ErrorMonitor();
+		void ErrorMonitor(const char* message);
 		void SuccessMonitor();
 };
 
