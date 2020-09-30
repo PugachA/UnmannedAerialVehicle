@@ -38,7 +38,8 @@ class MS5611
 	
     long temperature;
     long pressure;
-    double altitude;
+    double rawAltitude;
+    double filterAltitude;
 
     double dt; //period between timer interrupts for integrals
 	
@@ -70,7 +71,7 @@ class MS5611
     double getPressure(void); //return pressure
     double getTemperature(void); //return temperature
     double getRawAltitude(void); //return raw altitude
-    double getFiltAltitude(void); //return filtered altitude
+    double getFilterAltitude(void); //return filtered altitude
     void updateQFE(void); //calculating and remembering QFE pressure, public in case of need to re-init QFE from main
     double getQFEpressure(void); //return rememberred QFE pressure
     void calcVerticalSpeed(void); //calc Vy in timer interrupt

@@ -144,13 +144,13 @@ double MS5611::getTemperature(void)
 void MS5611::calcAltitude(void)
 {
   convertRaw();
-  this->altitude = R*(T0+temperature/temp_decimation)*log((pressure/pres_decimation)/this->pressure_QFE)/(-M*g);
+  this->rawAltitude = R*(T0+temperature/temp_decimation)*log((pressure/pres_decimation)/this->pressure_QFE)/(-M*g);
 }
 
 double MS5611::getRawAltitude(void)
 {
   calcAltitude();
-  return this->altitude; 
+  return this->rawAltitude;
 }
 
 void MS5611::updateQFE(void)
@@ -174,9 +174,9 @@ double MS5611::getQFEpressure(void)
 void MS5611::firstVsFilter(void)
 {
 	double error = 0;
-	//calcAltitude();
+	//calcAltitude(); //uncomment this line and comment the next one if you want to use raw altitude
 	lpAltFilter();
-    error = k1*(this->altitude - this->first_filter_output);
+    error = k1*(this->filterAltitude - this->first_filter_output);
 	this->first_filter_output += error*dt;
 }
 
@@ -204,13 +204,13 @@ void MS5611::lpAltFilter(void)
 {
 	calcAltitude();
 	double error = 0;
-	error = k_lp_alt*(this->vertical_speed - this->lpFilterOutput);
+	error = k_lp_alt*(this->rawAltitude - this->lpFilterOutput);
 	this->lpFilterOutput += error*dt;
-	this->altitude = this->lpFilterOutput;
+	this->filterAltitude = this->lpFilterOutput;
 }
 
-double MS5611::getFiltAltitude(void)
+double MS5611::getFilterAltitude(void)
 {
 	//note that you need to call lpAltFilter with the period of dt before usage of this function
-    return this->altitude;
+    return this->filterAltitude;
 }
