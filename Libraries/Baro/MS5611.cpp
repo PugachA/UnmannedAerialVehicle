@@ -28,6 +28,8 @@ MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c, int number_of_points
   k1 = 13.0;
   k2 = 17.0;
   dt = 0.001*overflows_to_Vy_calc; //0.0001 is a timer period, idk how to put it universally
+
+  k_lp_alt = 20;// 1/k = T - time constant for lpFilter, cut-off frequency = 20 rad/s ~ 3 Hz
 	
   //------------------------MS5611 Initialising---------------------------
   // Reset
@@ -142,13 +144,13 @@ double MS5611::getTemperature(void)
 void MS5611::calcAltitude(void)
 {
   convertRaw();
-  this->altitude = R*(T0+temperature/temp_decimation)*log((pressure/pres_decimation)/this->pressure_QFE)/(-M*g);
+  this->rawAltitude = R*(T0+temperature/temp_decimation)*log((pressure/pres_decimation)/this->pressure_QFE)/(-M*g);
 }
 
-double MS5611::getAltitude(void)
+double MS5611::getRawAltitude(void)
 {
   calcAltitude();
-  return this->altitude; 
+  return this->rawAltitude;
 }
 
 void MS5611::updateQFE(void)
@@ -169,15 +171,16 @@ double MS5611::getQFEpressure(void)
   return this->pressure_QFE;
 }
 
-void MS5611::firstFilter(void)
+void MS5611::firstVsFilter(void)
 {
 	double error = 0;
-	calcAltitude();
-    error = k1*(this->altitude - this->first_filter_output);
+	//calcAltitude(); //uncomment this line and comment the next one if you want to use raw altitude
+	lpAltFilter();
+    error = k1*(this->filterAltitude - this->first_filter_output);
 	this->first_filter_output += error*dt;
 }
 
-void MS5611::secondFilter(void)
+void MS5611::secondVsFilter(void)
 {
 	double error = 0;
     error = k2*(this->first_filter_output - this->second_filter_output);
@@ -185,14 +188,29 @@ void MS5611::secondFilter(void)
 	this->second_filter_output += error*dt;
 }
 
-void MS5611::verticalSpeedCalc(void)
+void MS5611::calcVerticalSpeed(void)
 {
-	firstFilter();
-	secondFilter();
+	firstVsFilter();
+	secondVsFilter();
 }
 
 double MS5611::getVerticalSpeed(void)
 {
-  return this->vertical_speed;
+	//note that you need to call calcVerticalSpeed with the period of dt before usage of this function
+    return this->vertical_speed;
 }
 
+void MS5611::lpAltFilter(void)
+{
+	calcAltitude();
+	double error = 0;
+	error = k_lp_alt*(this->rawAltitude - this->lpFilterOutput);
+	this->lpFilterOutput += error*dt;
+	this->filterAltitude = this->lpFilterOutput;
+}
+
+double MS5611::getFilterAltitude(void)
+{
+	//note that you need to call lpAltFilter with the period of dt before usage of this function
+    return this->filterAltitude;
+}
