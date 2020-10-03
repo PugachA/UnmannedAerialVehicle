@@ -187,8 +187,8 @@ int main(void)
 		while(ERS())
 		{
 			thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
-			HAL_Delay(1000);
-			ers_servo.setPositionMicroSeconds(540);//(540 - 1600 мкс диапазон дивжения планки САС)
+			beeper.longBeep();													//уже дает 1000Мс чтобы винт остановился до выпуска парашюта
+			ers_servo.setPositionMicroSeconds(540);								//(540 - 1600 мкс диапазон дивжения планки САС)
 			beeper.seriesBeep();
 		}
 		elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
