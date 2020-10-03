@@ -78,7 +78,7 @@ uint8_t Armed(Beeper* beeper)
 		beeper->longBeep();
 		enter_once = 1;
 	}
-	if(switch_rc.matchMinValue() && (enter_once == 1))
+	if((switch_rc.matchMinValue() || switch_rc.matchMaxValue()) && (enter_once == 1))
 	{
 		arm_flag = 0;
 		beeper->longBeep();
