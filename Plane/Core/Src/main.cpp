@@ -199,20 +199,13 @@ int main(void)
 		thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
 		ers_servo.setPositionMicroSeconds(slider_rc.getPulseWidth() - 448);
 
-		//#define DEBUG
-		/*#if def DEBUG
-		ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidth());
-		ail_servo_2.setPositionMicroSeconds(ail_rc.getPusleWidthDif());
-		elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidth());
-		rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
-		ers_servo.setPositionMicroSeconds(switch_rc.getPulseWidth());
-		thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
-
-		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", thr_rc.getPulseWidth()), 1000);
-		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", elev_rc.getPulseWidth()), 1000);
-		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", ail_rc.getPulseWidth()), 1000);
-		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", rud_rc.getPulseWidth()), 1000);
-		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d\n", switch_rc.getPulseWidth()), 1000);
+		/*#ifdef UART_DEBUG
+			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", thr_rc.getPulseWidth()), 1000);
+			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", elev_rc.getPulseWidth()), 1000);
+			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", ail_rc.getPulseWidth()), 1000);
+			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", rud_rc.getPulseWidth()), 1000);
+			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d\n", switch_rc.getPulseWidth()), 1000);
+			HAL_Delay(500);
 		#endif*/
     /* USER CODE END WHILE */
 
