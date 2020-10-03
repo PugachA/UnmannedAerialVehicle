@@ -86,14 +86,13 @@ uint8_t Armed(Beeper* beeper)
 	}
 	return arm_flag;
 }
-uint8_t ERS(Beeper* beeper)
+uint8_t ERS()
 {
 	static uint8_t ers_flag = 0;
 	static uint8_t enter_once = 0;
 	if(switch_rc.matchMaxValue() && (enter_once == 0))
 	{
 		ers_flag = 1;
-		beeper->longBeep();
 		enter_once = 1;
 	}
 	if((switch_rc.matchMidValue() || switch_rc.matchMinValue()) && (enter_once == 1))
@@ -185,7 +184,7 @@ int main(void)
 			ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
 			rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
 		}
-		while(ERS(&beeper))
+		while(ERS())
 		{
 			thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
 			HAL_Delay(1000);
