@@ -78,22 +78,27 @@ uint8_t Armed(Beeper* beeper)
 		beeper->longBeep();
 		enter_once = 1;
 	}
-	if(switch_rc.matchMinValue() && (enter_once == 1))
+	if((switch_rc.matchMinValue() || switch_rc.matchMaxValue()) && (enter_once == 1))
 	{
+		if(switch_rc.matchMaxValue())
+		{
+			arm_flag = 0;
+			enter_once = 0;
+			return arm_flag;
+		}
 		arm_flag = 0;
 		beeper->longBeep();
 		enter_once = 0;
 	}
 	return arm_flag;
 }
-uint8_t ERS(Beeper* beeper)
+uint8_t ERS()
 {
 	static uint8_t ers_flag = 0;
 	static uint8_t enter_once = 0;
 	if(switch_rc.matchMaxValue() && (enter_once == 0))
 	{
 		ers_flag = 1;
-		beeper->longBeep();
 		enter_once = 1;
 	}
 	if((switch_rc.matchMidValue() || switch_rc.matchMinValue()) && (enter_once == 1))
@@ -171,6 +176,8 @@ int main(void)
   ers_servo.setPositionMicroSeconds(ers_servo_set_up_position);
 
   Beeper beeper(GPIOD, GPIO_PIN_13);
+
+	//#define DEBUG_UART
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -185,11 +192,11 @@ int main(void)
 			ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
 			rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
 		}
-		while(ERS(&beeper))
+		while(ERS())
 		{
 			thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
-			HAL_Delay(1000);
-			ers_servo.setPositionMicroSeconds(540);//(540 - 1600 мкс диапазон дивжения планки САС)
+			beeper.longBeep();													//уже дает 1000Мс чтобы винт остановился до выпуска парашюта
+			ers_servo.setPositionMicroSeconds(540);								//(540 - 1600 мкс диапазон дивжения планки САС)
 			beeper.seriesBeep();
 		}
 		elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
@@ -199,21 +206,14 @@ int main(void)
 		thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
 		ers_servo.setPositionMicroSeconds(slider_rc.getPulseWidth() - 448);
 
-		//#define DEBUG
-		/*#if def DEBUG
-		ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidth());
-		ail_servo_2.setPositionMicroSeconds(ail_rc.getPusleWidthDif());
-		elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidth());
-		rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
-		ers_servo.setPositionMicroSeconds(switch_rc.getPulseWidth());
-		thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
-
+		#ifdef DEBUG_UART
 		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", thr_rc.getPulseWidth()), 1000);
 		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", elev_rc.getPulseWidth()), 1000);
 		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", ail_rc.getPulseWidth()), 1000);
 		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", rud_rc.getPulseWidth()), 1000);
 		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d\n", switch_rc.getPulseWidth()), 1000);
-		#endif*/
+		HAL_Delay(500);
+		#endif
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -368,7 +368,7 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 48;
+  htim2.Init.Prescaler = 47;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 65536;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -438,7 +438,7 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 48;
+  htim3.Init.Prescaler = 47;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 22000;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -510,7 +510,7 @@ static void MX_TIM5_Init(void)
 
   /* USER CODE END TIM5_Init 1 */
   htim5.Instance = TIM5;
-  htim5.Init.Prescaler = 48;
+  htim5.Init.Prescaler = 47;
   htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim5.Init.Period = 22000;
   htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
