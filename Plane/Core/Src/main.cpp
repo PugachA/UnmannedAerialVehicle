@@ -17,7 +17,6 @@
   ******************************************************************************
   */
 /* USER CODE END Header */
-
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
@@ -45,12 +44,15 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+ADC_HandleTypeDef hadc2;
 
 I2C_HandleTypeDef hi2c1;
+I2C_HandleTypeDef hi2c3;
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim5;
+TIM_HandleTypeDef htim6;
 
 UART_HandleTypeDef huart2;
 
@@ -67,6 +69,9 @@ static void MX_TIM3_Init(void);
 static void MX_TIM5_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_I2C1_Init(void);
+static void MX_ADC2_Init(void);
+static void MX_I2C3_Init(void);
+static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
 uint8_t Armed(Beeper* beeper)
 {
@@ -149,71 +154,72 @@ int main(void)
   MX_TIM5_Init();
   MX_ADC1_Init();
   MX_I2C1_Init();
+  MX_ADC2_Init();
+  MX_I2C3_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_RegisterCallback(&htim2, HAL_TIM_IC_CAPTURE_CB_ID, IcHandlerTim2);
-  HAL_TIM_RegisterCallback(&htim5, HAL_TIM_IC_CAPTURE_CB_ID, IcHandlerTim5);
+	HAL_TIM_RegisterCallback(&htim5, HAL_TIM_IC_CAPTURE_CB_ID, IcHandlerTim5);
 
-  HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);//PA5 thr input
-  HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);//PB3 elev input
-  HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_3);//PB10 ail input
-  HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_4);//PB11 rud input
-  HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_1);//PA0 switch input
-  HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_2);//PA1 slider input
+	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);//PA5 thr input
+	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);//PB3 elev input
+	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_3);//PB10 ail input
+	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_4);//PB11 rud input
+	HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_1);//PA0 switch input
+	HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_2);//PA1 slider input
 
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);//PA6 thr output
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);//PA7 elev servo output
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);//PB0 ail servo 1 output
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);//PB1 ail servo 2 output
-  HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_4);//PA3 rud servo 2 output
-  HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_3);//PA2 ers servo 2 output
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);//PA6 thr output
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);//PA7 elev servo output
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);//PB0 ail servo 1 output
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);//PB1 ail servo 2 output
+	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_4);//PA3 rud servo 2 output
+	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_3);//PA2 ers servo 2 output
 
-  char str[32];
-  Servo 	thr_servo(htim3.Instance, 1), elev_servo(htim3.Instance, 2),
+	char str[32];
+	Servo 	thr_servo(htim3.Instance, 1), elev_servo(htim3.Instance, 2),
 			ail_servo_1(htim3.Instance, 3), ail_servo_2(htim3.Instance, 4),
 			rud_servo(htim5.Instance, 4), ers_servo(htim5.Instance, 3);
 
-  uint32_t ers_servo_set_up_position = 1600;
-  ers_servo.setPositionMicroSeconds(ers_servo_set_up_position);
+	uint32_t ers_servo_set_up_position = 1600;
+	ers_servo.setPositionMicroSeconds(ers_servo_set_up_position);
 
-  Beeper beeper(GPIOD, GPIO_PIN_13);
-
-	//#define DEBUG_UART
+	Beeper beeper(GPIOD, GPIO_PIN_13);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		while(Armed(&beeper))
-		{
-			thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
-			elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
-			ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
-			ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
-			rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
-		}
-		while(ERS())
-		{
-			thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
-			beeper.longBeep();													//уже дает 1000Мс чтобы винт остановился до выпуска парашюта
-			ers_servo.setPositionMicroSeconds(540);								//(540 - 1600 мкс диапазон дивжения планки САС)
-			beeper.seriesBeep();
-		}
+	while(Armed(&beeper))
+	{
+		thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
 		elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
 		ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
 		ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
 		rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
+	}
+	while(ERS())
+	{
 		thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
-		ers_servo.setPositionMicroSeconds(slider_rc.getPulseWidth() - 448);
+		beeper.longBeep();													//уже дает 1000Мс чтобы винт остановился до выпуска парашюта
+		ers_servo.setPositionMicroSeconds(540);								//(540 - 1600 мкс диапазон дивжения планки САС)
+		beeper.seriesBeep();
+	}
+	elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
+	ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
+	ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
+	rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
+	thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
+	ers_servo.setPositionMicroSeconds(slider_rc.getPulseWidth() - 448);
 
-		#ifdef DEBUG_UART
-		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", thr_rc.getPulseWidth()), 1000);
-		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", elev_rc.getPulseWidth()), 1000);
-		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", ail_rc.getPulseWidth()), 1000);
-		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", rud_rc.getPulseWidth()), 1000);
-		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d\n", switch_rc.getPulseWidth()), 1000);
-		HAL_Delay(500);
-		#endif
+	#ifdef DEBUG_UART
+	HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", thr_rc.getPulseWidth()), 1000);
+	HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", elev_rc.getPulseWidth()), 1000);
+	HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", ail_rc.getPulseWidth()), 1000);
+	HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", rud_rc.getPulseWidth()), 1000);
+	HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d\n", switch_rc.getPulseWidth()), 1000);
+	HAL_Delay(500);
+	#endif
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -234,7 +240,8 @@ void SystemClock_Config(void)
   */
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-  /** Initializes the CPU, AHB and APB busses clocks
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -249,7 +256,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  /** Initializes the CPU, AHB and APB busses clocks
+  /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -315,6 +322,56 @@ static void MX_ADC1_Init(void)
 }
 
 /**
+  * @brief ADC2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC2_Init(void)
+{
+
+  /* USER CODE BEGIN ADC2_Init 0 */
+
+  /* USER CODE END ADC2_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC2_Init 1 */
+
+  /* USER CODE END ADC2_Init 1 */
+  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
+  */
+  hadc2.Instance = ADC2;
+  hadc2.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
+  hadc2.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc2.Init.ScanConvMode = DISABLE;
+  hadc2.Init.ContinuousConvMode = DISABLE;
+  hadc2.Init.DiscontinuousConvMode = DISABLE;
+  hadc2.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc2.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc2.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc2.Init.NbrOfConversion = 1;
+  hadc2.Init.DMAContinuousRequests = DISABLE;
+  hadc2.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  if (HAL_ADC_Init(&hadc2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_15;
+  sConfig.Rank = 1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC2_Init 2 */
+
+  /* USER CODE END ADC2_Init 2 */
+
+}
+
+/**
   * @brief I2C1 Initialization Function
   * @param None
   * @retval None
@@ -345,6 +402,40 @@ static void MX_I2C1_Init(void)
   /* USER CODE BEGIN I2C1_Init 2 */
 
   /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
+  * @brief I2C3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C3_Init(void)
+{
+
+  /* USER CODE BEGIN I2C3_Init 0 */
+
+  /* USER CODE END I2C3_Init 0 */
+
+  /* USER CODE BEGIN I2C3_Init 1 */
+
+  /* USER CODE END I2C3_Init 1 */
+  hi2c3.Instance = I2C3;
+  hi2c3.Init.ClockSpeed = 100000;
+  hi2c3.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c3.Init.OwnAddress1 = 0;
+  hi2c3.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c3.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c3.Init.OwnAddress2 = 0;
+  hi2c3.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c3.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C3_Init 2 */
+
+  /* USER CODE END I2C3_Init 2 */
 
 }
 
@@ -570,6 +661,44 @@ static void MX_TIM5_Init(void)
 }
 
 /**
+  * @brief TIM6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM6_Init(void)
+{
+
+  /* USER CODE BEGIN TIM6_Init 0 */
+
+  /* USER CODE END TIM6_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM6_Init 1 */
+
+  /* USER CODE END TIM6_Init 1 */
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = 47;
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = 99;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM6_Init 2 */
+
+  /* USER CODE END TIM6_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -613,6 +742,7 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
