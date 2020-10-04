@@ -28,7 +28,6 @@
 #include "string.h"
 #include "Logger\Logger.h"
 #include "AirSpeed\MPXV7002.h"
-#include "Baro\MS5611.h"
 
 /* USER CODE END Includes */
 
@@ -50,8 +49,6 @@
 ADC_HandleTypeDef hadc1;
 ADC_HandleTypeDef hadc2;
 
-I2C_HandleTypeDef hi2c1;
-
 SD_HandleTypeDef hsd;
 
 UART_HandleTypeDef huart1;
@@ -68,13 +65,20 @@ static void MX_SDIO_SD_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_ADC2_Init(void);
 static void MX_USART1_UART_Init(void);
-static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+uint8_t uartBuffer[50] = {0,};
+bool isDataRecieved = false;
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if(huart == &huart1)
+		isDataRecieved = true;
+}
 
 /* USER CODE END 0 */
 
@@ -99,12 +103,6 @@ int main(void)
   uint32_t voltageAirSpeed = 0;
   uint32_t voltageBeta = 0;
   char str[80] = "test\n";
-  char str_baro[80] = "test\n";
-  int overflows_to_Vy_calc = 10;
-  double altitude = 0;
-  double verticalSpeed = 0;
-
-  extern int tim10_counter;
 
   /* USER CODE END Init */
 
@@ -122,7 +120,6 @@ int main(void)
   MX_ADC1_Init();
   MX_ADC2_Init();
   MX_USART1_UART_Init();
-  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
   SDFileManager fileManager = SDFileManager(SDPath);
   fileResult = fileManager.MountSD();
@@ -130,12 +127,14 @@ int main(void)
   if(fileResult != FR_OK)
 	  Error_Handler();
 
-  Logger airSpeedLogger = Logger("AirSpeed", fileManager, GPIOA, GPIO_PIN_1, GPIOE, GPIO_PIN_8);
-  Logger flugerLogger = Logger("Fluger", fileManager, GPIOA, GPIO_PIN_1, GPIOE, GPIO_PIN_8);
-  Logger baroLogger = Logger("Baro", fileManager, GPIOA, GPIO_PIN_1, GPIOE, GPIO_PIN_8);
+  Logger airSpeedLogger = Logger("AirSpeed", fileManager, GPIOE, GPIO_PIN_8);
+  Logger flugerLogger = Logger("Fluger", fileManager, GPIOE, GPIO_PIN_8);
+  Logger planeLogger = Logger("Plane", fileManager, GPIOE, GPIO_PIN_8);
 
   MPXV7002 mpxv7002(hadc1);
-  MS5611 ms5611(0x77,hi2c1,100,overflows_to_Vy_calc);
+
+  //Переключаем в режим приема
+  HAL_HalfDuplex_EnableReceiver(&huart1);
 
   /* USER CODE END 2 */
 
@@ -146,6 +145,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  //ПВД
 	  voltageAirSpeed = mpxv7002.getRawData();
 	  sprintf(str,"%lu",voltageAirSpeed);
 	  airSpeedLogger.Info(str);
@@ -159,14 +159,16 @@ int main(void)
 	  sprintf(str,"%lu",voltageBeta);
 	  flugerLogger.Info(str);
 
-	  //Baro
-	  altitude = ms5611.getAltitude();
+	  //Данные с основной платы
+	  HAL_UART_Receive_IT(&huart1, (uint8_t*)uartBuffer, sizeof(uartBuffer));
 
-	  sprintf(str_baro,"%d",(int)(altitude*1000));
-	  //HAL_UART_Transmit(&huart1,(uint8_t*)str_baro,16,0xFFFF);
-	  baroLogger.Info(str_baro);
-
-	  HAL_Delay(50);
+	  if(isDataRecieved)
+	  {
+	  	planeLogger.Info((char*)uartBuffer);
+	  	isDataRecieved = false;
+	  	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
+	  }
+	  HAL_Delay(30);
   }
   /* USER CODE END 3 */
 }
@@ -180,11 +182,11 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-  /** Configure the main internal regulator output voltage
+  /** Configure the main internal regulator output voltage 
   */
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-  /** Initializes the CPU, AHB and APB busses clocks
+  /** Initializes the CPU, AHB and APB busses clocks 
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
@@ -198,7 +200,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  /** Initializes the CPU, AHB and APB busses clocks
+  /** Initializes the CPU, AHB and APB busses clocks 
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -230,7 +232,7 @@ static void MX_ADC1_Init(void)
   /* USER CODE BEGIN ADC1_Init 1 */
 
   /* USER CODE END ADC1_Init 1 */
-  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
+  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
   */
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
@@ -248,7 +250,7 @@ static void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
-  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
   */
   sConfig.Channel = ADC_CHANNEL_6;
   sConfig.Rank = 1;
@@ -280,7 +282,7 @@ static void MX_ADC2_Init(void)
   /* USER CODE BEGIN ADC2_Init 1 */
 
   /* USER CODE END ADC2_Init 1 */
-  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
+  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
   */
   hadc2.Instance = ADC2;
   hadc2.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
@@ -298,7 +300,7 @@ static void MX_ADC2_Init(void)
   {
     Error_Handler();
   }
-  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
   */
   sConfig.Channel = ADC_CHANNEL_2;
   sConfig.Rank = 1;
@@ -310,40 +312,6 @@ static void MX_ADC2_Init(void)
   /* USER CODE BEGIN ADC2_Init 2 */
 
   /* USER CODE END ADC2_Init 2 */
-
-}
-
-/**
-  * @brief I2C1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_I2C1_Init(void)
-{
-
-  /* USER CODE BEGIN I2C1_Init 0 */
-
-  /* USER CODE END I2C1_Init 0 */
-
-  /* USER CODE BEGIN I2C1_Init 1 */
-
-  /* USER CODE END I2C1_Init 1 */
-  hi2c1.Instance = I2C1;
-  hi2c1.Init.ClockSpeed = 100000;
-  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
-  hi2c1.Init.OwnAddress1 = 0;
-  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c1.Init.OwnAddress2 = 0;
-  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN I2C1_Init 2 */
-
-  /* USER CODE END I2C1_Init 2 */
 
 }
 
@@ -423,7 +391,6 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
@@ -472,7 +439,7 @@ void Error_Handler(void)
   * @retval None
   */
 void assert_failed(uint8_t *file, uint32_t line)
-{
+{ 
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
