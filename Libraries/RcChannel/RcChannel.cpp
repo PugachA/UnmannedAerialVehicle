@@ -113,9 +113,9 @@ uint8_t RcChannel::matchMaxValue()
 		return 0;
 	}
 }
-RcChannel thr_rc(&htim2, 1, 1000, 1500, 1976), elev_rc(&htim2, 2, 1000, 1500, 1977),
-		  ail_rc(&htim2, 3, 995, 1500, 1975), rud_rc(&htim2, 4, 1000, 1977),
-		  switch_rc(&htim5, 1, 1000, 1500, 1976), slider_rc(&htim5, 2, 990, 1976);
+RcChannel thr_rc(&htim2, 1, 989, 1500, 2013), elev_rc(&htim2, 2, 989, 1500, 2013),
+		  ail_rc(&htim2, 3, 989, 1500, 2013), rud_rc(&htim2, 4, 989, 1500, 2015),
+		  switch_rc(&htim5, 1, 989, 1500, 2013), slider_rc(&htim5, 2, 989, 2013);
 		  
 void IcHandlerTim2(TIM_HandleTypeDef *htim)
 {
