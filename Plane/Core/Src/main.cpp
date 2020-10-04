@@ -176,6 +176,8 @@ int main(void)
   ers_servo.setPositionMicroSeconds(ers_servo_set_up_position);
 
   Beeper beeper(GPIOD, GPIO_PIN_13);
+
+	//#define DEBUG_UART
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -204,7 +206,7 @@ int main(void)
 		thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
 		ers_servo.setPositionMicroSeconds(slider_rc.getPulseWidth() - 448);
 
-		#ifdef UART_DEBUG
+		#ifdef DEBUG_UART
 		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", thr_rc.getPulseWidth()), 1000);
 		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", elev_rc.getPulseWidth()), 1000);
 		HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", ail_rc.getPulseWidth()), 1000);
