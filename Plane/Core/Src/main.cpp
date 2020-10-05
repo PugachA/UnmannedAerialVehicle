@@ -68,6 +68,8 @@ UART_HandleTypeDef huart2;
 extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
 
 uint32_t manage_UART_counter = 0;
+uint32_t manage_vertical_speed_counter = 0;
+
 const uint32_t every_second = 10000;
 const uint32_t every_millisecond = 1000;
 
@@ -95,6 +97,7 @@ static void MX_TIM6_Init(void);
 void time_manager(TIM_HandleTypeDef *htim)
 {
 	manage_UART_counter++;
+	manage_vertical_speed_counter++;
 }
 uint8_t Armed(Beeper* beeper)
 {
@@ -260,6 +263,10 @@ int main(void)
 		{
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "alt=%d air_speed=%d\n", (int) (altitude * 100), (int) (voltageAirSpeed)), 1000);
 			manage_UART_counter = 0;
+		}
+		if(manage_vertical_speed_counter >= (10*every_millisecond))
+		{
+			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "Hello\n"), 1000);
 		}
 
 		#ifdef SERVO_DEBUG_UART
