@@ -71,7 +71,7 @@ uint32_t manage_UART_counter = 0;
 uint32_t manage_vertical_speed_counter = 0;
 
 const uint32_t every_second = 10000;
-const uint32_t every_millisecond = 1000;
+const uint32_t every_millisecond = 10;
 
 //-----------------------------------------------------------
 /* USER CODE END PV */
@@ -267,6 +267,7 @@ int main(void)
 		if(manage_vertical_speed_counter >= (10*every_millisecond))
 		{
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "Hello\n"), 1000);
+			manage_vertical_speed_counter = 0;
 		}
 
 		#ifdef SERVO_DEBUG_UART
