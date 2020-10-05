@@ -59,7 +59,19 @@ TIM_HandleTypeDef htim6;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+//--------------------DEBUG DEFINES-----------------------
+
+//#define SERVO_DEBUG_UART
+//#define SENSOR_DEBUG_UART
+
+//-------------------My Global VARs--------------------------
 extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
+
+uint32_t manage_UART_counter = 0;
+const uint32_t every_second = 10000;
+const uint32_t every_millisecond = 1000;
+
+//-----------------------------------------------------------
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -76,6 +88,14 @@ static void MX_I2C3_Init(void);
 static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
 
+//про time_manager: сейчас выполняет функцию простого диспетчера
+//в ней инкрементируются флаги по переполнению таймер (колбек см ниже)
+//события наступает после определенного числа переполнений в основном
+//супер цикле
+void time_manager(TIM_HandleTypeDef *htim)
+{
+	call_UART_after_ovf++;
+}
 uint8_t Armed(Beeper* beeper)
 {
 	static uint8_t arm_flag = 0;
@@ -121,10 +141,6 @@ uint8_t ERS()
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-//--------------------DEBUG DEFINES-----------------------
-
-//#define SERVO_DEBUG_UART
-#define SENSOR_DEBUG_UART
 
 /* USER CODE END 0 */
 
@@ -150,7 +166,6 @@ int main(void)
 	double altitude = 0;
 	double verticalSpeed = 0;
 	uint32_t voltageAirSpeed = 0;
-	uint32_t ers_servo_set_up_position = 1600;
 
 	/* USER CODE END Init */
 
@@ -173,6 +188,9 @@ int main(void)
 	MX_I2C3_Init();
 	MX_TIM6_Init();
 	/* USER CODE BEGIN 2 */
+	HAL_TIM_Base_Start_IT(&htim6);//пока используем для диспетчеризации событий по переполнению
+
+	HAL_TIM_RegisterCallback(&htim6, HAL_TIM_PERIOD_ELAPSED_CB_ID, time_manager);//1 тик = 1 мкС, переполнение 100 тиков = 100 мкС = 0.1 мС
 	HAL_TIM_RegisterCallback(&htim2, HAL_TIM_IC_CAPTURE_CB_ID, IcHandlerTim2);
 	HAL_TIM_RegisterCallback(&htim5, HAL_TIM_IC_CAPTURE_CB_ID, IcHandlerTim5);
 
@@ -197,8 +215,6 @@ int main(void)
 			ail_servo_2(htim3.Instance, 4),
 			rud_servo(htim5.Instance, 4),
 			ers_servo(htim5.Instance, 3);
-
-	ers_servo.setPositionMicroSeconds(ers_servo_set_up_position);
 	//---------------------------------------------------------
 
 	Beeper beeper(GPIOD, GPIO_PIN_13);
@@ -239,6 +255,13 @@ int main(void)
 		//чтение данных:
 		altitude = ms5611.getRawAltitude();
 		voltageAirSpeed = mpxv7002.getRawData();
+
+		//отправка данных:
+		if(manage_UART_counter >= every_second)
+		{
+			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "alt=%d air_speed=%d\n", (int) (altitude * 100), (int) (voltageAirSpeed)), 1000);
+			call_UART_after_ovf = 0;
+		}
 
 		#ifdef SERVO_DEBUG_UART
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", thr_rc.getPulseWidth()), 1000);
