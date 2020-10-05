@@ -259,7 +259,7 @@ int main(void)
 		voltageAirSpeed = mpxv7002.getRawData();
 
 		//отправка данных:
-		if(manage_UART_counter >= every_second)
+		if(manage_UART_counter >= (50*every_millisecond))
 		{
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "alt=%d air_speed=%d\n", (int) (altitude * 100), (int) (voltageAirSpeed)), 1000);
 			manage_UART_counter = 0;
