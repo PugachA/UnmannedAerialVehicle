@@ -27,8 +27,6 @@
 #include "stdio.h"
 #include "string.h"
 #include "Logger\Logger.h"
-#include "AirSpeed\MPXV7002.h"
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,9 +44,6 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-ADC_HandleTypeDef hadc1;
-ADC_HandleTypeDef hadc2;
-
 SD_HandleTypeDef hsd;
 
 UART_HandleTypeDef huart1;
@@ -62,8 +57,6 @@ UART_HandleTypeDef huart1;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SDIO_SD_Init(void);
-static void MX_ADC1_Init(void);
-static void MX_ADC2_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -72,7 +65,7 @@ static void MX_USART1_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-uint8_t uartBuffer[50] = {0,};
+uint8_t uartBuffer[100] = {0,};
 bool isDataRecieved = false;
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
@@ -100,10 +93,6 @@ int main(void)
   /* USER CODE BEGIN Init */
   FRESULT fileResult;
 
-  uint32_t voltageAirSpeed = 0;
-  uint32_t voltageBeta = 0;
-  char str[80] = "test\n";
-
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -117,8 +106,6 @@ int main(void)
   MX_GPIO_Init();
   MX_SDIO_SD_Init();
   MX_FATFS_Init();
-  MX_ADC1_Init();
-  MX_ADC2_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   SDFileManager fileManager = SDFileManager(SDPath);
@@ -127,11 +114,7 @@ int main(void)
   if(fileResult != FR_OK)
 	  Error_Handler();
 
-  Logger airSpeedLogger = Logger("AirSpeed", fileManager, GPIOE, GPIO_PIN_8);
-  Logger flugerLogger = Logger("Fluger", fileManager, GPIOE, GPIO_PIN_8);
   Logger planeLogger = Logger("Plane", fileManager, GPIOE, GPIO_PIN_8);
-
-  MPXV7002 mpxv7002(hadc1);
 
   //Переключаем в режим приема
   HAL_HalfDuplex_EnableReceiver(&huart1);
@@ -145,20 +128,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  //ПВД
-	  voltageAirSpeed = mpxv7002.getRawData();
-	  sprintf(str,"%lu",voltageAirSpeed);
-	  airSpeedLogger.Info(str);
-
-	  //Флюгарка
-	  HAL_ADC_Start(&hadc2);
-	  HAL_ADC_PollForConversion(&hadc2, 100);
-	  voltageBeta = HAL_ADC_GetValue(&hadc2);
-	  HAL_ADC_Stop(&hadc2);
-
-	  sprintf(str,"%lu",voltageBeta);
-	  flugerLogger.Info(str);
-
 	  //Данные с основной платы
 	  HAL_UART_Receive_IT(&huart1, (uint8_t*)uartBuffer, sizeof(uartBuffer));
 
@@ -168,7 +137,8 @@ int main(void)
 	  	isDataRecieved = false;
 	  	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
 	  }
-	  HAL_Delay(30);
+
+	  HAL_Delay(10);
   }
   /* USER CODE END 3 */
 }
@@ -213,106 +183,6 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-}
-
-/**
-  * @brief ADC1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_ADC1_Init(void)
-{
-
-  /* USER CODE BEGIN ADC1_Init 0 */
-
-  /* USER CODE END ADC1_Init 0 */
-
-  ADC_ChannelConfTypeDef sConfig = {0};
-
-  /* USER CODE BEGIN ADC1_Init 1 */
-
-  /* USER CODE END ADC1_Init 1 */
-  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
-  */
-  hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
-  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc1.Init.ScanConvMode = DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
-  hadc1.Init.DiscontinuousConvMode = DISABLE;
-  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 1;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
-  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-  if (HAL_ADC_Init(&hadc1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
-  */
-  sConfig.Channel = ADC_CHANNEL_6;
-  sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN ADC1_Init 2 */
-
-  /* USER CODE END ADC1_Init 2 */
-
-}
-
-/**
-  * @brief ADC2 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_ADC2_Init(void)
-{
-
-  /* USER CODE BEGIN ADC2_Init 0 */
-
-  /* USER CODE END ADC2_Init 0 */
-
-  ADC_ChannelConfTypeDef sConfig = {0};
-
-  /* USER CODE BEGIN ADC2_Init 1 */
-
-  /* USER CODE END ADC2_Init 1 */
-  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
-  */
-  hadc2.Instance = ADC2;
-  hadc2.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
-  hadc2.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc2.Init.ScanConvMode = DISABLE;
-  hadc2.Init.ContinuousConvMode = DISABLE;
-  hadc2.Init.DiscontinuousConvMode = DISABLE;
-  hadc2.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc2.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc2.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc2.Init.NbrOfConversion = 1;
-  hadc2.Init.DMAContinuousRequests = DISABLE;
-  hadc2.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-  if (HAL_ADC_Init(&hadc2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
-  */
-  sConfig.Channel = ADC_CHANNEL_2;
-  sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
-  if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN ADC2_Init 2 */
-
-  /* USER CODE END ADC2_Init 2 */
-
 }
 
 /**
@@ -397,6 +267,12 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7|GPIO_PIN_8, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PA0 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PA1 */
   GPIO_InitStruct.Pin = GPIO_PIN_1;

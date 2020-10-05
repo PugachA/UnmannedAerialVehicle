@@ -108,7 +108,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="RcChannel/|Baro/" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="Libraries"/>
+						<entry excluding="RcChannel/|Baro/|AirSpeed/" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="Libraries"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Core"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="FATFS"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Middlewares"/>
