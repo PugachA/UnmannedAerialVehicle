@@ -27,6 +27,7 @@
 #include "Servo/Servo.h"
 #include "Beeper/Beeper.h"
 #include "Baro/MS5611.h"
+#include "AirSpeed/MPXV7002.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -148,6 +149,7 @@ int main(void)
 	int overflows_to_Vy_calc = 10;
 	double altitude = 0;
 	double verticalSpeed = 0;
+	uint32_t voltageAirSpeed = 0;
 	uint32_t ers_servo_set_up_position = 1600;
 
 	/* USER CODE END Init */
@@ -181,13 +183,14 @@ int main(void)
 	HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_1);//PA0 switch input
 	HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_2);//PA1 slider input
 
+	//-------------------Servo INIT--------------------------
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);//PA6 thr output
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);//PA7 elev servo output
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);//PB0 ail servo 1 output
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);//PB1 ail servo 2 output
 	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_4);//PA3 rud servo 2 output
 	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_3);//PA2 ers servo 2 output
-	
+
 	Servo 	thr_servo(htim3.Instance, 1),
 			elev_servo(htim3.Instance, 2),
 			ail_servo_1(htim3.Instance, 3),
@@ -196,9 +199,15 @@ int main(void)
 			ers_servo(htim5.Instance, 3);
 
 	ers_servo.setPositionMicroSeconds(ers_servo_set_up_position);
+	//---------------------------------------------------------
 
 	Beeper beeper(GPIOD, GPIO_PIN_13);
+
+	//-------------------Sensors INIT--------------------------
 	MS5611 ms5611(0x77, hi2c1, 100, overflows_to_Vy_calc);//нельзя инитить до инита i2c
+	MPXV7002 mpxv7002(hadc1);
+	//---------------------------------------------------------
+
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
@@ -229,6 +238,7 @@ int main(void)
 
 		//чтение данных:
 		altitude = ms5611.getRawAltitude();
+		voltageAirSpeed = mpxv7002.getRawData();
 
 		#ifdef SERVO_DEBUG_UART
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", thr_rc.getPulseWidth()), 1000);
@@ -240,7 +250,7 @@ int main(void)
 			HAL_Delay(500);
 		#endif
 		#ifdef SENSOR_DEBUG_UART
-			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d\n", (int) (altitude * 100)), 1000);
+			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "alt=%d air_speed=%d\n", (int) (altitude * 100), (int) (voltageAirSpeed)), 1000);
 			HAL_Delay(500);
 		#endif
 		/* USER CODE END WHILE */
