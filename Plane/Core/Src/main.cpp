@@ -162,7 +162,7 @@ int main(void)
 	/* USER CODE BEGIN Init */
 	char str[80] = "test\n";
 	char str_baro[80] = "test\n";
-	int overflows_to_Vy_calc = 10;
+	int overflows_to_Vy_calc = 10000;
 	double altitude = 0;
 	double verticalSpeed = 0;
 	uint32_t voltageAirSpeed = 0;
