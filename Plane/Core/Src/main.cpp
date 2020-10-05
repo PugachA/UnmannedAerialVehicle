@@ -94,7 +94,7 @@ static void MX_TIM6_Init(void);
 //супер цикле
 void time_manager(TIM_HandleTypeDef *htim)
 {
-	call_UART_after_ovf++;
+	manage_UART_counter++;
 }
 uint8_t Armed(Beeper* beeper)
 {
@@ -237,16 +237,6 @@ int main(void)
 			ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
 			ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
 			rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
-
-			altitude = ms5611.getRawAltitude();
-			voltageAirSpeed = mpxv7002.getRawData();
-
-			//отправка данных:
-			if(manage_UART_counter >= every_second)
-			{
-				HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "alt=%d air_speed=%d\n", (int) (altitude * 100), (int) (voltageAirSpeed)), 1000);
-				call_UART_after_ovf = 0;
-			}
 		}
 		while(ERS())
 		{
@@ -261,6 +251,16 @@ int main(void)
 		rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
 		thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
 		ers_servo.setPositionMicroSeconds(slider_rc.getPulseWidth() - 448);
+
+		altitude = ms5611.getRawAltitude();
+		voltageAirSpeed = mpxv7002.getRawData();
+
+		//отправка данных:
+		if(manage_UART_counter >= every_second)
+		{
+			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "alt=%d air_speed=%d\n", (int) (altitude * 100), (int) (voltageAirSpeed)), 1000);
+			manage_UART_counter = 0;
+		}
 
 		#ifdef SERVO_DEBUG_UART
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", thr_rc.getPulseWidth()), 1000);
