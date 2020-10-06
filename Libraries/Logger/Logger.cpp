@@ -9,15 +9,11 @@
 
 Logger::Logger(const char* loggerName,
 		SDFileManager& fileManager,
-		GPIO_TypeDef* successGPIO,
-		uint16_t successPin,
-		GPIO_TypeDef* errorGPIO,
-		uint16_t errorPin) : loggerName(loggerName), fileManager(fileManager)
+		GPIO_TypeDef* monitorGPIO,
+		uint16_t monitorPin) : loggerName(loggerName), fileManager(fileManager)
 {
-	this->successGPIO = successGPIO;
-	this->successPin = successPin;
-	this->errorGPIO = errorGPIO;
-	this->errorPin = errorPin;
+	this->monitorGPIO = monitorGPIO;
+	this->monitorPin = monitorPin;
 	this->errorCount = 0;
 
 	char buf[100];
@@ -29,15 +25,11 @@ Logger::Logger(const char* loggerName,
 Logger::Logger(const char* fileName,
 		const char* loggerName,
 		SDFileManager& fileManager,
-		GPIO_TypeDef* successGPIO,
-		uint16_t successPin,
-		GPIO_TypeDef* errorGPIO,
-		uint16_t errorPin) : loggerName(loggerName), fileManager(fileManager)
+		GPIO_TypeDef* monitorGPIO,
+		uint16_t monitorPin) : loggerName(loggerName), fileManager(fileManager)
 {
-	this->successGPIO = successGPIO;
-	this->successPin = successPin;
-	this->errorGPIO = errorGPIO;
-	this->errorPin = errorPin;
+	this->monitorGPIO = monitorGPIO;
+	this->monitorPin = monitorPin;
 	this->errorCount = 0;
 
 	CreateLogFile(fileName);
@@ -74,16 +66,12 @@ void Logger::ErrorMonitor(const char* message)
 	FRESULT result = this->fileManager.MountSD();
 
 	if(result != FR_OK)
-	{
-	  HAL_GPIO_WritePin(this->errorGPIO, this->errorPin, GPIO_PIN_SET);
-	  HAL_GPIO_WritePin(this->successGPIO, this->successPin, GPIO_PIN_RESET);
-	}
+	  HAL_GPIO_WritePin(this->monitorGPIO, this->monitorPin, GPIO_PIN_SET);
 }
 
 void Logger::SuccessMonitor()
 {
-	HAL_GPIO_WritePin(this->successGPIO, this->successPin, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(this->errorGPIO, this->errorPin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(this->monitorGPIO, this->monitorPin, GPIO_PIN_RESET);
 }
 
 void Logger::WriteToLog(const char* message, const char* messageType)

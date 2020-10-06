@@ -17,17 +17,13 @@ class Logger
 	public:
 		Logger(const char* loggerName,
 				SDFileManager& fileManager,
-				GPIO_TypeDef* successGPIO,
-				uint16_t successPin,
-				GPIO_TypeDef* errorGPIO,
-				uint16_t errorPin);
+				GPIO_TypeDef* monitorGPIO,
+				uint16_t monitorPin);
 		Logger(const char* fileName,
 				const char* loggerName,
 				SDFileManager& fileManager,
-				GPIO_TypeDef* successGPIO,
-				uint16_t successPin,
-				GPIO_TypeDef* errorGPIO,
-				uint16_t errorPin);
+				GPIO_TypeDef* monitorGPIO,
+				uint16_t monitorPin);
 		virtual ~Logger();
 		void Info(const char* message);
 		void Error(const char* message);
@@ -40,10 +36,8 @@ class Logger
 		char errorQueue[3000] = ""; //расчитываю на 10 записей по 300 символов
 		uint8_t errorCount;
 		SDFileManager fileManager;
-		GPIO_TypeDef* successGPIO;
-		uint16_t successPin;
-		GPIO_TypeDef* errorGPIO;
-		uint16_t errorPin;
+		GPIO_TypeDef* monitorGPIO;
+		uint16_t monitorPin;
 
 		void WriteToLog(const char* message, const char* messageType);
 		void CreateLogFile(const char* fileName);
