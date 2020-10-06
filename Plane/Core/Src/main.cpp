@@ -221,6 +221,7 @@ int main(void)
 	//---------------------------------------------------------
 
 	Beeper beeper(GPIOD, GPIO_PIN_13);
+	HAL_HalfDuplex_EnableTransmitter(&huart2);
 
 	//-------------------Sensors INIT--------------------------
 	MS5611 ms5611(0x77, hi2c1, 100, overflows_to_Vy_calc);//нельзя инитить до инита i2c
