@@ -1,6 +1,6 @@
 #include "Servo.h"
 
-Servo::Servo(TIM_TypeDef* TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t max_PWM_value, uint16_t max_Angle)
+Servo::Servo(TIM_TypeDef *TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t max_PWM_value, uint16_t max_Angle)
 {
 	this->TIM = TIM;
 	this->channel = channel;
@@ -9,22 +9,14 @@ Servo::Servo(TIM_TypeDef* TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t
 	this->max_Angle = max_Angle;
 }
 
-Servo::Servo(TIM_TypeDef* TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t max_PWM_value)
-{
-	this->TIM = TIM;
-	this->channel = channel;
-	this->min_PWM_value = min_PWM_value;
-	this->max_PWM_value = max_PWM_value;
-	this->max_Angle = 180;
-}
-Servo::Servo(TIM_TypeDef* TIM, uint8_t channel)
-{
-	this->TIM = TIM;
-	this->channel = channel;
-	this->min_PWM_value = 0;
-	this->max_PWM_value = 0;
-	this->max_Angle = 0;
-}
+Servo::Servo(TIM_TypeDef *TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t max_PWM_value)
+	: Servo(TIM, channel, min_PWM_value, max_PWM_value, 180)
+{}
+
+Servo::Servo(TIM_TypeDef *TIM, uint8_t channel)
+	: Servo(TIM, channel, 0, 0, 0)
+{}
+
 void Servo::setPositionMicroSeconds(uint32_t position)
 {
 	switch (this->channel)
@@ -43,9 +35,10 @@ void Servo::setPositionMicroSeconds(uint32_t position)
 			break;
 	}
 }
+
 void Servo::Set_Position(uint8_t position)
 {
-  double multiplier = (double)(this->max_PWM_value - this->min_PWM_value)/this->max_Angle;
+	double multiplier = (double)(this->max_PWM_value - this->min_PWM_value)/this->max_Angle;
 
 	if(position > this->max_Angle)
 		position = this->max_Angle;

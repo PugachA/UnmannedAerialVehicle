@@ -22,9 +22,9 @@ class Servo
 		uint16_t max_Angle;
 
 	public:
-		Servo(TIM_TypeDef* TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t max_PWM_value, uint16_t max_Angle);
-		Servo(TIM_TypeDef* TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t max_PWM_value);
-		Servo(TIM_TypeDef* TIM, uint8_t channel);
+		Servo(TIM_TypeDef *TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t max_PWM_value, uint16_t max_Angle);
+		Servo(TIM_TypeDef *TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t max_PWM_value);
+		Servo(TIM_TypeDef *TIM, uint8_t channel);
 		//Поварачивает сервопривод на заданный угол
 		void Set_Position(uint8_t position);
 		void setPositionMicroSeconds(uint32_t position);
