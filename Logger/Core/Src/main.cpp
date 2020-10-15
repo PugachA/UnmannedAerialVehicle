@@ -20,13 +20,11 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "fatfs.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
 #include "string.h"
-#include "Logger\Logger.h"
 #include "Servo\Servo.h"
 #include "PWMCapturer\PWMCapturer.h"
 
@@ -47,8 +45,6 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-SD_HandleTypeDef hsd;
-
 TIM_HandleTypeDef htim2;
 
 UART_HandleTypeDef huart1;
@@ -61,9 +57,8 @@ UART_HandleTypeDef huart1;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_SDIO_SD_Init(void);
-static void MX_USART1_UART_Init(void);
 static void MX_TIM2_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 /* USER CODE END PFP */
 
@@ -71,14 +66,8 @@ static void MX_TIM2_Init(void);
 /* USER CODE BEGIN 0 */
 
 uint8_t uartBuffer[100] = {0,};
-bool isDataRecieved = false;
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-	if(huart == &huart1)
-		isDataRecieved = true;
-}
 
-PWMCapturer ersCapturer = PWMCapturer(&htim2, 2, 530, 1500, 2460, 4);
+PWMCapturer ersCapturer = PWMCapturer(&htim2, 2, 530, 1500, 2460);
 void IcHandlerTim2(TIM_HandleTypeDef *htim)
 {
 	switch ((uint8_t)htim->Channel)
@@ -107,7 +96,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  FRESULT fileResult;
 
   /* USER CODE END Init */
 
@@ -120,27 +108,14 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_SDIO_SD_Init();
-  MX_FATFS_Init();
-  MX_USART1_UART_Init();
   MX_TIM2_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  SDFileManager fileManager = SDFileManager(SDPath);
-  fileResult = fileManager.MountSD();
 
-  if(fileResult != FR_OK)
-	  Error_Handler();
-
-  Logger planeLogger = Logger("Plane", fileManager, GPIOE, GPIO_PIN_8);
-
-  //Переключаем в режим приема
-  HAL_HalfDuplex_EnableReceiver(&huart1);
-
-  //Запускаем PWM
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
   HAL_TIM_RegisterCallback(&htim2, HAL_TIM_IC_CAPTURE_CB_ID, IcHandlerTim2);
   HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);//PB3 ers input
 
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
   Servo ersServo = Servo(htim2.Instance, 1, 530, 2460);
 
   /* USER CODE END 2 */
@@ -152,18 +127,11 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  //Данные с основной платы
-	  HAL_UART_Receive_IT(&huart1, (uint8_t*)uartBuffer, sizeof(uartBuffer));
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
 
-	  if(isDataRecieved)
-	  {
-		  //planeLogger.Info((char*)uartBuffer);
-		  isDataRecieved = false;
-		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
-	  }
-
-	  //ersServo.setPositionMicroSeconds(ersCapturer.getPulseWidth());
-	  HAL_Delay(50);
+	ersServo.setPositionMicroSeconds(ersCapturer.getPulseWidth());
+	//ersServo.setPositionMicroSeconds(1500);
+	//HAL_Delay(50);
   }
   /* USER CODE END 3 */
 }
@@ -208,34 +176,6 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-}
-
-/**
-  * @brief SDIO Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_SDIO_SD_Init(void)
-{
-
-  /* USER CODE BEGIN SDIO_Init 0 */
-
-  /* USER CODE END SDIO_Init 0 */
-
-  /* USER CODE BEGIN SDIO_Init 1 */
-
-  /* USER CODE END SDIO_Init 1 */
-  hsd.Instance = SDIO;
-  hsd.Init.ClockEdge = SDIO_CLOCK_EDGE_RISING;
-  hsd.Init.ClockBypass = SDIO_CLOCK_BYPASS_DISABLE;
-  hsd.Init.ClockPowerSave = SDIO_CLOCK_POWER_SAVE_DISABLE;
-  hsd.Init.BusWide = SDIO_BUS_WIDE_1B;
-  hsd.Init.HardwareFlowControl = SDIO_HARDWARE_FLOW_CONTROL_DISABLE;
-  hsd.Init.ClockDiv = 4;
-  /* USER CODE BEGIN SDIO_Init 2 */
-
-  /* USER CODE END SDIO_Init 2 */
-
 }
 
 /**
@@ -356,8 +296,6 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
