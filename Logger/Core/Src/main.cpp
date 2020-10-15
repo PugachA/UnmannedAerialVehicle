@@ -67,7 +67,7 @@ static void MX_USART1_UART_Init(void);
 
 uint8_t uartBuffer[100] = {0,};
 
-PWMCapturer ersCapturer = PWMCapturer(&htim2, 2, 530, 1500, 2460);
+PWMCapturer ersCapturer = PWMCapturer(&htim2, 2, 530, 1500, 2460, 4);
 void IcHandlerTim2(TIM_HandleTypeDef *htim)
 {
 	switch ((uint8_t)htim->Channel)
