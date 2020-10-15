@@ -64,9 +64,6 @@ static void MX_USART1_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-uint8_t uartBuffer[100] = {0,};
-
 PWMCapturer ersCapturer = PWMCapturer(&htim2, 2, 530, 1500, 2460, 4);
 void IcHandlerTim2(TIM_HandleTypeDef *htim)
 {
@@ -76,6 +73,14 @@ void IcHandlerTim2(TIM_HandleTypeDef *htim)
 			ersCapturer.calculatePulseWidth();
 			break;
 	}
+}
+
+uint8_t uartBuffer[100] = {0,};
+bool isDataRecieved = false;
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if(huart == &huart1)
+		isDataRecieved = true;
 }
 
 /* USER CODE END 0 */
@@ -118,6 +123,9 @@ int main(void)
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
   Servo ersServo = Servo(htim2.Instance, 1, 530, 2460);
 
+  //Переключаем в режим приема
+  HAL_HalfDuplex_EnableReceiver(&huart1);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -127,11 +135,21 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
+	HAL_UART_Receive_IT(&huart1, (uint8_t*)uartBuffer, sizeof(uartBuffer));
+
+	if(isDataRecieved)
+	{
+		isDataRecieved = false;
+		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
+
+	}
+
+	/*if(ersCapturer.matchMidValue())
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
+
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);*/
 
 	ersServo.setPositionMicroSeconds(ersCapturer.getPulseWidth());
-	//ersServo.setPositionMicroSeconds(1500);
-	//HAL_Delay(50);
   }
   /* USER CODE END 3 */
 }
