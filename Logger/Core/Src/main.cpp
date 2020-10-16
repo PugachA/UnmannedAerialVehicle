@@ -29,6 +29,7 @@
 #include "Servo\Servo.h"
 #include "PWMCapturer\PWMCapturer.h"
 #include "Logger\Logger.h"
+#include "Beeper\Beeper.h"
 
 /* USER CODE END Includes */
 
@@ -71,7 +72,7 @@ static void MX_SDIO_SD_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-PWMCapturer ersCapturer = PWMCapturer(&htim2, 2, 530, 1500, 2460, 4);
+PWMCapturer ersCapturer = PWMCapturer(&htim2, 2, 989, 1500, 2013, 4);
 void IcHandlerTim2(TIM_HandleTypeDef *htim)
 {
 	switch ((uint8_t)htim->Channel)
@@ -132,9 +133,14 @@ int main(void)
 
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
   Servo ersServo = Servo(htim2.Instance, 1, 530, 2460);
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
+  Servo engine = Servo(htim2.Instance, 3, 989, 2013);
 
   //Переключаем в режим приема
   HAL_HalfDuplex_EnableReceiver(&huart1);
+
+  Beeper beeper = Beeper(GPIOE, GPIO_PIN_7);
+  bool ersFlag = false;
 
   SDFileManager fileManager = SDFileManager(SDPath);
   FRESULT fileResult = fileManager.MountSD();
@@ -164,12 +170,28 @@ int main(void)
 		planeLogger.Info((char*)uartBuffer);
 	}
 
-	/*if(ersCapturer.matchMidValue())
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
+	if(ersCapturer.matchMaxValue())
+	{
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, GPIO_PIN_RESET); //переключение мультиплексора на ERS
+		engine.Set_Position(0); //остановка двигателя
 
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);*/
+		if(!ersFlag)
+			beeper.beep(1000); // задержка 1 секунды плюс пищалка
 
-	ersServo.setPositionMicroSeconds(ersCapturer.getPulseWidth());
+		beeper.seriesBeepAsync(1000); //чтобы не мешать записи логов и передачи телеметрии
+		ersServo.setPositionMicroSeconds(540); //открытие капсылы парашюта
+		ersFlag = true;
+	}
+
+	if(ersCapturer.matchMidValue() || ersCapturer.matchMinValue())
+	{
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, GPIO_PIN_SET); //переключение мультиплексора на ERS
+		ersServo.Set_Position(150); //закрытие капсылы парашюта
+		ersFlag = false;
+	}
+
+	if(ersCapturer.matchOutOfInterval())
+		planeLogger.Info("Некорретный сигнал с пульта");
   }
   /* USER CODE END 3 */
 }
@@ -309,6 +331,10 @@ static void MX_TIM2_Init(void)
   {
     Error_Handler();
   }
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN TIM2_Init 2 */
 
   /* USER CODE END TIM2_Init 2 */
@@ -386,7 +412,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7|GPIO_PIN_8, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PA0 */
   GPIO_InitStruct.Pin = GPIO_PIN_0;
@@ -405,6 +431,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_8;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PE9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 

@@ -119,3 +119,11 @@ bool PWMCapturer::matchMaxValue()
 	return false;
 }
 
+bool PWMCapturer::matchOutOfInterval()
+{
+	if((difference < (min_value - measurement_error)) || (difference > (max_value + measurement_error)))
+			return true;
+
+		return false;
+}
+

@@ -34,9 +34,10 @@ class PWMCapturer
 		bool matchMinValue();
 		bool matchMidValue();
 		bool matchMaxValue();
+		bool matchOutOfInterval();
 
 	private:
-		uint16_t max_value=0;
+		uint16_t max_value = 0;
 		uint16_t mid_value = 0;
 		uint16_t min_value = 0;
 		uint32_t IC_Val1 = 0;

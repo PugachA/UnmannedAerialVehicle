@@ -10,6 +10,7 @@ class Beeper
 		uint32_t pin = 0;
 		const uint16_t LONG_BEEP_TIME_MS = 1000;
 		const uint16_t SHORT_BEEP_TIME_MS = 100;
+		uint32_t stopTimeStamp = 0;
 
 	public:
 		Beeper(GPIO_TypeDef * port, uint32_t pin);
@@ -17,7 +18,8 @@ class Beeper
 		void shortBeep();
 		void longBeep();
 		void seriesBeep();
-
+		void beep(uint16_t milliSeconds);
+		void seriesBeepAsync(uint16_t milliSeconds);
 };
 
 #endif // BEEPER_H
