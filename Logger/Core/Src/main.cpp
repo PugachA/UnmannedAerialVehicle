@@ -129,7 +129,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   HAL_TIM_RegisterCallback(&htim2, HAL_TIM_IC_CAPTURE_CB_ID, IcHandlerTim2);
-  HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);//PB3 ers input
+  HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2); //PB3 ers input
 
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
   Servo ersServo = Servo(htim2.Instance, 1, 530, 2460);
@@ -170,7 +170,7 @@ int main(void)
 		planeLogger.Info((char*)uartBuffer);
 	}
 
-	if(ersCapturer.matchMaxValue())
+	if(ersCapturer.matchMaxValue()) //срабатывание ERS
 	{
 		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, GPIO_PIN_RESET); //переключение мультиплексора на ERS
 		engine.Set_Position(0); //остановка двигателя
@@ -183,14 +183,14 @@ int main(void)
 		ersFlag = true;
 	}
 
-	if(ersCapturer.matchMidValue() || ersCapturer.matchMinValue())
+	if(ersCapturer.matchMidValue() || ersCapturer.matchMinValue()) //обычный режим работы
 	{
 		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, GPIO_PIN_SET); //переключение мультиплексора на ERS
 		ersServo.Set_Position(150); //закрытие капсылы парашюта
 		ersFlag = false;
 	}
 
-	if(ersCapturer.matchOutOfInterval())
+	if(ersCapturer.matchOutOfInterval()) //Некорретный сигнал с пульта
 		planeLogger.Info("Некорретный сигнал с пульта");
   }
   /* USER CODE END 3 */
