@@ -1,7 +1,7 @@
 #ifndef RCCHANNEL_H
 #define RCCHANNEL_H
 
-#include "stm32f4xx_hal.h"
+#include "stm32f4xx_hal.h"ч
 
 class RcChannel
 {
