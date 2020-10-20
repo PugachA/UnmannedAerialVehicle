@@ -72,7 +72,18 @@ static void MX_SDIO_SD_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-PWMCapturer ersCapturer = PWMCapturer(&htim2, 2, 989, 1500, 2013, 4);
+uint16_t min_value_ms = 989;
+uint16_t mid_value_ms = 1500;
+uint16_t max_value_ms = 2013;
+uint8_t measurement_error = 4;
+PWMCapturer ersCapturer = PWMCapturer(
+		&htim2,
+		HAL_TIM_ACTIVE_CHANNEL_2,
+		min_value_ms,
+		mid_value_ms,
+		max_value_ms,
+		measurement_error);
+
 void IcHandlerTim2(TIM_HandleTypeDef *htim)
 {
 	switch ((uint8_t)htim->Channel)
