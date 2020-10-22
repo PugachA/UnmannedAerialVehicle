@@ -25,6 +25,8 @@
 extern "C" {
 #endif
 
+#define USE_HAL_TIM_REGISTER_CALLBACKS 1
+
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal_def.h"
 
