@@ -80,7 +80,7 @@ uint16_t max_value_ms = 2013;
 uint8_t measurement_error = 4;
 PWMCapturer ersCapturer = PWMCapturer(
 		&htim2,
-		HAL_TIM_ACTIVE_CHANNEL_2,
+		2,
 		min_value_ms,
 		mid_value_ms,
 		max_value_ms,
@@ -90,7 +90,7 @@ uint16_t engine_min_value_ms = 989;
 uint16_t engine_max_value_ms = 2013;
 PWMCapturer engineCapturer = PWMCapturer(
 		&htim2,
-		HAL_TIM_ACTIVE_CHANNEL_4,
+		4,
 		engine_min_value_ms,
 		engine_max_value_ms,
 		measurement_error);
