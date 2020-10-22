@@ -224,6 +224,7 @@ int main(void)
 	if(ersCapturer.matchOutOfInterval()) //Некорретный сигнал с пульта
 		planeLogger.Info("Некорретный сигнал с пульта");
 
+	//передаем значение на двигатель
 	if(!ersFlag)
 	    engine.setPositionMicroSeconds(engineCapturer.getPulseWidth());
   }
