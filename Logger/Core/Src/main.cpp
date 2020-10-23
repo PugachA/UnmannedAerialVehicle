@@ -118,6 +118,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		isDataRecieved = true;
 }
 
+uint16_t ers_open_position = 165;
+uint16_t ers_close_position = 60;
 /* USER CODE END 0 */
 
 /**
@@ -164,7 +166,7 @@ int main(void)
   //Настройка PWM
   HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
   Servo ersServo = Servo(htim4.Instance, 1, 530, 2460);
-  ersServo.Set_Position(60);
+  ersServo.Set_Position(ers_close_position);
 
   HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
   Servo engine = Servo(htim4.Instance, 2, engine_min_value_ms, engine_max_value_ms);
@@ -210,13 +212,13 @@ int main(void)
 			beeper.beep(1000); // задержка 1 секунды плюс пищалка
 
 		beeper.seriesBeepAsync(1000); //чтобы не мешать записи логов и передачи телеметрии
-		ersServo.Set_Position(165); //открытие капсылы парашюта
+		ersServo.Set_Position(ers_open_position); //открытие капсылы парашюта
 		ersFlag = true;
 	}
 
 	if(ersCapturer.matchMidValue() || ersCapturer.matchMinValue()) //обычный режим работы
 	{
-		ersServo.Set_Position(60); //закрытие капсылы парашюта
+		ersServo.Set_Position(ers_close_position); //закрытие капсылы парашюта
 		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7, GPIO_PIN_RESET); //выключение пищалки
 		ersFlag = false;
 	}
