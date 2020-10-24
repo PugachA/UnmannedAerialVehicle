@@ -256,7 +256,7 @@ int main(void)
 			rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
 
 			altitude = ms5611.getRawAltitude();
-			voltageAirSpeed = mpxv7002.getRawData();
+			voltageAirSpeed = mpxv7002.getFilteredADC();
 			v = bno055.getVectorGyroscopeRemap();
 
 			//отправка данных:
@@ -280,7 +280,7 @@ int main(void)
 				rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
 
 				altitude = ms5611.getRawAltitude();
-				voltageAirSpeed = mpxv7002.getRawData();
+				voltageAirSpeed = mpxv7002.getFilteredADC();
 				v = bno055.getVectorGyroscopeRemap();
 
 				//отправка данных:
@@ -309,7 +309,7 @@ int main(void)
 		thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
 
 		altitude = ms5611.getRawAltitude();
-		voltageAirSpeed = mpxv7002.getRawData();
+		voltageAirSpeed = mpxv7002.getFilteredADC();
 		v = bno055.getVectorGyroscopeRemap();
 
 		if(manage_UART_counter >= (100*every_millisecond))

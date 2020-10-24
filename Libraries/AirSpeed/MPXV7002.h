@@ -8,6 +8,7 @@ class MPXV7002
 		ADC_HandleTypeDef hadc; //pointer to ADC
 	
 	  uint32_t adc_raw;
+	  uint32_t adc_raw_prev;
 	  double pressure;
 	  double airSpeed;
 	
@@ -29,5 +30,6 @@ class MPXV7002
 	  uint32_t getRawData(void);
 	  double getPressure(void);
 	  double getAirSpeed(void);
+	  uint32_t getFilteredADC(void);
 };
 #endif
