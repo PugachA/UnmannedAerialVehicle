@@ -28,6 +28,7 @@
 #include "Beeper/Beeper.h"
 #include "Baro/MS5611.h"
 #include "AirSpeed/MPXV7002.h"
+#include "Gyro/bno055.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -123,22 +124,6 @@ uint8_t Armed(Beeper* beeper)
 	}
 	return arm_flag;
 }
-uint8_t ERS()
-{
-	static uint8_t ers_flag = 0;
-	static uint8_t enter_once = 0;
-	if(switch_rc.matchMaxValue() && (enter_once == 0))
-	{
-		ers_flag = 1;
-		enter_once = 1;
-	}
-	if((switch_rc.matchMidValue() || switch_rc.matchMinValue()) && (enter_once == 1))
-	{
-		ers_flag = 0;
-		enter_once = 0;
-	}
-	return ers_flag;
-}
 
 /* USER CODE END PFP */
 
@@ -153,44 +138,46 @@ uint8_t ERS()
   */
 int main(void)
 {
-	/* USER CODE BEGIN 1 */
+  /* USER CODE BEGIN 1 */
 
-	/* USER CODE END 1 */
+  /* USER CODE END 1 */
 
-	/* MCU Configuration--------------------------------------------------------*/
+  /* MCU Configuration--------------------------------------------------------*/
 
-	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-	HAL_Init();
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
 
-	/* USER CODE BEGIN Init */
+  /* USER CODE BEGIN Init */
 	char str[80] = "test\n";
 	char str_baro[80] = "test\n";
 	int overflows_to_Vy_calc = 10000;
 	double altitude = 0;
 	double verticalSpeed = 0;
 	uint32_t voltageAirSpeed = 0;
+	bno055_vector_t v;
+	//bno055_axis_map_t axisRemap;
 
-	/* USER CODE END Init */
+  /* USER CODE END Init */
 
-	/* Configure the system clock */
-	SystemClock_Config();
+  /* Configure the system clock */
+  SystemClock_Config();
 
-	/* USER CODE BEGIN SysInit */
+  /* USER CODE BEGIN SysInit */
 
-	/* USER CODE END SysInit */
+  /* USER CODE END SysInit */
 
-	/* Initialize all configured peripherals */
-	MX_GPIO_Init();
-	MX_TIM2_Init();
-	MX_USART2_UART_Init();
-	MX_TIM3_Init();
-	MX_TIM5_Init();
-	MX_ADC1_Init();
-	MX_I2C1_Init();
-	MX_ADC2_Init();
-	MX_I2C3_Init();
-	MX_TIM6_Init();
-	/* USER CODE BEGIN 2 */
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_TIM2_Init();
+  MX_USART2_UART_Init();
+  MX_TIM3_Init();
+  MX_TIM5_Init();
+  MX_ADC1_Init();
+  MX_I2C1_Init();
+  MX_ADC2_Init();
+  MX_I2C3_Init();
+  MX_TIM6_Init();
+  /* USER CODE BEGIN 2 */
 	HAL_TIM_Base_Start_IT(&htim6);//пока используем для диспетчеризации событий по переполнению
 
 	HAL_TIM_RegisterCallback(&htim6, HAL_TIM_PERIOD_ELAPSED_CB_ID, time_manager);//1 тик = 1 мкС, переполнение 100 тиков = 100 мкС = 0.1 мС
@@ -221,17 +208,24 @@ int main(void)
 	//---------------------------------------------------------
 
 	Beeper beeper(GPIOD, GPIO_PIN_13);
-	HAL_HalfDuplex_EnableTransmitter(&huart2);
+	//HAL_HalfDuplex_EnableTransmitter(&huart2);
 
 	//-------------------Sensors INIT--------------------------
 	MS5611 ms5611(0x77, hi2c1, 100, overflows_to_Vy_calc);//нельзя инитить до инита i2c
 	MPXV7002 mpxv7002(hadc1);
+	HAL_Delay(700);
+	BNO055 bno055(hi2c3);
+	HAL_Delay(700);
+	bno055.setup();
+	HAL_Delay(700);
+	bno055.setOperationModeNDOF();
+	//bno055.setAxisMap(axisRemap);
 	//---------------------------------------------------------
 
-	/* USER CODE END 2 */
+  /* USER CODE END 2 */
 
-	/* Infinite loop */
-	/* USER CODE BEGIN WHILE */
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
 	while (1)
 	{
 		while(Armed(&beeper))
@@ -244,32 +238,28 @@ int main(void)
 
 			altitude = ms5611.getRawAltitude();
 			voltageAirSpeed = mpxv7002.getRawData();
+			v = bno055.getVectorEuler();
 
 			//отправка данных:
-			if(manage_UART_counter >= (50*every_millisecond))
+			if(manage_UART_counter >= (100*every_millisecond))
 			{
-				HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "alt=%d air_speed=%d\n", (int) (altitude * 100), (int) (voltageAirSpeed)), 1000);
+				//HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "alt=%d air_speed=%d ", (int) (altitude * 100), (int) (voltageAirSpeed)), 1000);
+				sprintf(str, "%d\n", (int) v.x*10);
+				HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);//ось х тут для нашей платы это вертикальная ось z
 				manage_UART_counter = 0;
 			}
 			if(manage_vertical_speed_counter >= (10*every_millisecond))
 			{
-				HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "Hello\n"), 1000);
+				//HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "Hello\n"), 1000);
 				manage_vertical_speed_counter = 0;
 			}
 		}
-		while(ERS())
-		{
-			thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
-			beeper.longBeep();													//уже дает 1000Мс чтобы винт остановился до выпуска парашюта
-			ers_servo.setPositionMicroSeconds(540);								//(540 - 1600 мкс диапазон дивжения планки САС)
-			beeper.seriesBeep();
-		}
+
 		elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
 		ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
 		ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
 		rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
 		thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
-		ers_servo.setPositionMicroSeconds(slider_rc.getPulseWidth() - 448);
 
 		#ifdef SERVO_DEBUG_UART
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", thr_rc.getPulseWidth()), 1000);
@@ -284,11 +274,11 @@ int main(void)
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "alt=%d air_speed=%d\n", (int) (altitude * 100), (int) (voltageAirSpeed)), 1000);
 			HAL_Delay(500);
 		#endif
-		/* USER CODE END WHILE */
+    /* USER CODE END WHILE */
 
-		/* USER CODE BEGIN 3 */
+    /* USER CODE BEGIN 3 */
 	}
-		/* USER CODE END 3 */
+  /* USER CODE END 3 */
 }
 
 /**
@@ -808,10 +798,21 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PE7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PD13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
