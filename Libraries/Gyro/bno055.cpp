@@ -195,9 +195,6 @@ int8_t BNO055::bno055_getTemp(void)
 
 void BNO055::setup(void) {
 	reset();
-	//HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7, GPIO_PIN_RESET);
-	//HAL_Delay(1000);
-//	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7, GPIO_PIN_SET);
 
   uint8_t id = 0;
   char str[80];

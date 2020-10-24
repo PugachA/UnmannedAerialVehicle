@@ -184,6 +184,15 @@ typedef enum {  // BNO-55 operation modes
   BNO055_OPERATION_MODE_NDOF  // 0x0C
 } bno055_opmode_t;
 
+typedef struct {
+  uint8_t x;
+  uint8_t x_sign;
+  uint8_t y;
+  uint8_t y_sign;
+  uint8_t z;
+  uint8_t z_sign;
+} bno055_axis_map_t;
+
 class BNO055
 {
 
@@ -238,15 +247,6 @@ class BNO055
       bno055_calibration_offset_t offset;
       bno055_calibration_radius_t radius;
     } bno055_calibration_data_t;
-
-    typedef struct {
-      uint8_t x;
-      uint8_t x_sign;
-      uint8_t y;
-      uint8_t y_sign;
-      uint8_t z;
-      uint8_t z_sign;
-    } bno055_axis_map_t;
 
     typedef enum {
       BNO055_VECTOR_ACCELEROMETER = 0x08,  // Default: m/s²
