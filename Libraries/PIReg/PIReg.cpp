@@ -2,11 +2,11 @@
 #include "PIReg.h"
 #include "math.h"
 
-PIReg::PIReg(double k_int, double k_pr, int overflows_to_integrate)
+PIReg::PIReg(double k_int, double k_pr, int dt)
 {
 	this->k_int = k_int;
 	this->k_pr = k_pr;
-	dt = 0.001*(double)overflows_to_integrate; //0.001 is a timer period, idk how to put it universally
+	this->dt = dt;
 
 	this->integral = 0;
 	this->error = 0;

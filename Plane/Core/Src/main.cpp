@@ -101,6 +101,7 @@ void time_manager(TIM_HandleTypeDef *htim)
 {
 	manage_UART_counter++;
 	manage_vertical_speed_counter++;
+	manage_omega_counter++;
 }
 uint8_t Armed(Beeper* beeper)
 {
@@ -222,6 +223,14 @@ int main(void)
 	bno055.setOperationModeNDOF();
 	//---------------------------------------------------------
 
+	//------------------Regulators INIT------------------------
+
+	int k_int_omega_x = 1.5;
+	int k_pr_omega_x = 0.1;
+	PIReg omega_x_PI_reg(k_int_omega_x,k_pr_omega_x,0.01);
+
+	//---------------------------------------------------------
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -245,7 +254,7 @@ int main(void)
 			{
 				//HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "alt=%d air_speed=%d ", (int) (altitude * 100), (int) (voltageAirSpeed)), 1000);
 				sprintf(str, "%d %d %d\n", (int) v.x*10, (int) v.y*10, (int) v.z*10);
-				HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
+				//HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
 				manage_UART_counter = 0;
 			}
 			if(manage_vertical_speed_counter >= (10*every_millisecond))
@@ -256,8 +265,11 @@ int main(void)
 
 			if(manage_omega_counter >= (10*every_millisecond))
 			{
-
+				omega_x_PI_reg.setError(0.0-v.x);
+				omega_x_PI_reg.calcOutput();
 				manage_omega_counter = 0;
+				sprintf(str, "%d\n", (int)omega_x_PI_reg.getOutput());
+				HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
 			}
 		}
 
