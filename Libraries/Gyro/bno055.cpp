@@ -194,7 +194,7 @@ int8_t BNO055::bno055_getTemp(void)
 }
 
 void BNO055::setup(void) {
-	reset();
+  reset();
 
   uint8_t id = 0;
   char str[80];

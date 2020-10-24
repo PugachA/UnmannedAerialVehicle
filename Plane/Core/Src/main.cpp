@@ -155,7 +155,6 @@ int main(void)
 	double verticalSpeed = 0;
 	uint32_t voltageAirSpeed = 0;
 	bno055_vector_t v;
-	//bno055_axis_map_t axisRemap;
 
   /* USER CODE END Init */
 
@@ -218,6 +217,17 @@ int main(void)
 	HAL_Delay(700);
 	bno055.setup();
 	HAL_Delay(700);
+
+	bno055_axis_map_t axis = {
+	  .x = BNO055_AXIS_Z,
+	  .x_sign = BNO055_AXIS_SIGN_POSITIVE,
+	  .y = BNO055_AXIS_Y,
+	  .y_sign = BNO055_AXIS_SIGN_POSITIVE,
+	  .z = BNO055_AXIS_X,
+	  .z_sign = BNO055_AXIS_SIGN_POSITIVE
+	};
+
+	bno055.setAxisMap(axis);
 	bno055.setOperationModeNDOF();
 	//bno055.setAxisMap(axisRemap);
 	//---------------------------------------------------------
