@@ -29,6 +29,7 @@
 #include "Baro/MS5611.h"
 #include "AirSpeed/MPXV7002.h"
 #include "Gyro/bno055.h"
+#include "PIReg/PIReg.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -70,6 +71,7 @@ extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
 
 uint32_t manage_UART_counter = 0;
 uint32_t manage_vertical_speed_counter = 0;
+uint32_t manage_omega_counter = 0;
 
 const uint32_t every_second = 10000;
 const uint32_t every_millisecond = 10;
@@ -250,6 +252,12 @@ int main(void)
 			{
 				//HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "Hello\n"), 1000);
 				manage_vertical_speed_counter = 0;
+			}
+
+			if(manage_omega_counter >= (10*every_millisecond))
+			{
+
+				manage_omega_counter = 0;
 			}
 		}
 
