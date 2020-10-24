@@ -16,10 +16,23 @@ Logger::Logger(const char* loggerName,
 	this->monitorPin = monitorPin;
 	this->errorCount = 0;
 
-	char buf[100];
-	sprintf(buf, "log-file-%s.log", this->loggerName);
+	uint8_t counter = 0;
+	char fileNameBuf[100];
+	char filePathBuf[150];
+	bool flag = false;
 
-	CreateLogFile(buf);
+	while(!flag)
+	{
+		sprintf(fileNameBuf, "log-file-%s-%d.log", this->loggerName, counter);
+		sprintf(filePathBuf, "%s/%s",this->folderName, fileNameBuf);
+
+		if(!this->fileManager.IsPathExists(filePathBuf))
+			flag = true;
+
+		counter++;
+	}
+
+	CreateLogFile(fileNameBuf);
 }
 
 Logger::Logger(const char* fileName,
@@ -40,10 +53,12 @@ Logger::~Logger()
 
 void Logger::CreateLogFile(const char* fileName)
 {
-	if(!this->fileManager.IsPathExists("/logs"))
-		this->fileManager.CreateDirectory("logs");
+	sprintf(this->filePath, "/%s", this->folderName);
 
-	sprintf(this->filePath, "logs/%s", fileName);
+	if(!this->fileManager.IsPathExists(this->filePath))
+		this->fileManager.CreateDirectory(this->folderName);
+
+	sprintf(this->filePath, "%s/%s", this->folderName, fileName);
 
 	if(!this->fileManager.IsPathExists(this->filePath))
 	{
@@ -78,11 +93,7 @@ void Logger::WriteToLog(const char* message, const char* messageType)
 {
 	uint32_t bufferSize = 200 + strlen(message);
 	char buffer[bufferSize];
-	sprintf(buffer, "{ \"timestamp\": \"%lu\", \"logger\": \"%s\", \"level\": \"%s\", \"message\": \"%s\" }",
-			HAL_GetTick(),
-			this->loggerName,
-			messageType,
-			message);
+	sprintf(buffer, "timestamp:%lu;message:%s", HAL_GetTick(), message);
 
 	int bytesWritten;
 	if(this->errorCount > 0)

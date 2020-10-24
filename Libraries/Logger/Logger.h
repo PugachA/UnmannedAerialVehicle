@@ -38,6 +38,7 @@ class Logger
 		SDFileManager fileManager;
 		GPIO_TypeDef* monitorGPIO;
 		uint16_t monitorPin;
+		const char folderName[5] = "logs";
 
 		void WriteToLog(const char* message, const char* messageType);
 		void CreateLogFile(const char* fileName);

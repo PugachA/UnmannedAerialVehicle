@@ -74,10 +74,10 @@ static void MX_TIM4_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint16_t min_value_ms = 989;
-uint16_t mid_value_ms = 1500;
-uint16_t max_value_ms = 2013;
-uint8_t measurement_error = 4;
+const uint16_t min_value_ms = 989;
+const uint16_t mid_value_ms = 1500;
+const uint16_t max_value_ms = 2013;
+const uint8_t measurement_error = 4;
 PWMCapturer ersCapturer = PWMCapturer(
 		&htim2,
 		2,
@@ -86,8 +86,8 @@ PWMCapturer ersCapturer = PWMCapturer(
 		max_value_ms,
 		measurement_error);
 
-uint16_t engine_min_value_ms = 989;
-uint16_t engine_max_value_ms = 2013;
+const uint16_t engine_min_value_ms = 989;
+const uint16_t engine_max_value_ms = 2013;
 PWMCapturer engineCapturer = PWMCapturer(
 		&htim2,
 		4,
@@ -118,8 +118,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		isDataRecieved = true;
 }
 
-uint16_t ers_open_position = 165;
-uint16_t ers_close_position = 60;
+const uint16_t ers_open_position = 165;
+const uint16_t ers_close_position = 60;
 /* USER CODE END 0 */
 
 /**
