@@ -186,6 +186,7 @@ int main(void)
   Logger planeLogger = Logger("Plane", fileManager, GPIOE, GPIO_PIN_8);
   HAL_Delay(100);
 
+  char loggerBuffer[sizeof(uartBuffer)+5]={0,};
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -201,7 +202,8 @@ int main(void)
 	{
 		isDataRecieved = false;
 		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
-		planeLogger.Info((char*)uartBuffer);
+		sprintf(loggerBuffer, "%s;ers=%d", uartBuffer, ersFlag);
+		planeLogger.Info((char*)loggerBuffer);
 	}
 
 	if(ersCapturer.matchMaxValue()) //срабатывание ERS

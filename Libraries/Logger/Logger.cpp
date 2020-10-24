@@ -30,6 +30,12 @@ Logger::Logger(const char* loggerName,
 			flag = true;
 
 		counter++;
+
+		if(counter >= 1000)
+		{
+			this->ErrorMonitor("Превышено максимально допустимое количество файлов");
+			break;
+		}
 	}
 
 	CreateLogFile(fileNameBuf);
