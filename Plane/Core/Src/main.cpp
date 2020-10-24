@@ -217,19 +217,7 @@ int main(void)
 	HAL_Delay(700);
 	bno055.setup();
 	HAL_Delay(700);
-
-	bno055_axis_map_t axis = {
-	  .x = BNO055_AXIS_Z,
-	  .x_sign = BNO055_AXIS_SIGN_POSITIVE,
-	  .y = BNO055_AXIS_Y,
-	  .y_sign = BNO055_AXIS_SIGN_POSITIVE,
-	  .z = BNO055_AXIS_X,
-	  .z_sign = BNO055_AXIS_SIGN_POSITIVE
-	};
-
-	bno055.setAxisMap(axis);
 	bno055.setOperationModeNDOF();
-	//bno055.setAxisMap(axisRemap);
 	//---------------------------------------------------------
 
   /* USER CODE END 2 */
@@ -248,14 +236,14 @@ int main(void)
 
 			altitude = ms5611.getRawAltitude();
 			voltageAirSpeed = mpxv7002.getRawData();
-			v = bno055.getVectorEuler();
+			v = bno055.getVectorGyroscopeRemap();
 
 			//отправка данных:
 			if(manage_UART_counter >= (100*every_millisecond))
 			{
 				//HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "alt=%d air_speed=%d ", (int) (altitude * 100), (int) (voltageAirSpeed)), 1000);
-				sprintf(str, "%d\n", (int) v.x*10);
-				HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);//ось х тут для нашей платы это вертикальная ось z
+				sprintf(str, "%d %d %d\n", (int) v.x*10, (int) v.y*10, (int) v.z*10);
+				HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
 				manage_UART_counter = 0;
 			}
 			if(manage_vertical_speed_counter >= (10*every_millisecond))

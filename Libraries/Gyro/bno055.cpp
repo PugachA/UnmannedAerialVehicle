@@ -421,3 +421,27 @@ void BNO055::setAxisMap(bno055_axis_map_t axis)
   writeData(BNO055_AXIS_MAP_CONFIG, axisRemap);
   writeData(BNO055_AXIS_MAP_SIGN, axisMapSign);
 }
+
+bno055_vector_t BNO055::getVectorEulerRemap(void)
+{
+	bno055_vector_t buf;
+	bno055_vector_t output;
+	buf = bno055_getVector(BNO055_VECTOR_EULER);
+    output.x = buf.y;
+    output.y = buf.x;
+    output.z = buf.z;
+
+    return output;
+}
+
+bno055_vector_t BNO055::getVectorGyroscopeRemap(void)
+{
+	bno055_vector_t buf;
+	bno055_vector_t output;
+	buf = bno055_getVector(BNO055_VECTOR_GYROSCOPE);
+    output.x = -buf.y;
+    output.y = buf.z;
+    output.z = -buf.x;
+
+    return output;
+}

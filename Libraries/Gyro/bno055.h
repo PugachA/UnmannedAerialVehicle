@@ -327,5 +327,7 @@ class BNO055
     bno055_vector_t getVectorGravity(void);
     bno055_vector_t getVectorQuaternion(void);
     int8_t bno055_getTemp(void);
+    bno055_vector_t getVectorEulerRemap(void);
+    bno055_vector_t getVectorGyroscopeRemap(void);
 };
 #endif
