@@ -241,8 +241,11 @@ int main(void)
 		{
 			thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
 			elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
-			ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
-			ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
+			//elev_servo.setPositionMicroSeconds((int)(1500+0.4*omega_x_PI_reg.getOutput()));
+			//ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
+			//ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
+			ail_servo_1.setPositionMicroSeconds((int)(1500+0.4*omega_x_PI_reg.getOutput()));
+			ail_servo_2.setPositionMicroSeconds((int)(1500+0.4*omega_x_PI_reg.getOutput()));
 			rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
 
 			altitude = ms5611.getRawAltitude();
@@ -253,7 +256,7 @@ int main(void)
 			if(manage_UART_counter >= (100*every_millisecond))
 			{
 				//HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "alt=%d air_speed=%d ", (int) (altitude * 100), (int) (voltageAirSpeed)), 1000);
-				sprintf(str, "%d %d %d\n", (int) v.x*10, (int) v.y*10, (int) v.z*10);
+				//sprintf(str, "%d %d %d\n", (int) v.x*10, (int) v.y*10, (int) v.z*10);
 				//HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
 				manage_UART_counter = 0;
 			}
@@ -268,8 +271,9 @@ int main(void)
 				omega_x_PI_reg.setError(0.0-v.x);
 				omega_x_PI_reg.calcOutput();
 				manage_omega_counter = 0;
-				sprintf(str, "%d\n", (int)omega_x_PI_reg.getOutput());
-				HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
+
+				//sprintf(str, "%d\n", (int)(1500+0.4*omega_x_PI_reg.getOutput()));
+				//HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
 			}
 		}
 
