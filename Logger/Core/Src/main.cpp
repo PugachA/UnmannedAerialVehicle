@@ -52,7 +52,6 @@ SD_HandleTypeDef hsd;
 DMA_HandleTypeDef hdma_sdio_tx;
 
 TIM_HandleTypeDef htim2;
-TIM_HandleTypeDef htim4;
 
 UART_HandleTypeDef huart1;
 
@@ -68,7 +67,6 @@ static void MX_DMA_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_SDIO_SD_Init(void);
-static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
 /* USER CODE END PFP */
 
@@ -80,22 +78,11 @@ uint16_t max_value_ms = 2013;
 uint8_t measurement_error = 4;
 PWMCapturer ersCapturer = PWMCapturer(
 		&htim2,
-		2,
+		HAL_TIM_ACTIVE_CHANNEL_2,
 		min_value_ms,
 		mid_value_ms,
 		max_value_ms,
 		measurement_error);
-
-uint16_t engine_min_value_ms = 989;
-uint16_t engine_max_value_ms = 2013;
-PWMCapturer engineCapturer = PWMCapturer(
-		&htim2,
-		4,
-		engine_min_value_ms,
-		engine_max_value_ms,
-		measurement_error);
-
-bool ersFlag = false;
 
 void IcHandlerTim2(TIM_HandleTypeDef *htim)
 {
@@ -103,9 +90,6 @@ void IcHandlerTim2(TIM_HandleTypeDef *htim)
 	{
 		case HAL_TIM_ACTIVE_CHANNEL_2:
 			ersCapturer.calculatePulseWidth();
-			break;
-		case HAL_TIM_ACTIVE_CHANNEL_4:
-			engineCapturer.calculatePulseWidth();
 			break;
 	}
 }
@@ -118,8 +102,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		isDataRecieved = true;
 }
 
-uint16_t ers_open_position = 165;
-uint16_t ers_close_position = 60;
 /* USER CODE END 0 */
 
 /**
@@ -155,26 +137,23 @@ int main(void)
   MX_USART1_UART_Init();
   MX_SDIO_SD_Init();
   MX_FATFS_Init();
-  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
 
-  //Настройка capture mode
   HAL_TIM_RegisterCallback(&htim2, HAL_TIM_IC_CAPTURE_CB_ID, IcHandlerTim2);
   HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2); //PB3 ers input
-  HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_4); //PA3 engine input
 
-  //Настройка PWM
-  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
-  Servo ersServo = Servo(htim4.Instance, 1, 530, 2460);
-  ersServo.Set_Position(ers_close_position);
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+  Servo ersServo = Servo(htim2.Instance, 1, 530, 2460);
+  ersServo.Set_Position(150);
 
-  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
-  Servo engine = Servo(htim4.Instance, 2, engine_min_value_ms, engine_max_value_ms);
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
+  Servo engine = Servo(htim2.Instance, 3, 989, 2013);
 
   //Переключаем в режим приема
   HAL_HalfDuplex_EnableReceiver(&huart1);
 
   Beeper beeper = Beeper(GPIOE, GPIO_PIN_7);
+  bool ersFlag = false;
 
   SDFileManager fileManager = SDFileManager(SDPath);
   FRESULT fileResult = fileManager.MountSD();
@@ -206,29 +185,26 @@ int main(void)
 
 	if(ersCapturer.matchMaxValue()) //срабатывание ERS
 	{
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, GPIO_PIN_RESET); //переключение мультиплексора на ERS
 		engine.Set_Position(0); //остановка двигателя
 
 		if(!ersFlag)
 			beeper.beep(1000); // задержка 1 секунды плюс пищалка
 
 		beeper.seriesBeepAsync(1000); //чтобы не мешать записи логов и передачи телеметрии
-		ersServo.Set_Position(ers_open_position); //открытие капсылы парашюта
+		ersServo.setPositionMicroSeconds(540); //открытие капсылы парашюта
 		ersFlag = true;
 	}
 
 	if(ersCapturer.matchMidValue() || ersCapturer.matchMinValue()) //обычный режим работы
 	{
-		ersServo.Set_Position(ers_close_position); //закрытие капсылы парашюта
-		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7, GPIO_PIN_RESET); //выключение пищалки
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, GPIO_PIN_SET); //переключение мультиплексора на ERS
+		ersServo.Set_Position(150); //закрытие капсылы парашюта
 		ersFlag = false;
 	}
 
 	if(ersCapturer.matchOutOfInterval()) //Некорретный сигнал с пульта
 		planeLogger.Info("Некорретный сигнал с пульта");
-
-	//передаем значение на двигатель
-	if(!ersFlag)
-	    engine.setPositionMicroSeconds(engineCapturer.getPulseWidth());
   }
   /* USER CODE END 3 */
 }
@@ -317,6 +293,7 @@ static void MX_TIM2_Init(void)
 
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
   TIM_IC_InitTypeDef sConfigIC = {0};
 
   /* USER CODE BEGIN TIM2_Init 1 */
@@ -337,6 +314,10 @@ static void MX_TIM2_Init(void)
   {
     Error_Handler();
   }
+  if (HAL_TIM_PWM_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
   if (HAL_TIM_IC_Init(&htim2) != HAL_OK)
   {
     Error_Handler();
@@ -344,6 +325,14 @@ static void MX_TIM2_Init(void)
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
   {
     Error_Handler();
   }
@@ -355,76 +344,14 @@ static void MX_TIM2_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_4) != HAL_OK)
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
   {
     Error_Handler();
   }
   /* USER CODE BEGIN TIM2_Init 2 */
 
   /* USER CODE END TIM2_Init 2 */
-
-}
-
-/**
-  * @brief TIM4 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM4_Init(void)
-{
-
-  /* USER CODE BEGIN TIM4_Init 0 */
-
-  /* USER CODE END TIM4_Init 0 */
-
-  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-  TIM_OC_InitTypeDef sConfigOC = {0};
-
-  /* USER CODE BEGIN TIM4_Init 1 */
-
-  /* USER CODE END TIM4_Init 1 */
-  htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 83;
-  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 22000;
-  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_PWM_Init(&htim4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM4_Init 2 */
-
-  /* USER CODE END TIM4_Init 2 */
-  HAL_TIM_MspPostInit(&htim4);
+  HAL_TIM_MspPostInit(&htim2);
 
 }
 
@@ -490,15 +417,15 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7|GPIO_PIN_8, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PA0 */
   GPIO_InitStruct.Pin = GPIO_PIN_0;
@@ -517,6 +444,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_8;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PE9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
