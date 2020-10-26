@@ -78,10 +78,8 @@ void Logger::WriteToLog(const char* message, const char* messageType)
 {
 	uint32_t bufferSize = 200 + strlen(message);
 	char buffer[bufferSize];
-	sprintf(buffer, "{ \"timestamp\": \"%lu\", \"logger\": \"%s\", \"level\": \"%s\", \"message\": \"%s\" }",
+	sprintf(buffer, "timestamp:%lu|message:%s",
 			HAL_GetTick(),
-			this->loggerName,
-			messageType,
 			message);
 
 	int bytesWritten;

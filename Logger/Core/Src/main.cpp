@@ -72,16 +72,25 @@ static void MX_SDIO_SD_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint16_t min_value_ms = 989;
-uint16_t mid_value_ms = 1500;
-uint16_t max_value_ms = 2013;
-uint8_t measurement_error = 4;
+const uint16_t min_value_ms = 989;
+const uint16_t mid_value_ms = 1500;
+const uint16_t max_value_ms = 2013;
+const uint8_t measurement_error = 4;
 PWMCapturer ersCapturer = PWMCapturer(
 		&htim2,
-		HAL_TIM_ACTIVE_CHANNEL_2,
+		2,
 		min_value_ms,
 		mid_value_ms,
 		max_value_ms,
+		measurement_error);
+
+const uint16_t engine_min_value_ms = 989;
+const uint16_t engine_max_value_ms = 2013;
+PWMCapturer engineCapturer = PWMCapturer(
+		&htim2,
+		4,
+		engine_min_value_ms,
+		engine_max_value_ms,
 		measurement_error);
 
 void IcHandlerTim2(TIM_HandleTypeDef *htim)
@@ -90,6 +99,9 @@ void IcHandlerTim2(TIM_HandleTypeDef *htim)
 	{
 		case HAL_TIM_ACTIVE_CHANNEL_2:
 			ersCapturer.calculatePulseWidth();
+			break;
+		case HAL_TIM_ACTIVE_CHANNEL_4:
+			engineCapturer.calculatePulseWidth();
 			break;
 	}
 }
@@ -102,6 +114,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		isDataRecieved = true;
 }
 
+uint16_t ers_open_position = 165;
+uint16_t ers_close_position = 60;
 /* USER CODE END 0 */
 
 /**
@@ -141,13 +155,14 @@ int main(void)
 
   HAL_TIM_RegisterCallback(&htim2, HAL_TIM_IC_CAPTURE_CB_ID, IcHandlerTim2);
   HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2); //PB3 ers input
+  HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_4); //PA3 engine input
 
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
   Servo ersServo = Servo(htim2.Instance, 1, 530, 2460);
-  ersServo.Set_Position(150);
+  ersServo.Set_Position(ers_close_position);
 
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
-  Servo engine = Servo(htim2.Instance, 3, 989, 2013);
+  Servo engine = Servo(htim2.Instance, 3, engine_min_value_ms, engine_max_value_ms);
 
   //Переключаем в режим приема
   HAL_HalfDuplex_EnableReceiver(&huart1);
@@ -165,6 +180,8 @@ int main(void)
   Logger planeLogger = Logger("Plane", fileManager, GPIOE, GPIO_PIN_8);
   HAL_Delay(100);
 
+  char loggerBuffer[sizeof(uartBuffer)+5]={0,};
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -180,31 +197,35 @@ int main(void)
 	{
 		isDataRecieved = false;
 		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
-		planeLogger.Info((char*)uartBuffer);
+		sprintf(loggerBuffer, "%s;ers=%d", uartBuffer, ersFlag);
+		planeLogger.Info((char*)loggerBuffer);
 	}
 
 	if(ersCapturer.matchMaxValue()) //срабатывание ERS
 	{
-		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, GPIO_PIN_RESET); //переключение мультиплексора на ERS
 		engine.Set_Position(0); //остановка двигателя
 
 		if(!ersFlag)
 			beeper.beep(1000); // задержка 1 секунды плюс пищалка
 
 		beeper.seriesBeepAsync(1000); //чтобы не мешать записи логов и передачи телеметрии
-		ersServo.setPositionMicroSeconds(540); //открытие капсылы парашюта
+		ersServo.Set_Position(ers_open_position); //открытие капсылы парашюта
 		ersFlag = true;
 	}
 
 	if(ersCapturer.matchMidValue() || ersCapturer.matchMinValue()) //обычный режим работы
 	{
-		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, GPIO_PIN_SET); //переключение мультиплексора на ERS
-		ersServo.Set_Position(150); //закрытие капсылы парашюта
+		ersServo.Set_Position(ers_close_position); //закрытие капсылы парашюта
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7, GPIO_PIN_RESET); //выключение пищалки
 		ersFlag = false;
 	}
 
 	if(ersCapturer.matchOutOfInterval()) //Некорретный сигнал с пульта
 		planeLogger.Info("Некорретный сигнал с пульта");
+
+	//передаем значение на двигатель
+	if(!ersFlag)
+		engine.setPositionMicroSeconds(engineCapturer.getPulseWidth());
   }
   /* USER CODE END 3 */
 }
@@ -348,6 +369,10 @@ static void MX_TIM2_Init(void)
   {
     Error_Handler();
   }
+  if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_4) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN TIM2_Init 2 */
 
   /* USER CODE END TIM2_Init 2 */
@@ -425,7 +450,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7|GPIO_PIN_8, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PA0 */
   GPIO_InitStruct.Pin = GPIO_PIN_0;
@@ -444,13 +469,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_8;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PE9 */
-  GPIO_InitStruct.Pin = GPIO_PIN_9;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
