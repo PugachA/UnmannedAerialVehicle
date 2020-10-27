@@ -1,4 +1,3 @@
-#include "stm32f4xx_hal.h"
 #include "PIReg.h"
 #include "math.h"
 

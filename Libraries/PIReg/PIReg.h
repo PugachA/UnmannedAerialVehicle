@@ -12,8 +12,8 @@ private:
 	double output;
 
 public:
-	PIReg(double,double,int); //constructor
-	void setError(double);
+	PIReg(double k_int, double k_pr, int dt); //constructor
+	void setError(double error);
 	void calcOutput(void);
 	double getOutput(void);
 	void integralReset(void);
