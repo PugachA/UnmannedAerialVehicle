@@ -107,13 +107,13 @@ uint8_t Armed(Beeper* beeper)
 {
 	static uint8_t arm_flag = 0;
 	static uint8_t enter_once = 0;
-	if(slider_rc.matchMaxValue() && (enter_once == 0))
+	if(slider_rc.matchMaxValue() && (enter_once == false))
 	{
 		arm_flag = 1;
 		beeper->longBeep();
 		enter_once = 1;
 	}
-	if(slider_rc.matchMinValue() && (enter_once == 1))
+	if(slider_rc.matchMinValue() && (enter_once == true))
 	{
 		arm_flag = 0;
 		beeper->longBeep();
@@ -125,12 +125,12 @@ uint8_t Stab(PIReg* reg)
 {
 	static uint8_t stab_flag = 0;
 	static uint8_t enter_once = 0;
-	if(switch_rc.matchMidValue() && (enter_once == 0))
+	if(switch_rc.matchMidValue() && (enter_once == false))
 	{
 		stab_flag = 1;
 		enter_once = 1;
 	}
-	if((switch_rc.matchMinValue() || switch_rc.matchMaxValue()) && (enter_once == 1))
+	if((switch_rc.matchMinValue() || switch_rc.matchMaxValue()) && (enter_once == true))
 	{
 		stab_flag = 0;
 		reg->integralReset();
