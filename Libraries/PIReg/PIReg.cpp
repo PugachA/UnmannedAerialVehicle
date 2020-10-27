@@ -19,9 +19,8 @@ void PIReg::setError(double error)
 
 void PIReg::calcOutput(void)
 {
-	double proportional = 0;
+	double proportional = this->k_pr*this->error;
 
-	proportional = this->k_pr*this->error;
 	this->integral += this->error*this->k_int;
 
 	this->output = proportional+this->integral;
