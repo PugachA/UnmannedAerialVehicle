@@ -260,9 +260,9 @@ int main(void)
 			v = bno055.getVectorGyroscopeRemap();
 
 			//отправка данных:
-			if(manage_UART_counter >= (100*every_millisecond))
+			if(manage_UART_counter >= (50*every_millisecond))
 			{
-				sprintf(str, "mode=arm;gyr=%d;%d;%d;alt=%d;air=%d\n", (int) v.x*10, (int) v.y*10, (int) v.z*10, (int) (altitude*100), voltageAirSpeed);
+				sprintf(str, "t=%d;mode=arm;gyr=%d;%d;%d;alt=%d;air=%d", HAL_GetTick(), (int) v.x*10, (int) v.y*10, (int) v.z*10, (int) (altitude*100), voltageAirSpeed);
 				HAL_UART_Transmit(&huart2, (uint8_t*)str, 100, 1000);
 				manage_UART_counter = 0;
 			}
@@ -284,10 +284,9 @@ int main(void)
 				v = bno055.getVectorGyroscopeRemap();
 
 				//отправка данных:
-				if(manage_UART_counter >= (100*every_millisecond))
+				if(manage_UART_counter >= (50*every_millisecond))
 				{
-					sprintf(str, "mode=stab;gyr=%d;%d;%d;alt=%d;air=%d\n", (int) v.x*10, (int) v.y*10, (int) v.z*10, (int) (altitude*100), voltageAirSpeed);
-					HAL_UART_Transmit(&huart2, (uint8_t*)str, 100, 1000);
+					sprintf(str, "t=%d;mode=stab;gyr=%d;%d;%d;alt=%d;air=%d", HAL_GetTick(), (int) v.x*10, (int) v.y*10, (int) v.z*10, (int) (altitude*100), voltageAirSpeed);					HAL_UART_Transmit(&huart2, (uint8_t*)str, 100, 1000);
 					manage_UART_counter = 0;
 				}
 				if(manage_vertical_speed_counter >= (10*every_millisecond))
@@ -312,9 +311,9 @@ int main(void)
 		voltageAirSpeed = mpxv7002.getFilteredADC();
 		v = bno055.getVectorGyroscopeRemap();
 
-		if(manage_UART_counter >= (100*every_millisecond))
+		if(manage_UART_counter >= (50*every_millisecond))
 		{
-			sprintf(str, "mode=darm;gyr=%d;%d;%d;alt=%d;air=%d\n", (int) v.x*10, (int) v.y*10, (int) v.z*10, (int) (altitude*100), voltageAirSpeed);
+			sprintf(str, "t=%d;mode=darm;gyr=%d;%d;%d;alt=%d;air=%d", HAL_GetTick(), (int) v.x*10, (int) v.y*10, (int) v.z*10, (int) (altitude*100), voltageAirSpeed);
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, 100, 1000);
 			manage_UART_counter = 0;
 		}
