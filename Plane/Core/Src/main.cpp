@@ -29,6 +29,7 @@
 #include "Baro/MS5611.h"
 #include "AirSpeed/MPXV7002.h"
 #include "Gyro/bno055.h"
+#include "PIReg/PIReg.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -70,6 +71,7 @@ extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
 
 uint32_t manage_UART_counter = 0;
 uint32_t manage_vertical_speed_counter = 0;
+uint32_t manage_omega_counter = 0;
 
 const uint32_t every_second = 10000;
 const uint32_t every_millisecond = 10;
@@ -99,32 +101,43 @@ void time_manager(TIM_HandleTypeDef *htim)
 {
 	manage_UART_counter++;
 	manage_vertical_speed_counter++;
+	manage_omega_counter++;
 }
 uint8_t Armed(Beeper* beeper)
 {
 	static uint8_t arm_flag = 0;
 	static uint8_t enter_once = 0;
-	if(switch_rc.matchMidValue() && (enter_once == 0))
+	if(slider_rc.matchMaxValue() && (enter_once == false))
 	{
 		arm_flag = 1;
 		beeper->longBeep();
 		enter_once = 1;
 	}
-	if((switch_rc.matchMinValue() || switch_rc.matchMaxValue()) && (enter_once == 1))
+	if(slider_rc.matchMinValue() && (enter_once == true))
 	{
-		if(switch_rc.matchMaxValue())
-		{
-			arm_flag = 0;
-			enter_once = 0;
-			return arm_flag;
-		}
 		arm_flag = 0;
 		beeper->longBeep();
 		enter_once = 0;
 	}
 	return arm_flag;
 }
-
+uint8_t Stab(PIReg* reg)
+{
+	static uint8_t stab_flag = 0;
+	static uint8_t enter_once = 0;
+	if(switch_rc.matchMidValue() && (enter_once == false))
+	{
+		stab_flag = 1;
+		enter_once = 1;
+	}
+	if((switch_rc.matchMinValue() || switch_rc.matchMaxValue()) && (enter_once == true))
+	{
+		stab_flag = 0;
+		reg->integralReset();
+		enter_once = 0;
+	}
+	return stab_flag;
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -220,6 +233,14 @@ int main(void)
 	bno055.setOperationModeNDOF();
 	//---------------------------------------------------------
 
+	//------------------Regulators INIT------------------------
+
+	int k_int_omega_x = 1.5;
+	int k_pr_omega_x = 0.1;
+	PIReg omega_x_PI_reg(k_int_omega_x,k_pr_omega_x,0.01);
+
+	//---------------------------------------------------------
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -235,29 +256,68 @@ int main(void)
 			rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
 
 			altitude = ms5611.getRawAltitude();
-			voltageAirSpeed = mpxv7002.getRawData();
+			voltageAirSpeed = mpxv7002.getFilteredADC();
 			v = bno055.getVectorGyroscopeRemap();
 
 			//отправка данных:
-			if(manage_UART_counter >= (100*every_millisecond))
+			if(manage_UART_counter >= (50*every_millisecond))
 			{
-				//HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "alt=%d air_speed=%d ", (int) (altitude * 100), (int) (voltageAirSpeed)), 1000);
-				sprintf(str, "%d %d %d\n", (int) v.x*10, (int) v.y*10, (int) v.z*10);
-				HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
+				sprintf(str, "t=%d;mode=arm;gyr=%d-%d-%d;alt=%d;air=%d", HAL_GetTick(), (int) v.x*10, (int) v.y*10, (int) v.z*10, (int) (altitude*100), voltageAirSpeed);
+				HAL_UART_Transmit(&huart2, (uint8_t*)str, 100, 1000);
 				manage_UART_counter = 0;
 			}
 			if(manage_vertical_speed_counter >= (10*every_millisecond))
 			{
-				//HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "Hello\n"), 1000);
 				manage_vertical_speed_counter = 0;
 			}
-		}
 
+			while(Stab(&omega_x_PI_reg))
+			{
+				thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
+				elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
+				ail_servo_1.setPositionMicroSeconds((int)(1500+0.4*omega_x_PI_reg.getOutput()));
+				ail_servo_2.setPositionMicroSeconds((int)(1500+0.4*omega_x_PI_reg.getOutput()));
+				rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
+
+				altitude = ms5611.getRawAltitude();
+				voltageAirSpeed = mpxv7002.getFilteredADC();
+				v = bno055.getVectorGyroscopeRemap();
+
+				//отправка данных:
+				if(manage_UART_counter >= (50*every_millisecond))
+				{
+					sprintf(str, "t=%d;mode=stab;gyr=%d-%d-%d;alt=%d;air=%d", HAL_GetTick(), (int) v.x*10, (int) v.y*10, (int) v.z*10, (int) (altitude*100), voltageAirSpeed);					HAL_UART_Transmit(&huart2, (uint8_t*)str, 100, 1000);
+					manage_UART_counter = 0;
+				}
+				if(manage_vertical_speed_counter >= (10*every_millisecond))
+				{
+					manage_vertical_speed_counter = 0;
+				}
+				if(manage_omega_counter >= (10*every_millisecond))
+				{
+					omega_x_PI_reg.setError(0.0-v.x);
+					omega_x_PI_reg.calcOutput();
+					manage_omega_counter = 0;
+				}
+			}
+		}
 		elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
 		ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
 		ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
 		rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
 		thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
+
+		altitude = ms5611.getRawAltitude();
+		voltageAirSpeed = mpxv7002.getFilteredADC();
+		v = bno055.getVectorGyroscopeRemap();
+
+		if(manage_UART_counter >= (50*every_millisecond))
+		{
+			sprintf(str, "t=%d;mode=darm;gyr=%d-%d-%d;alt=%d;air=%d", HAL_GetTick(), (int) v.x*10, (int) v.y*10, (int) v.z*10, (int) (altitude*100), voltageAirSpeed);
+			HAL_UART_Transmit(&huart2, (uint8_t*)str, 100, 1000);
+			manage_UART_counter = 0;
+		}
+
 
 		#ifdef SERVO_DEBUG_UART
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", thr_rc.getPulseWidth()), 1000);
@@ -269,7 +329,8 @@ int main(void)
 			HAL_Delay(500);
 		#endif
 		#ifdef SENSOR_DEBUG_UART
-			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "alt=%d air_speed=%d\n", (int) (altitude * 100), (int) (voltageAirSpeed)), 1000);
+			sprintf(str, "gyr=%d, %d, %d, alt=%d, air=%d\n", (int) v.x*10, (int) v.y*10, (int) v.z*10, (int) (altitude*100), voltageAirSpeed);
+			HAL_UART_Transmit(&huart2, (uint8_t*)str, 100, 1000);
 			HAL_Delay(500);
 		#endif
     /* USER CODE END WHILE */
