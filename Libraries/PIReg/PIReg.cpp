@@ -27,24 +27,18 @@ void PIReg::calcOutput(void)
 	this->integral += this->error*this->k_int;
 
 	if (this->integral > this->integral_lim)
-	{
 		this->integral = this->integral_lim;
-	}
+
 	else if (this->integral < -this->integral_lim)
-	{
 		this->integral = -this->integral_lim;
-	}
 
 	this->output = proportional+this->integral;
 
 	if (this->output > this->output_lim)
-	{
 		this->output = this->output_lim;
-	}
+
 	else if (this->output < -this->output_lim)
-	{
 		this->output = -this->output_lim;
-	}
 }
 
 double PIReg::getOutput(void)
