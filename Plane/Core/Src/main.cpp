@@ -235,9 +235,10 @@ int main(void)
 
 	//------------------Regulators INIT------------------------
 
-	int k_int_omega_x = 1.5;
-	int k_pr_omega_x = 0.1;
-	PIReg omega_x_PI_reg(k_int_omega_x,k_pr_omega_x,0.01);
+	double k_int_omega_x = 0.1;
+	double k_pr_omega_x = 1.5;
+	double int_lim_omega_x = 1000;
+	PIReg omega_x_PI_reg(k_int_omega_x,k_pr_omega_x,0.01,int_lim_omega_x);
 
 	//---------------------------------------------------------
 
