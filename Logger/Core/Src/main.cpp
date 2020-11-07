@@ -26,7 +26,7 @@
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
 #include "string.h"
-#include "Servo\Servo.h"
+#include "PWMDriver\PWMDriver.h"
 #include "PWMCapturer\PWMCapturer.h"
 #include "Logger\Logger.h"
 #include "Beeper\Beeper.h"
@@ -114,8 +114,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		isDataRecieved = true;
 }
 
-uint16_t ers_open_position = 165;
-uint16_t ers_close_position = 60;
+const double ers_open_position = 165; //градусы
+const double ers_close_position = 60; //градусы
 bool enableLogging = true;
 /* USER CODE END 0 */
 
@@ -159,11 +159,17 @@ int main(void)
   HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_4); //PA3 engine input
 
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-  Servo ersServo = Servo(htim2.Instance, 1, 530, 2460);
-  ersServo.Set_Position(ers_close_position);
+  const uint32_t min_ers_ms = 530;
+  const uint32_t max_ers_ms = 2460;
+  const double min_angle = 0;
+  const double max_angle = 180;
+  PWMDriver ersServo = PWMDriver(htim2.Instance, 1, min_ers_ms, max_ers_ms, min_angle, max_angle);
+  ersServo.setPosition(ers_close_position);
 
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
-  Servo engine = Servo(htim2.Instance, 3, engine_min_value_ms, engine_max_value_ms);
+  const double min_percent = 0;
+  const double max_percent = 100;
+  PWMDriver engine = PWMDriver(htim2.Instance, 3, engine_min_value_ms, engine_max_value_ms, min_percent, max_percent);
 
   //Переключаем в режим приема
   HAL_HalfDuplex_EnableReceiver(&huart1);
@@ -207,19 +213,19 @@ int main(void)
 
 	if(ersCapturer.matchMaxValue()) //срабатывание ERS
 	{
-		engine.Set_Position(0); //остановка двигателя
+		engine.setPosition(0); //остановка двигателя
 
 		if(!ersFlag)
 			beeper.beep(1000); // задержка 1 секунды плюс пищалка
 
 		beeper.seriesBeepAsync(1000); //чтобы не мешать записи логов и передачи телеметрии
-		ersServo.Set_Position(ers_open_position); //открытие капсылы парашюта
+		ersServo.setPosition(ers_open_position); //открытие капсылы парашюта
 		ersFlag = true;
 	}
 
 	if(ersCapturer.matchMidValue() || ersCapturer.matchMinValue()) //обычный режим работы
 	{
-		ersServo.Set_Position(ers_close_position); //закрытие капсылы парашюта
+		ersServo.setPosition(ers_close_position); //закрытие капсылы парашюта
 		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7, GPIO_PIN_RESET); //выключение пищалки
 		ersFlag = false;
 	}
