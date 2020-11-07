@@ -1,45 +1,63 @@
 #include "Servo.h"
 
-Servo::Servo(TIM_TypeDef *TIM, uint8_t channel, uint32_t min_PWM_value, uint32_t max_PWM_value, double min_input, double max_input)
+Servo::Servo(TIM_TypeDef *TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t max_PWM_value, uint16_t max_Angle)
 {
 	this->TIM = TIM;
 	this->channel = channel;
 	this->min_PWM_value = min_PWM_value;
 	this->max_PWM_value = max_PWM_value;
-	this->min_input = min_input;
-	this->max_input = max_input;
-	this->multiplier = (max_PWM_value - min_PWM_value) / (max_input - min_input);
+	this->max_Angle = max_Angle;
 }
 
-Servo::Servo(TIM_TypeDef *TIM, uint8_t channel, uint32_t min_PWM_value, uint32_t max_PWM_value)
-	: Servo(TIM, channel, min_PWM_value, max_PWM_value, 0, 100)
+Servo::Servo(TIM_TypeDef *TIM, uint8_t channel, uint16_t min_PWM_value, uint16_t max_PWM_value)
+	: Servo(TIM, channel, min_PWM_value, max_PWM_value, 180)
 {}
 
-void Servo::setPositionMicroSeconds(uint32_t microseconds)
+Servo::Servo(TIM_TypeDef *TIM, uint8_t channel)
+	: Servo(TIM, channel, 0, 0, 0)
+{}
+
+void Servo::setPositionMicroSeconds(uint32_t position)
 {
 	switch (this->channel)
 	{
 		case 1:
-			this->TIM->CCR1 = microseconds;
+			this->TIM->CCR1 = position;
 			break;
 		case 2:
-			this->TIM->CCR2 = microseconds;
+			this->TIM->CCR2 = position;
 			break;
 		case 3:
-			this->TIM->CCR3 = microseconds;
+			this->TIM->CCR3 = position;
 			break;
 		case 4:
-			this->TIM->CCR4 = microseconds;
+			this->TIM->CCR4 = position;
 			break;
 	}
 }
 
-void Servo::setPosition(double position)
+void Servo::Set_Position(uint8_t position)
 {
-	if(position > this->max_input)
-		position = this->max_input;
+	double multiplier = (double)(this->max_PWM_value - this->min_PWM_value)/this->max_Angle;
 
-	uint32_t pwm = this->min_PWM_value + (uint32_t)((position - this->min_input) * this->multiplier);
+	if(position > this->max_Angle)
+		position = this->max_Angle;
 
-	this->setPositionMicroSeconds(pwm);
+	uint16_t pwm = min_PWM_value + multiplier * position;
+
+	switch (this->channel)
+	{
+		case 1:
+			this->TIM->CCR1 = pwm;
+			break;
+		case 2:
+			this->TIM->CCR2 = pwm;
+			break;
+		case 3:
+			this->TIM->CCR3 = pwm;
+			break;
+		case 4:
+			this->TIM->CCR4 = pwm;
+			break;
+	}
 }
