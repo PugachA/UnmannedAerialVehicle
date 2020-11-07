@@ -37,7 +37,7 @@ void PWMDriver::setPosition(double position)
 		position = this->max_mapping_scale;
 
 	if(position < this->min_mapping_scale)
-			position = this->min_mapping_scale;
+		position = this->min_mapping_scale;
 
 	uint32_t pwm = (uint32_t)(position * this->multiplier + this->offset);
 
