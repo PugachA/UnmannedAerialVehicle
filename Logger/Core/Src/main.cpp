@@ -106,7 +106,7 @@ void IcHandlerTim2(TIM_HandleTypeDef *htim)
 	}
 }
 
-uint8_t uartBuffer[100] = {0,};
+uint8_t uartBuffer[200] = {0,};
 bool isDataRecieved = false;
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
@@ -116,6 +116,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 const double ers_open_position = 165; //градусы
 const double ers_close_position = 60; //градусы
+bool enableLogging = true;
 /* USER CODE END 0 */
 
 /**
@@ -181,11 +182,12 @@ int main(void)
   HAL_Delay(100);
 
   if(fileResult != FR_OK)
-	  Error_Handler();
+	  enableLogging = false;
 
   Logger planeLogger = Logger("Plane", fileManager, GPIOE, GPIO_PIN_8);
   HAL_Delay(100);
 
+  //char *loggerBuffer = new char(sizeof(uartBuffer)+5);
   char loggerBuffer[sizeof(uartBuffer)+5]={0,};
 
   /* USER CODE END 2 */
@@ -204,7 +206,9 @@ int main(void)
 		isDataRecieved = false;
 		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
 		sprintf(loggerBuffer, "%s;ers=%d", uartBuffer, ersFlag);
-		planeLogger.Info((char*)loggerBuffer);
+
+		if(enableLogging)
+			planeLogger.Info((char*)loggerBuffer);
 	}
 
 	if(ersCapturer.matchMaxValue()) //срабатывание ERS
@@ -226,7 +230,7 @@ int main(void)
 		ersFlag = false;
 	}
 
-	if(ersCapturer.matchOutOfInterval()) //Некорретный сигнал с пульта
+	if(ersCapturer.matchOutOfInterval() && enableLogging) //Некорретный сигнал с пульта
 		planeLogger.Info("Некорретный сигнал с пульта");
 
 	//передаем значение на двигатель

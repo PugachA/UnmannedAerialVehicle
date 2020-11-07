@@ -10,9 +10,10 @@ private:
 	double error;
 	double integral;
 	double output;
+	double integral_lim;
 
 public:
-	PIReg(double k_int, double k_pr, int dt); //constructor
+	PIReg(double k_int, double k_pr, int dt, double integral_lim); //constructor
 	void setError(double error);
 	void calcOutput(void);
 	double getOutput(void);
