@@ -158,11 +158,17 @@ int main(void)
   HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_4); //PA3 engine input
 
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-  PWMDriver ersServo = PWMDriver(htim2.Instance, 1, 530, 2460, 0, 180);
+  const uint32_t min_ers_ms = 530;
+  const uint32_t max_ers_ms = 2460;
+  const double min_angle = 0;
+  const double max_angle = 180;
+  PWMDriver ersServo = PWMDriver(htim2.Instance, 1, min_ers_ms, max_ers_ms, min_angle, max_angle);
   ersServo.setPosition(ers_close_position);
 
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
-  PWMDriver engine = PWMDriver(htim2.Instance, 3, engine_min_value_ms, engine_max_value_ms, 0, 100);
+  const double min_percent = 0;
+  const double max_percent = 100;
+  PWMDriver engine = PWMDriver(htim2.Instance, 3, engine_min_value_ms, engine_max_value_ms, min_percent, max_percent);
 
   //Переключаем в режим приема
   HAL_HalfDuplex_EnableReceiver(&huart1);
