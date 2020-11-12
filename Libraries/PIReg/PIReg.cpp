@@ -1,6 +1,6 @@
 #include "PIReg.h"
 
-PIReg::PIReg(double k_int, double k_pr, int dt, double integral_lim)
+PIReg::PIReg(double k_int, double k_pr, double dt, double integral_lim)
 {
 	this->k_int = k_int;
 	this->k_pr = k_pr;
@@ -22,7 +22,7 @@ void PIReg::calcOutput(void)
 {
 	double proportional = this->k_pr*this->error;
 
-	this->integral += this->error*this->dt*this->k_int;
+	this->integral += this->error * (this->dt * this->k_int);
 
 	if (this->integral > this->integral_lim)
 		this->integral = this->integral_lim;
@@ -30,7 +30,7 @@ void PIReg::calcOutput(void)
 	else if (this->integral < -this->integral_lim)
 		this->integral = -this->integral_lim;
 
-	this->output = proportional+this->integral;
+	this->output = proportional + this->integral;
 }
 
 double PIReg::getOutput(void)
