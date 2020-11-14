@@ -235,10 +235,11 @@ int main(void)
 
 	//------------------Regulators INIT------------------------
 
-	double k_int_omega_x = 0.1;
-	double k_pr_omega_x = 1.5;
+	double k_int_omega_x = 1;
+	double k_pr_omega_x = 4;
 	double int_lim_omega_x = 1000;
-	PIReg omega_x_PI_reg(k_int_omega_x,k_pr_omega_x,0.01,int_lim_omega_x);
+	double omega_zad_x = 0;
+	PIReg omega_x_PI_reg(k_int_omega_x, k_pr_omega_x, 0.01, int_lim_omega_x);
 
 	//---------------------------------------------------------
 
@@ -263,8 +264,9 @@ int main(void)
 			//отправка данных:
 			if(manage_UART_counter >= (50*every_millisecond))
 			{
-				sprintf(str, "t=%d;mode=arm;gyr=%d-%d-%d;alt=%d;air=%d", HAL_GetTick(), (int) v.x*10, (int) v.y*10, (int) v.z*10, (int) (altitude*100), voltageAirSpeed);
-				HAL_UART_Transmit(&huart2, (uint8_t*)str, 100, 1000);
+				//sprintf(str, "t=%d;mode=arm;gyr=%d-%d-%d;alt=%d;=%d", HAL_GetTick(), (int) v.x*10, (int) v.y*10, (int) v.z*10, (int) (altitude*100), voltageAirSpeed);
+				sprintf(str, "%d\n", (int) omega_x_PI_reg.getOutput());
+				HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
 				manage_UART_counter = 0;
 			}
 			if(manage_vertical_speed_counter >= (10*every_millisecond))
@@ -283,11 +285,13 @@ int main(void)
 				altitude = ms5611.getRawAltitude();
 				voltageAirSpeed = mpxv7002.getFilteredADC();
 				v = bno055.getVectorGyroscopeRemap();
-
+				omega_zad_x = 0.234375*ail_rc.getPulseWidth() - 351.5625;
 				//отправка данных:
 				if(manage_UART_counter >= (50*every_millisecond))
 				{
-					sprintf(str, "t=%d;mode=stab;gyr=%d-%d-%d;alt=%d;air=%d", HAL_GetTick(), (int) v.x*10, (int) v.y*10, (int) v.z*10, (int) (altitude*100), voltageAirSpeed);					HAL_UART_Transmit(&huart2, (uint8_t*)str, 100, 1000);
+					//sprintf(str, "t=%d;mode=stab;gyr=%d-%d-%d;alt=%d;air=%d", HAL_GetTick(), (int) v.x*10, (int) v.y*10, (int) v.z*10, (int) (altitude*100), voltageAirSpeed);					HAL_UART_Transmit(&huart2, (uint8_t*)str, 100, 1000);
+					sprintf(str, "%d\n", (int) omega_x_PI_reg.getOutput());
+					HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
 					manage_UART_counter = 0;
 				}
 				if(manage_vertical_speed_counter >= (10*every_millisecond))
@@ -296,7 +300,7 @@ int main(void)
 				}
 				if(manage_omega_counter >= (10*every_millisecond))
 				{
-					omega_x_PI_reg.setError(0.0-v.x);
+					omega_x_PI_reg.setError(omega_zad_x - v.x);
 					omega_x_PI_reg.calcOutput();
 					manage_omega_counter = 0;
 				}
@@ -314,7 +318,7 @@ int main(void)
 
 		if(manage_UART_counter >= (50*every_millisecond))
 		{
-			sprintf(str, "t=%d;mode=darm;gyr=%d-%d-%d;alt=%d;air=%d", HAL_GetTick(), (int) v.x*10, (int) v.y*10, (int) v.z*10, (int) (altitude*100), voltageAirSpeed);
+			//sprintf(str, "t=%d;mode=darm;gyr=%d-%d-%d;alt=%d;air=%d", HAL_GetTick(), (int) v.x*10, (int) v.y*10, (int) v.z*10, (int) (altitude*100), voltageAirSpeed);
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, 100, 1000);
 			manage_UART_counter = 0;
 		}
