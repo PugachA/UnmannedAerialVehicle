@@ -319,7 +319,7 @@ int main(void)
 		if(manage_UART_counter >= (50*every_millisecond))
 		{
 			sprintf(str, "t=%d;mode=darm;gyr=%d-%d-%d;alt=%d;air=%d", HAL_GetTick(), (int) v.x*10, (int) v.y*10, (int) v.z*10, (int) (altitude*100), voltageAirSpeed);
-			HAL_UART_Transmit(&huart2, (uint8_t*)str, 100, 1000);
+			HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
 			manage_UART_counter = 0;
 		}
 
