@@ -264,7 +264,7 @@ int main(void)
 			//отправка данных:
 			if(manage_UART_counter >= (50*every_millisecond))
 			{
-				sprintf(str, "t=%d;mode=arm;gyr=%d-%d-%d;alt=%d;=%d", HAL_GetTick(), (int) v.x*10, (int) v.y*10, (int) v.z*10, (int) (altitude*100), voltageAirSpeed);
+				sprintf(str, "t=%d;mode=arm;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d", HAL_GetTick(),(int)0, (int)(v.x*10), (int)(v.y*10), (int)(v.z*10), (int)(altitude*100), voltageAirSpeed);
 				//sprintf(str, "%d\n", (int) omega_x_PI_reg.getOutput());
 				HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
 				manage_UART_counter = 0;
@@ -285,11 +285,13 @@ int main(void)
 				altitude = ms5611.getRawAltitude();
 				voltageAirSpeed = mpxv7002.getFilteredADC();
 				v = bno055.getVectorGyroscopeRemap();
+
 				omega_zad_x = 0.234375*ail_rc.getPulseWidth() - 351.5625;
+
 				//отправка данных:
 				if(manage_UART_counter >= (50*every_millisecond))
 				{
-					sprintf(str, "t=%d;mode=stab;gyr=%d-%d-%d;alt=%d;air=%d", HAL_GetTick(), (int) v.x*10, (int) v.y*10, (int) v.z*10, (int) (altitude*100), voltageAirSpeed);					HAL_UART_Transmit(&huart2, (uint8_t*)str, 100, 1000);
+					sprintf(str, "t=%d;mode=stab;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d", HAL_GetTick(), (int)(omega_zad_x*10), (int)(v.x*10), (int)(v.y*10), (int)(v.z*10), (int)(altitude*100), voltageAirSpeed);
 					//sprintf(str, "%d\n", (int) omega_x_PI_reg.getOutput());
 					HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
 					manage_UART_counter = 0;
@@ -318,7 +320,7 @@ int main(void)
 
 		if(manage_UART_counter >= (50*every_millisecond))
 		{
-			sprintf(str, "t=%d;mode=darm;gyr=%d-%d-%d;alt=%d;air=%d", HAL_GetTick(), (int) v.x*10, (int) v.y*10, (int) v.z*10, (int) (altitude*100), voltageAirSpeed);
+			sprintf(str, "t=%d;mode=darm;mode=stab;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d", HAL_GetTick(), (int)(0), (int)(v.x*10), (int)(v.y*10), (int)(v.z*10), (int)(altitude*100), voltageAirSpeed);
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
 			manage_UART_counter = 0;
 		}
