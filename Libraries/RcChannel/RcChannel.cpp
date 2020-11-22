@@ -85,7 +85,7 @@ uint32_t RcChannel::getPulseWidthDif()
 }
 uint8_t RcChannel::matchMinValue()
 {
-	if( (this->Difference > (this->channel_min_value - 4)) && (this->Difference < (this->channel_min_value + 4)) )
+	if( (this->Difference > (this->channel_min_value - 30)) && (this->Difference < (this->channel_min_value + 30)) )
 	{
 		return 1;
 	} else
@@ -95,7 +95,7 @@ uint8_t RcChannel::matchMinValue()
 }
 uint8_t RcChannel::matchMidValue()
 {
-	if( (this->Difference > (this->channel_mid_value - 4)) && (this->Difference < (this->channel_mid_value + 4)) )
+	if( (this->Difference > (this->channel_mid_value - 30)) && (this->Difference < (this->channel_mid_value + 30)) )
 	{
 		return 1;
 	} else
@@ -105,7 +105,7 @@ uint8_t RcChannel::matchMidValue()
 }
 uint8_t RcChannel::matchMaxValue()
 {
-	if( (this->Difference > (this->channel_max_value - 4)) && (this->Difference < (this->channel_max_value + 4)) )
+	if( (this->Difference > (this->channel_max_value - 30)) && (this->Difference < (this->channel_max_value + 30)) )
 	{
 		return 1;
 	} else
