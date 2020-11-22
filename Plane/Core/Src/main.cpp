@@ -286,7 +286,7 @@ int main(void)
 				voltageAirSpeed = mpxv7002.getFilteredADC();
 				v = bno055.getVectorGyroscopeRemap();
 
-				omega_zad_x = 0.234375*ail_rc.getPulseWidth() - 351.5625;
+				omega_zad_x = -(0.234375*ail_rc.getPulseWidth() - 351.5625);
 
 				//отправка данных:
 				if(manage_UART_counter >= (50*every_millisecond))
@@ -332,7 +332,7 @@ int main(void)
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", ail_rc.getPulseWidth()), 1000);
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", rud_rc.getPulseWidth()), 1000);
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", switch_rc.getPulseWidth()), 1000);
-			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d\n", slide_rc.getPulseWidth()), 1000);
+			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d\n", slider_rc.getPulseWidth()), 1000);
 			HAL_Delay(500);
 		#endif
 		#ifdef SENSOR_DEBUG_UART
