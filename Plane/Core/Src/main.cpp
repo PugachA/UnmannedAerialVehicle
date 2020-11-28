@@ -98,6 +98,14 @@ static void MX_TIM6_Init(void);
 //в ней инкрементируются флаги по переполнению таймер (колбек см ниже)
 //события наступает после определенного числа переполнений в основном
 //супер цикле
+enum Channels
+{
+	THR,
+	ELEV,
+	AIL1,
+	AIL2,
+	RUD,
+};
 void time_manager(TIM_HandleTypeDef *htim)
 {
 	manage_UART_counter++;
@@ -139,30 +147,48 @@ uint8_t Stab(PIReg* reg)
 	}
 	return stab_flag;
 }
-void directUpdate(uint32_t * inpit, uint32_t * output)
+/*void updateSensors(double * data_input, MS5611 ms5611, MPXV7002 mpxv7002, BNO055 bno055)
 {
-	output[0] = input[0];
-	output[1] = input[1];
-	output[2] = input[2];
-	output[3] = input[3];
-	output[4] = input[4];
+	altitude = ms5611.getRawAltitude();
+	voltageAirSpeed = mpxv7002.getFilteredADC();
+	v = bno055.getVectorGyroscopeRemap();
+}*/
+void updateRcInput(uint32_t * rc_input)
+{
+	rc_input[THR] = thr_rc.getPulseWidthDif();
+	rc_input[ELEV] = elev_rc.getPulseWidthDif();
+	rc_input[AIL1] = ail_rc.getPulseWidthDif();
+	rc_input[AIL2] = ail_rc.getPulseWidth();
+	rc_input[RUD] = rud_rc.getPulseWidth();
 }
-void updateModeState()
+void updateActuators(uint32_t * actuators_pwm, Servo thr_servo, Servo elev_servo, Servo ail_servo_1, Servo ail_servo_2, Servo rud_servo)
+{
+	thr_servo.setPositionMicroSeconds(actuators_pwm[THR]);
+	elev_servo.setPositionMicroSeconds(actuators_pwm[ELEV]);
+	ail_servo_1.setPositionMicroSeconds(actuators_pwm[AIL1]);
+	ail_servo_2.setPositionMicroSeconds(actuators_pwm[AIL2]);
+	rud_servo.setPositionMicroSeconds(actuators_pwm[RUD]);
+}
+void directUpdate(uint32_t * rc_input, uint32_t * output)
+{
+	updateRcInput(rc_input);
+
+	output[THR] = rc_input[THR];
+	output[ELEV] = rc_input[ELEV];
+	output[AIL1] = rc_input[AIL1];
+	output[AIL2] = rc_input[AIL2];
+	output[RUD] = rc_input[RUD];
+}
+void updateModeState(uint32_t * rc_input, uint32_t * output)
 {
 	switch(current_mode)
 	{
-		case 0: directUpdate(); break;
-		case 1: stab_update(); break;
+		case 0: directUpdate(rc_input, output); break;
+
 	}
 }
-void updateActuators(uint32_t * actuators_pwm)
-{
-	thr_servo.setPositionMicroSeconds(actuators_pwm[0]);
-	elev_servo.setPositionMicroSeconds(actuators_pwm[1]);
-	ail_servo_1.setPositionMicroSeconds(actuators_pwm[2]);
-	ail_servo_2.setPositionMicroSeconds(actuators_pwm[3]);
-	rud_servo.setPositionMicroSeconds(actuators_pwm[4]);
-}
+
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -267,6 +293,8 @@ int main(void)
 	PIReg omega_x_PI_reg(k_int_omega_x, k_pr_omega_x, 0.01, int_lim_omega_x);
 
 	//---------------------------------------------------------
+	uint32_t rc_input[5];
+	uint32_t pwm_output[5];
 
   /* USER CODE END 2 */
 
@@ -276,30 +304,11 @@ int main(void)
 	{
 		while(Armed(&beeper))
 		{
-			thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
-			elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
-			ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
-			ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
-			rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
+			//updateSensors(data_input, ms5611, mpxv7002, bno055);
+			updateModeState( rc_input, pwm_output);
+			updateActuators(pwm_output, thr_servo, elev_servo, ail_servo_1, ail_servo_2, rud_servo);
 
-			altitude = ms5611.getRawAltitude();
-			voltageAirSpeed = mpxv7002.getFilteredADC();
-			v = bno055.getVectorGyroscopeRemap();
-
-			//отправка данных:
-			if(manage_UART_counter >= (50*every_millisecond))
-			{
-				sprintf(str, "t=%d;mode=arm;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d", HAL_GetTick(),(int)0, (int)(v.x*10), (int)(v.y*10), (int)(v.z*10), (int)(altitude*100), voltageAirSpeed);
-				//sprintf(str, "%d\n", (int) omega_x_PI_reg.getOutput());
-				HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
-				manage_UART_counter = 0;
-			}
-			if(manage_vertical_speed_counter >= (10*every_millisecond))
-			{
-				manage_vertical_speed_counter = 0;
-			}
-
-			while(Stab(&omega_x_PI_reg))
+			/*while(Stab(&omega_x_PI_reg))
 			{
 				thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
 				elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
@@ -331,7 +340,7 @@ int main(void)
 					omega_x_PI_reg.calcOutput();
 					manage_omega_counter = 0;
 				}
-			}
+			}*/
 		}
 		elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
 		ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
