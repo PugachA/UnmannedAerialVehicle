@@ -76,6 +76,7 @@ uint32_t manage_omega_counter = 0;
 const uint32_t every_second = 10000;
 const uint32_t every_millisecond = 10;
 
+uint8_t current_mode = 0;
 //-----------------------------------------------------------
 /* USER CODE END PV */
 
@@ -137,6 +138,22 @@ uint8_t Stab(PIReg* reg)
 		enter_once = 0;
 	}
 	return stab_flag;
+}
+void updateModeState()
+{
+	switch(current_mode)
+	{
+		case 0: direct.update(); break;
+		case 1: stab.update(); break;
+	}
+}
+void updateActuators()
+{
+	thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
+	elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
+	ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
+	ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
+	rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
 }
 /* USER CODE END PFP */
 
