@@ -139,21 +139,29 @@ uint8_t Stab(PIReg* reg)
 	}
 	return stab_flag;
 }
+void directUpdate(uint32_t * inpit, uint32_t * output)
+{
+	output[0] = input[0];
+	output[1] = input[1];
+	output[2] = input[2];
+	output[3] = input[3];
+	output[4] = input[4];
+}
 void updateModeState()
 {
 	switch(current_mode)
 	{
-		case 0: direct.update(); break;
-		case 1: stab.update(); break;
+		case 0: directUpdate(); break;
+		case 1: stab_update(); break;
 	}
 }
-void updateActuators()
+void updateActuators(uint32_t * actuators_pwm)
 {
-	thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
-	elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
-	ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
-	ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
-	rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
+	thr_servo.setPositionMicroSeconds(actuators_pwm[0]);
+	elev_servo.setPositionMicroSeconds(actuators_pwm[1]);
+	ail_servo_1.setPositionMicroSeconds(actuators_pwm[2]);
+	ail_servo_2.setPositionMicroSeconds(actuators_pwm[3]);
+	rud_servo.setPositionMicroSeconds(actuators_pwm[4]);
 }
 /* USER CODE END PFP */
 
