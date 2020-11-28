@@ -190,12 +190,39 @@ void directUpdate(uint32_t * rc_input, uint32_t * output)
 	output[AIL2] = rc_input[AIL2];
 	output[RUD] = rc_input[RUD];
 }
+void stabUpdate(double * input_data, uint32_t * rc_input, uint32_t * output)
+{
+	//------------------Regulators INIT------------------------
+	double k_int_omega_x = 1;
+	double k_pr_omega_x = 4;
+	double int_lim_omega_x = 1000;
+	double omega_zad_x = 0;
+	PIReg omega_x_PI_reg(k_int_omega_x, k_pr_omega_x, 0.01, int_lim_omega_x);
+	//---------------------------------------------------------
+
+	updateRcInput(rc_input);
+	omega_zad_x = -(0.234375*rc_input[AIL2] - 351.5625);
+
+	output[THR] = rc_input[THR];
+	output[ELEV] = rc_input[ELEV];
+	output[AIL1] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
+	output[AIL2] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
+	output[RUD] = rc_input[RUD];
+
+	if(manage_omega_counter >= (10*every_millisecond))
+	{
+		omega_x_PI_reg.setError(omega_zad_x - v.x);
+		omega_x_PI_reg.calcOutput();
+		manage_omega_counter = 0;
+	}
+
+}
 void updateModeState(double * input_data, uint32_t * rc_input, uint32_t * output)
 {
 	switch(current_mode)
 	{
 		case 0: directUpdate(rc_input, output); break;
-
+		case 1: stabUpdate(input_data, rc_input, output); break;
 	}
 }
 
@@ -279,12 +306,9 @@ int main(void)
 			ail_servo_2(htim3.Instance, 4),
 			rud_servo(htim5.Instance, 4),
 			ers_servo(htim5.Instance, 3);
-	//---------------------------------------------------------
-
-	Beeper beeper(GPIOD, GPIO_PIN_13);
-	//HAL_HalfDuplex_EnableTransmitter(&huart2);
 
 	//-------------------Sensors INIT--------------------------
+	Beeper beeper(GPIOD, GPIO_PIN_13);
 	MS5611 ms5611(0x77, hi2c1, 100, overflows_to_Vy_calc);//нельзя инитить до инита i2c
 	MPXV7002 mpxv7002(hadc1);
 	HAL_Delay(700);
@@ -295,15 +319,6 @@ int main(void)
 	bno055.setOperationModeNDOF();
 	//---------------------------------------------------------
 
-	//------------------Regulators INIT------------------------
-
-	double k_int_omega_x = 1;
-	double k_pr_omega_x = 4;
-	double int_lim_omega_x = 1000;
-	double omega_zad_x = 0;
-	PIReg omega_x_PI_reg(k_int_omega_x, k_pr_omega_x, 0.01, int_lim_omega_x);
-
-	//---------------------------------------------------------
 	uint32_t rc_input[5];
 	uint32_t pwm_output[5];
 	double data_input[5];
@@ -316,7 +331,7 @@ int main(void)
 	{
 		while(Armed(&beeper))
 		{
-			//updateSensors(data_input, ms5611, mpxv7002, bno055);
+			updateSensors(data_input, ms5611, mpxv7002, bno055);
 			updateModeState(data_input, rc_input, pwm_output);
 			updateActuators(pwm_output, thr_servo, elev_servo, ail_servo_1, ail_servo_2, rud_servo);
 
