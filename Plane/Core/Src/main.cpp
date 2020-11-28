@@ -179,7 +179,7 @@ void directUpdate(uint32_t * rc_input, uint32_t * output)
 	output[AIL2] = rc_input[AIL2];
 	output[RUD] = rc_input[RUD];
 }
-void updateModeState(uint32_t * rc_input, uint32_t * output)
+void updateModeState(double * input_data, uint32_t * rc_input, uint32_t * output)
 {
 	switch(current_mode)
 	{
@@ -295,6 +295,7 @@ int main(void)
 	//---------------------------------------------------------
 	uint32_t rc_input[5];
 	uint32_t pwm_output[5];
+	double data_input[3];
 
   /* USER CODE END 2 */
 
@@ -305,7 +306,7 @@ int main(void)
 		while(Armed(&beeper))
 		{
 			//updateSensors(data_input, ms5611, mpxv7002, bno055);
-			updateModeState( rc_input, pwm_output);
+			updateModeState(data_input, rc_input, pwm_output);
 			updateActuators(pwm_output, thr_servo, elev_servo, ail_servo_1, ail_servo_2, rud_servo);
 
 			/*while(Stab(&omega_x_PI_reg))
