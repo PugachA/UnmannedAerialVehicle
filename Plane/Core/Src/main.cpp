@@ -106,6 +106,14 @@ enum Channels
 	AIL2,
 	RUD,
 };
+enum Sensors
+{
+	BARO,
+	AIR,
+	GYROX,
+	GYROY,
+	GYROZ,
+};
 void time_manager(TIM_HandleTypeDef *htim)
 {
 	manage_UART_counter++;
@@ -147,12 +155,15 @@ uint8_t Stab(PIReg* reg)
 	}
 	return stab_flag;
 }
-/*void updateSensors(double * data_input, MS5611 ms5611, MPXV7002 mpxv7002, BNO055 bno055)
+void updateSensors(double * data_input, MS5611 ms5611, MPXV7002 mpxv7002, BNO055 bno055)
 {
-	altitude = ms5611.getRawAltitude();
-	voltageAirSpeed = mpxv7002.getFilteredADC();
-	v = bno055.getVectorGyroscopeRemap();
-}*/
+	bno055_vector_t v = bno055.getVectorGyroscopeRemap();
+	data_input[BARO] = ms5611.getRawAltitude();
+	data_input[AIR] = mpxv7002.getFilteredADC();
+	data_input[GYROX] = v.x;
+	data_input[GYROY] = v.y;
+	data_input[GYROZ] = v.z;
+}
 void updateRcInput(uint32_t * rc_input)
 {
 	rc_input[THR] = thr_rc.getPulseWidthDif();
@@ -295,7 +306,7 @@ int main(void)
 	//---------------------------------------------------------
 	uint32_t rc_input[5];
 	uint32_t pwm_output[5];
-	double data_input[3];
+	double data_input[5];
 
   /* USER CODE END 2 */
 
