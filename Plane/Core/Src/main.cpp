@@ -373,14 +373,12 @@ int main(void)
 		updateModeState(data_input, rc_input, pwm_output);
 		updateActuators(pwm_output, thr_servo, elev_servo, ail_servo_1, ail_servo_2, rud_servo);
 
-
 		if(manage_UART_counter >= (50*every_millisecond))
 		{
-			sprintf(str, "t=%d;mode=darm;mode=stab;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d", HAL_GetTick(), (int)(0), (int)(v.x*10), (int)(v.y*10), (int)(v.z*10), (int)(altitude*100), voltageAirSpeed);
+			sprintf(str, "t=%d;mode=%d;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d", HAL_GetTick(), (int)current_mode ,(int)(0), (int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10), (int)(data_input[BARO]*100), data_input[AIR]);
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
 			manage_UART_counter = 0;
 		}
-
 
 		#ifdef SERVO_DEBUG_UART
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", thr_rc.getPulseWidth()), 1000);
