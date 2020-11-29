@@ -105,6 +105,8 @@ enum Channels
 	AIL1,
 	AIL2,
 	RUD,
+	SWITCHA,
+	ARM,
 };
 enum Sensors
 {
@@ -113,6 +115,12 @@ enum Sensors
 	GYROX,
 	GYROY,
 	GYROZ,
+};
+enum Modes
+{
+	PREFLIGHTCHECK,
+	DIRECT,
+	STAB,
 };
 void time_manager(TIM_HandleTypeDef *htim)
 {
@@ -155,6 +163,7 @@ uint8_t Stab(PIReg* reg)
 	}
 	return stab_flag;
 }
+
 void updateSensors(double * data_input, MS5611 ms5611, MPXV7002 mpxv7002, BNO055 bno055)
 {
 	bno055_vector_t v = bno055.getVectorGyroscopeRemap();
@@ -171,6 +180,8 @@ void updateRcInput(uint32_t * rc_input)
 	rc_input[AIL1] = ail_rc.getPulseWidthDif();
 	rc_input[AIL2] = ail_rc.getPulseWidth();
 	rc_input[RUD] = rud_rc.getPulseWidth();
+	rc_input[SWITCHA] = switch_rc.getPulseWidth();
+	rc_input[ARM] = slider_rc.getPulseWidth();
 }
 void updateActuators(uint32_t * actuators_pwm, Servo thr_servo, Servo elev_servo, Servo ail_servo_1, Servo ail_servo_2, Servo rud_servo)
 {
@@ -179,6 +190,16 @@ void updateActuators(uint32_t * actuators_pwm, Servo thr_servo, Servo elev_servo
 	ail_servo_1.setPositionMicroSeconds(actuators_pwm[AIL1]);
 	ail_servo_2.setPositionMicroSeconds(actuators_pwm[AIL2]);
 	rud_servo.setPositionMicroSeconds(actuators_pwm[RUD]);
+}
+void preFlightCheckUpdate(uint32_t * rc_input, uint32_t * output)
+{
+	updateRcInput(rc_input);
+
+	output[THR] = 989;
+	output[ELEV] = rc_input[ELEV];
+	output[AIL1] = rc_input[AIL1];
+	output[AIL2] = rc_input[AIL2];
+	output[RUD] = rc_input[RUD];
 }
 void directUpdate(uint32_t * rc_input, uint32_t * output)
 {
@@ -197,7 +218,7 @@ void stabUpdate(double * input_data, uint32_t * rc_input, uint32_t * output)
 	double k_pr_omega_x = 4;
 	double int_lim_omega_x = 1000;
 	double omega_zad_x = 0;
-	PIReg omega_x_PI_reg(k_int_omega_x, k_pr_omega_x, 0.01, int_lim_omega_x);
+	static PIReg omega_x_PI_reg(k_int_omega_x, k_pr_omega_x, 0.01, int_lim_omega_x);
 	//---------------------------------------------------------
 
 	updateRcInput(rc_input);
@@ -211,18 +232,41 @@ void stabUpdate(double * input_data, uint32_t * rc_input, uint32_t * output)
 
 	if(manage_omega_counter >= (10*every_millisecond))
 	{
-		omega_x_PI_reg.setError(omega_zad_x - v.x);
+		omega_x_PI_reg.setError(omega_zad_x - input_data[GYROX]);
 		omega_x_PI_reg.calcOutput();
 		manage_omega_counter = 0;
 	}
 
 }
+void setMode(uint32_t * rc_input, Beeper * beeper)
+{
+	static uint8_t prev_mode = 0;
+
+	if(prev_mode != current_mode)
+	{
+		beeper->longBeep();
+	}
+	prev_mode = current_mode;
+
+	if(rc_input[ARM] < 1500)
+		current_mode = PREFLIGHTCHECK;
+	else
+	{
+		if(rc_input[SWITCHA] > 988 -4 && rc_input[SWITCHA] < 988 + 4)
+		{
+			current_mode = DIRECT;
+		}
+		if(rc_input[SWITCHA] > 1500 -4 && rc_input[SWITCHA] < 1500 + 4)
+			current_mode = STAB;
+	}
+}
 void updateModeState(double * input_data, uint32_t * rc_input, uint32_t * output)
 {
 	switch(current_mode)
 	{
-		case 0: directUpdate(rc_input, output); break;
-		case 1: stabUpdate(input_data, rc_input, output); break;
+		case PREFLIGHTCHECK: preFlightCheckUpdate(rc_input, output); break;
+		case DIRECT: directUpdate(rc_input, output); break;
+		case STAB: stabUpdate(input_data, rc_input, output); break;
 	}
 }
 
@@ -251,12 +295,7 @@ int main(void)
 
   /* USER CODE BEGIN Init */
 	char str[200] = "test\n";
-	char str_baro[80] = "test\n";
 	int overflows_to_Vy_calc = 10000;
-	double altitude = 0;
-	double verticalSpeed = 0;
-	uint32_t voltageAirSpeed = 0;
-	bno055_vector_t v;
 
   /* USER CODE END Init */
 
@@ -319,7 +358,7 @@ int main(void)
 	bno055.setOperationModeNDOF();
 	//---------------------------------------------------------
 
-	uint32_t rc_input[5];
+	uint32_t rc_input[7];
 	uint32_t pwm_output[5];
 	double data_input[5];
 
@@ -329,8 +368,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 	while (1)
 	{
-		while(Armed(&beeper))
-		{
+			setMode(rc_input, &beeper);
 			updateSensors(data_input, ms5611, mpxv7002, bno055);
 			updateModeState(data_input, rc_input, pwm_output);
 			updateActuators(pwm_output, thr_servo, elev_servo, ail_servo_1, ail_servo_2, rud_servo);
@@ -367,8 +405,8 @@ int main(void)
 					omega_x_PI_reg.calcOutput();
 					manage_omega_counter = 0;
 				}
-			}*/
-		}
+			}
+
 		elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
 		ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
 		ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
@@ -384,7 +422,7 @@ int main(void)
 			sprintf(str, "t=%d;mode=darm;mode=stab;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d", HAL_GetTick(), (int)(0), (int)(v.x*10), (int)(v.y*10), (int)(v.z*10), (int)(altitude*100), voltageAirSpeed);
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
 			manage_UART_counter = 0;
-		}
+		}*/
 
 
 		#ifdef SERVO_DEBUG_UART
