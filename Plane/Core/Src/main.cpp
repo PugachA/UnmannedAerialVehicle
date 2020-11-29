@@ -77,6 +77,7 @@ const uint32_t every_second = 10000;
 const uint32_t every_millisecond = 10;
 
 uint8_t current_mode = 0;
+uint8_t integral_reset_flag = 0;
 //-----------------------------------------------------------
 /* USER CODE END PV */
 
@@ -175,10 +176,10 @@ void updateSensors(double * data_input, MS5611 ms5611, MPXV7002 mpxv7002, BNO055
 }
 void updateRcInput(uint32_t * rc_input)
 {
-	rc_input[THR] = thr_rc.getPulseWidthDif();
+	rc_input[THR] = thr_rc.getPulseWidth();
 	rc_input[ELEV] = elev_rc.getPulseWidthDif();
 	rc_input[AIL1] = ail_rc.getPulseWidthDif();
-	rc_input[AIL2] = ail_rc.getPulseWidth();
+	rc_input[AIL2] = ail_rc.getPulseWidthDif();
 	rc_input[RUD] = rud_rc.getPulseWidth();
 	rc_input[SWITCHA] = switch_rc.getPulseWidth();
 	rc_input[ARM] = slider_rc.getPulseWidth();
@@ -214,26 +215,41 @@ void directUpdate(uint32_t * rc_input, uint32_t * output)
 void stabUpdate(double * input_data, uint32_t * rc_input, uint32_t * output)
 {
 	//------------------Regulators INIT------------------------
-	double k_int_omega_x = 1;
-	double k_pr_omega_x = 4;
+	double k_int_omega_x = 2.5;
+	double k_pr_omega_x = 5.5;
 	double int_lim_omega_x = 1000;
-	double omega_zad_x = 0;
+	double omega_zad_x = 0, omega_zad_y = 0, omega_zad_z = 0;
 	static PIReg omega_x_PI_reg(k_int_omega_x, k_pr_omega_x, 0.01, int_lim_omega_x);
+	static PIReg omega_y_PI_reg(k_int_omega_x, k_pr_omega_x, 0.01, int_lim_omega_x);
+	static PIReg omega_z_PI_reg(k_int_omega_x, k_pr_omega_x, 0.01, int_lim_omega_x);
 	//---------------------------------------------------------
 
 	updateRcInput(rc_input);
-	omega_zad_x = -(0.234375*rc_input[AIL2] - 351.5625);
+	if(integral_reset_flag)
+	{
+		omega_x_PI_reg.integralReset();
+		omega_y_PI_reg.integralReset();
+		omega_z_PI_reg.integralReset();
+		integral_reset_flag = 0;
+	}
+	omega_zad_x = (0.234375*rc_input[AIL2] - 351.5625);
+	omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
+	omega_zad_z = (0.234375*rc_input[ELEV] - 351.5625);
 
 	output[THR] = rc_input[THR];
-	output[ELEV] = rc_input[ELEV];
+	output[ELEV] = (int)(1500+0.4*omega_z_PI_reg.getOutput());
 	output[AIL1] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
 	output[AIL2] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
-	output[RUD] = rc_input[RUD];
+	output[RUD] = (int)(1500+0.4*omega_y_PI_reg.getOutput());
 
 	if(manage_omega_counter >= (10*every_millisecond))
 	{
 		omega_x_PI_reg.setError(omega_zad_x - input_data[GYROX]);
 		omega_x_PI_reg.calcOutput();
+		omega_y_PI_reg.setError(omega_zad_y - input_data[GYROY]);
+		omega_y_PI_reg.calcOutput();
+		omega_z_PI_reg.setError(omega_zad_z - input_data[GYROZ]);
+		omega_z_PI_reg.calcOutput();
 		manage_omega_counter = 0;
 	}
 
@@ -244,7 +260,8 @@ void setMode(uint32_t * rc_input, Beeper * beeper)
 
 	if(prev_mode != current_mode)
 	{
-		beeper->longBeep();
+		//beeper->longBeep();
+		integral_reset_flag = 1;
 	}
 	prev_mode = current_mode;
 
