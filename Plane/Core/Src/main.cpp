@@ -76,6 +76,8 @@ uint32_t manage_omega_counter = 0;
 const uint32_t every_second = 10000;
 const uint32_t every_millisecond = 10;
 
+uint8_t current_mode = 0;
+uint8_t integral_reset_flag = 0;
 //-----------------------------------------------------------
 /* USER CODE END PV */
 
@@ -97,6 +99,30 @@ static void MX_TIM6_Init(void);
 //в ней инкрементируются флаги по переполнению таймер (колбек см ниже)
 //события наступает после определенного числа переполнений в основном
 //супер цикле
+enum Channels
+{
+	THR,
+	ELEV,
+	AIL1,
+	AIL2,
+	RUD,
+	SWITCHA,
+	ARM,
+};
+enum Sensors
+{
+	BARO,
+	AIR,
+	GYROX,
+	GYROY,
+	GYROZ,
+};
+enum Modes
+{
+	PREFLIGHTCHECK,
+	DIRECT,
+	STAB,
+};
 void time_manager(TIM_HandleTypeDef *htim)
 {
 	manage_UART_counter++;
@@ -138,6 +164,130 @@ uint8_t Stab(PIReg* reg)
 	}
 	return stab_flag;
 }
+
+void updateSensors(double * data_input, MS5611 ms5611, MPXV7002 mpxv7002, BNO055 bno055)
+{
+	bno055_vector_t v = bno055.getVectorGyroscopeRemap();
+	data_input[BARO] = ms5611.getRawAltitude();
+	data_input[AIR] = mpxv7002.getFilteredADC();
+	data_input[GYROX] = v.x;
+	data_input[GYROY] = v.y;
+	data_input[GYROZ] = v.z;
+}
+void updateRcInput(uint32_t * rc_input)
+{
+	rc_input[THR] = thr_rc.getPulseWidth();
+	rc_input[ELEV] = elev_rc.getPulseWidthDif();
+	rc_input[AIL1] = ail_rc.getPulseWidthDif();
+	rc_input[AIL2] = ail_rc.getPulseWidthDif();
+	rc_input[RUD] = rud_rc.getPulseWidth();
+	rc_input[SWITCHA] = switch_rc.getPulseWidth();
+	rc_input[ARM] = slider_rc.getPulseWidth();
+}
+void updateActuators(uint32_t * actuators_pwm, Servo thr_servo, Servo elev_servo, Servo ail_servo_1, Servo ail_servo_2, Servo rud_servo)
+{
+	thr_servo.setPositionMicroSeconds(actuators_pwm[THR]);
+	elev_servo.setPositionMicroSeconds(actuators_pwm[ELEV]);
+	ail_servo_1.setPositionMicroSeconds(actuators_pwm[AIL1]);
+	ail_servo_2.setPositionMicroSeconds(actuators_pwm[AIL2]);
+	rud_servo.setPositionMicroSeconds(actuators_pwm[RUD]);
+}
+void preFlightCheckUpdate(uint32_t * rc_input, uint32_t * output)
+{
+	updateRcInput(rc_input);
+
+	output[THR] = 989;
+	output[ELEV] = rc_input[ELEV];
+	output[AIL1] = rc_input[AIL1];
+	output[AIL2] = rc_input[AIL2];
+	output[RUD] = rc_input[RUD];
+}
+void directUpdate(uint32_t * rc_input, uint32_t * output)
+{
+	updateRcInput(rc_input);
+
+	output[THR] = rc_input[THR];
+	output[ELEV] = rc_input[ELEV];
+	output[AIL1] = rc_input[AIL1];
+	output[AIL2] = rc_input[AIL2];
+	output[RUD] = rc_input[RUD];
+}
+void stabUpdate(double * input_data, uint32_t * rc_input, uint32_t * output)
+{
+	//------------------Regulators INIT------------------------
+	double k_int_omega_x = 2.5;
+	double k_pr_omega_x = 5.5;
+	double int_lim_omega_x = 1000;
+	double omega_zad_x = 0, omega_zad_y = 0, omega_zad_z = 0;
+	static PIReg omega_x_PI_reg(k_int_omega_x, k_pr_omega_x, 0.01, int_lim_omega_x);
+	static PIReg omega_y_PI_reg(k_int_omega_x, k_pr_omega_x, 0.01, int_lim_omega_x);
+	static PIReg omega_z_PI_reg(k_int_omega_x, k_pr_omega_x, 0.01, int_lim_omega_x);
+	//---------------------------------------------------------
+
+	updateRcInput(rc_input);
+	if(integral_reset_flag)
+	{
+		omega_x_PI_reg.integralReset();
+		omega_y_PI_reg.integralReset();
+		omega_z_PI_reg.integralReset();
+		integral_reset_flag = 0;
+	}
+	omega_zad_x = (0.234375*rc_input[AIL2] - 351.5625);
+	omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
+	omega_zad_z = (0.234375*rc_input[ELEV] - 351.5625);
+
+	output[THR] = rc_input[THR];
+	output[ELEV] = (int)(1500+0.4*omega_z_PI_reg.getOutput());
+	output[AIL1] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
+	output[AIL2] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
+	output[RUD] = (int)(1500+0.4*omega_y_PI_reg.getOutput());
+
+	if(manage_omega_counter >= (10*every_millisecond))
+	{
+		omega_x_PI_reg.setError(omega_zad_x - input_data[GYROX]);
+		omega_x_PI_reg.calcOutput();
+		omega_y_PI_reg.setError(omega_zad_y - input_data[GYROY]);
+		omega_y_PI_reg.calcOutput();
+		omega_z_PI_reg.setError(omega_zad_z - input_data[GYROZ]);
+		omega_z_PI_reg.calcOutput();
+		manage_omega_counter = 0;
+	}
+
+}
+void setMode(uint32_t * rc_input, Beeper * beeper)
+{
+	static uint8_t prev_mode = 0;
+
+	if(prev_mode != current_mode)
+	{
+		//beeper->longBeep();
+		integral_reset_flag = 1;
+	}
+	prev_mode = current_mode;
+
+	if(rc_input[ARM] < 1500)
+		current_mode = PREFLIGHTCHECK;
+	else
+	{
+		if(rc_input[SWITCHA] > 988 -4 && rc_input[SWITCHA] < 988 + 4)
+		{
+			current_mode = DIRECT;
+		}
+		if(rc_input[SWITCHA] > 1500 -4 && rc_input[SWITCHA] < 1500 + 4)
+			current_mode = STAB;
+	}
+}
+void updateModeState(double * input_data, uint32_t * rc_input, uint32_t * output)
+{
+	switch(current_mode)
+	{
+		case PREFLIGHTCHECK: preFlightCheckUpdate(rc_input, output); break;
+		case DIRECT: directUpdate(rc_input, output); break;
+		case STAB: stabUpdate(input_data, rc_input, output); break;
+	}
+}
+
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -162,12 +312,7 @@ int main(void)
 
   /* USER CODE BEGIN Init */
 	char str[200] = "test\n";
-	char str_baro[80] = "test\n";
 	int overflows_to_Vy_calc = 10000;
-	double altitude = 0;
-	double verticalSpeed = 0;
-	uint32_t voltageAirSpeed = 0;
-	bno055_vector_t v;
 
   /* USER CODE END Init */
 
@@ -217,12 +362,9 @@ int main(void)
 			ail_servo_2(htim3.Instance, 4),
 			rud_servo(htim5.Instance, 4),
 			ers_servo(htim5.Instance, 3);
-	//---------------------------------------------------------
-
-	Beeper beeper(GPIOD, GPIO_PIN_13);
-	//HAL_HalfDuplex_EnableTransmitter(&huart2);
 
 	//-------------------Sensors INIT--------------------------
+	Beeper beeper(GPIOD, GPIO_PIN_13);
 	MS5611 ms5611(0x77, hi2c1, 100, overflows_to_Vy_calc);//нельзя инитить до инита i2c
 	MPXV7002 mpxv7002(hadc1);
 	HAL_Delay(700);
@@ -233,15 +375,9 @@ int main(void)
 	bno055.setOperationModeNDOF();
 	//---------------------------------------------------------
 
-	//------------------Regulators INIT------------------------
-
-	double k_int_omega_x = 1;
-	double k_pr_omega_x = 4;
-	double int_lim_omega_x = 1000;
-	double omega_zad_x = 0;
-	PIReg omega_x_PI_reg(k_int_omega_x, k_pr_omega_x, 0.01, int_lim_omega_x);
-
-	//---------------------------------------------------------
+	uint32_t rc_input[7];
+	uint32_t pwm_output[5];
+	double data_input[5];
 
   /* USER CODE END 2 */
 
@@ -249,82 +385,17 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 	while (1)
 	{
-		while(Armed(&beeper))
-		{
-			thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
-			elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
-			ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
-			ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
-			rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
-
-			altitude = ms5611.getRawAltitude();
-			voltageAirSpeed = mpxv7002.getFilteredADC();
-			v = bno055.getVectorGyroscopeRemap();
-
-			//отправка данных:
-			if(manage_UART_counter >= (50*every_millisecond))
-			{
-				sprintf(str, "t=%d;mode=arm;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d", HAL_GetTick(),(int)0, (int)(v.x*10), (int)(v.y*10), (int)(v.z*10), (int)(altitude*100), voltageAirSpeed);
-				//sprintf(str, "%d\n", (int) omega_x_PI_reg.getOutput());
-				HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
-				manage_UART_counter = 0;
-			}
-			if(manage_vertical_speed_counter >= (10*every_millisecond))
-			{
-				manage_vertical_speed_counter = 0;
-			}
-
-			while(Stab(&omega_x_PI_reg))
-			{
-				thr_servo.setPositionMicroSeconds(thr_rc.getPulseWidth());
-				elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
-				ail_servo_1.setPositionMicroSeconds((int)(1500+0.4*omega_x_PI_reg.getOutput()));
-				ail_servo_2.setPositionMicroSeconds((int)(1500+0.4*omega_x_PI_reg.getOutput()));
-				rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
-
-				altitude = ms5611.getRawAltitude();
-				voltageAirSpeed = mpxv7002.getFilteredADC();
-				v = bno055.getVectorGyroscopeRemap();
-
-				omega_zad_x = -(0.234375*ail_rc.getPulseWidth() - 351.5625);
-
-				//отправка данных:
-				if(manage_UART_counter >= (50*every_millisecond))
-				{
-					sprintf(str, "t=%d;mode=stab;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d", HAL_GetTick(), (int)(omega_zad_x*10), (int)(v.x*10), (int)(v.y*10), (int)(v.z*10), (int)(altitude*100), voltageAirSpeed);
-					//sprintf(str, "%d\n", (int) omega_x_PI_reg.getOutput());
-					HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
-					manage_UART_counter = 0;
-				}
-				if(manage_vertical_speed_counter >= (10*every_millisecond))
-				{
-					manage_vertical_speed_counter = 0;
-				}
-				if(manage_omega_counter >= (10*every_millisecond))
-				{
-					omega_x_PI_reg.setError(omega_zad_x - v.x);
-					omega_x_PI_reg.calcOutput();
-					manage_omega_counter = 0;
-				}
-			}
-		}
-		elev_servo.setPositionMicroSeconds(elev_rc.getPulseWidthDif());
-		ail_servo_1.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
-		ail_servo_2.setPositionMicroSeconds(ail_rc.getPulseWidthDif());
-		rud_servo.setPositionMicroSeconds(rud_rc.getPulseWidth());
-		thr_servo.setPositionMicroSeconds(thr_rc.getChannelMinWidth());
-
-		altitude = ms5611.getRawAltitude();
-		voltageAirSpeed = mpxv7002.getFilteredADC();
-		v = bno055.getVectorGyroscopeRemap();
+		setMode(rc_input, &beeper);
+		updateSensors(data_input, ms5611, mpxv7002, bno055);
+		updateModeState(data_input, rc_input, pwm_output);
+		updateActuators(pwm_output, thr_servo, elev_servo, ail_servo_1, ail_servo_2, rud_servo);
 
 		if(manage_UART_counter >= (50*every_millisecond))
 		{
-			sprintf(str, "t=%d;mode=darm;mode=stab;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d", HAL_GetTick(), (int)(0), (int)(v.x*10), (int)(v.y*10), (int)(v.z*10), (int)(altitude*100), voltageAirSpeed);
+			sprintf(str, "t=%d;mode=%d;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d", HAL_GetTick(), (int)current_mode ,(int)(0), (int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10), (int)(data_input[BARO]*100), data_input[AIR]);
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
 			manage_UART_counter = 0;
 		}
-
 
 		#ifdef SERVO_DEBUG_UART
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", thr_rc.getPulseWidth()), 1000);
