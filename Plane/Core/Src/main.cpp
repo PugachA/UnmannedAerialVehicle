@@ -118,6 +118,7 @@ enum Sensors
 	GYROZ,
 	BAROVY,
 };
+double vy = 0;
 enum Modes
 {
 	PREFLIGHTCHECK,
@@ -166,7 +167,7 @@ uint8_t Stab(PIReg* reg)
 	return stab_flag;
 }
 
-void updateSensors(double * data_input, MS5611 ms5611, MPXV7002 mpxv7002, BNO055 bno055)
+void updateSensors(double * data_input, MS5611 &ms5611, MPXV7002 &mpxv7002, BNO055 &bno055)
 {
 	bno055_vector_t v = bno055.getVectorGyroscopeRemap();
 	data_input[BARO] = ms5611.getRawAltitude();
@@ -400,7 +401,7 @@ int main(void)
 		if(manage_UART_counter >= (50*every_millisecond))
 		{
 			//sprintf(str, "t=%d;mode=%d;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d", HAL_GetTick(), (int)current_mode ,(int)(0), (int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10), (int)(data_input[BARO]*100), data_input[AIR]);
-			sprintf(str, "Alt=%d; Vy=%d\n",(int) (100*data_input[BARO]), (int) (100*data_input[BAROVY]));
+			sprintf(str, "%d, %d\n", (int) (100*data_input[BAROVY]), (int) (100*data_input[BARO]));
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
 			manage_UART_counter = 0;
 		}
