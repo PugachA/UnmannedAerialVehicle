@@ -179,12 +179,6 @@ void MS5611::firstVsFilter(void)
 	//lpAltFilter();
     error = k1*(this->rawAltitude - this->first_filter_output);
 	this->first_filter_output += error*dt;
-	/*лоховский дифф-тор
-	double error = 0;
-	calcAltitude();
-	error = (this->rawAltitude - this->first_filter_output);
-	this->first_filter_output = this->rawAltitude;
-	this->vertical_speed = error/dt;*/
 }
 
 void MS5611::secondVsFilter(void)
