@@ -66,7 +66,7 @@ class MS5611
 		
 	
   public:
-    MS5611(uint8_t,I2C_HandleTypeDef,int, int); //constructor
+    MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c,int number_of_points_to_average, double dt); //constructor
 	
     double getPressure(void); //return pressure
     double getTemperature(void); //return temperature

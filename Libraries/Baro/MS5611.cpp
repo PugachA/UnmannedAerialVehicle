@@ -1,7 +1,7 @@
 #include "MS5611.h"
 #include "math.h"
 
-MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c, int number_of_points_to_average, int overflows_to_Vy_calc) //constructor
+MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c, int number_of_points_to_average, double dt) //constructor
 {
   this->MS5611_addr = ms5611_addr;
   this->hi2c = hi2c;
@@ -27,7 +27,7 @@ MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c, int number_of_points
 	
   k1 = 13.0;
   k2 = 17.0;
-  dt = 0.001*overflows_to_Vy_calc; //0.0001 is a timer period, idk how to put it universally
+  this-> dt = dt;
 
   k_lp_alt = 20;// 1/k = T - time constant for lpFilter, cut-off frequency = 20 rad/s ~ 3 Hz
 	
