@@ -116,6 +116,7 @@ enum Sensors
 	GYROX,
 	GYROY,
 	GYROZ,
+	BAROVY,
 };
 enum Modes
 {
@@ -173,6 +174,12 @@ void updateSensors(double * data_input, MS5611 ms5611, MPXV7002 mpxv7002, BNO055
 	data_input[GYROX] = v.x;
 	data_input[GYROY] = v.y;
 	data_input[GYROZ] = v.z;
+	if(manage_vertical_speed_counter > 10*every_millisecond)
+	{
+		ms5611.calcVerticalSpeed();
+		manage_vertical_speed_counter = 0;
+	}
+	data_input[BAROVY] = ms5611.getVerticalSpeed();
 }
 void updateRcInput(uint32_t * rc_input)
 {
@@ -365,7 +372,7 @@ int main(void)
 
 	//-------------------Sensors INIT--------------------------
 	Beeper beeper(GPIOD, GPIO_PIN_13);
-	MS5611 ms5611(0x77, hi2c1, 100, overflows_to_Vy_calc);//нельзя инитить до инита i2c
+	MS5611 ms5611(0x77, hi2c1, 100, 10*every_millisecond);//нельзя инитить до инита i2c
 	MPXV7002 mpxv7002(hadc1);
 	HAL_Delay(700);
 	BNO055 bno055(hi2c3);
@@ -377,7 +384,7 @@ int main(void)
 
 	uint32_t rc_input[7];
 	uint32_t pwm_output[5];
-	double data_input[5];
+	double data_input[6];
 
   /* USER CODE END 2 */
 
