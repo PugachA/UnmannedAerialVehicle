@@ -118,7 +118,6 @@ enum Sensors
 	GYROZ,
 	BAROVY,
 };
-double vy = 0;
 enum Modes
 {
 	PREFLIGHTCHECK,
