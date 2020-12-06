@@ -219,9 +219,9 @@ void stabUpdate(double * input_data, uint32_t * rc_input, uint32_t * output)
 	double k_pr_omega_x = 5.5;
 	double int_lim_omega_x = 1000;
 	double omega_zad_x = 0, omega_zad_y = 0, omega_zad_z = 0;
-	static PIReg omega_x_PI_reg(k_int_omega_x, k_pr_omega_x, 0.01, int_lim_omega_x);
-	static PIReg omega_y_PI_reg(k_int_omega_x, k_pr_omega_x, 0.01, int_lim_omega_x);
-	static PIReg omega_z_PI_reg(k_int_omega_x, k_pr_omega_x, 0.01, int_lim_omega_x);
+	static PIReg omega_x_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x);
+	static PIReg omega_y_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x);
+	static PIReg omega_z_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x);
 	//---------------------------------------------------------
 
 	updateRcInput(rc_input);

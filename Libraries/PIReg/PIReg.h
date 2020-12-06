@@ -4,8 +4,8 @@
 class PIReg
 {
 private:
-	double k_int;
 	double k_pr;
+	double k_int;
 	double dt;
 	double error;
 	double integral;
@@ -13,7 +13,7 @@ private:
 	double integral_lim;
 
 public:
-	PIReg(double k_int, double k_pr, double dt, double integral_lim); //constructor
+	PIReg(double k_pr, double k_int, double dt, double integral_lim); //constructor
 	void setError(double error);
 	void calcOutput(void);
 	double getOutput(void);
