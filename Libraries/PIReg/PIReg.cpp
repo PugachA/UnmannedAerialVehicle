@@ -1,9 +1,9 @@
 #include "PIReg.h"
 
-PIReg::PIReg(double k_int, double k_pr, double dt, double integral_lim)
+PIReg::PIReg(double k_pr, double k_int, double dt, double integral_lim)
 {
-	this->k_int = k_int;
 	this->k_pr = k_pr;
+	this->k_int = k_int;
 	this->dt = dt;
 
 	this->integral = 0;
