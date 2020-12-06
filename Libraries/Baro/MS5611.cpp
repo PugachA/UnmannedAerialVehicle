@@ -25,8 +25,8 @@ MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c, int number_of_points
   pres_decimation = 100.0;
 	
 	
-  k1 = 13.0;
-  k2 = 17.0;
+  k1 = 10.0;
+  k2 = 12.0;
   this-> dt = dt;
 
   k_lp_alt = 20;// 1/k = T - time constant for lpFilter, cut-off frequency = 20 rad/s ~ 3 Hz
