@@ -177,9 +177,9 @@ void updateSensors(double * data_input, MS5611 &ms5611, MPXV7002 &mpxv7002, BNO0
 	if(manage_vertical_speed_counter > 10*every_millisecond)
 	{
 		ms5611.calcVerticalSpeed();
+		data_input[BAROVY] = ms5611.getVerticalSpeed();
 		manage_vertical_speed_counter = 0;
 	}
-	data_input[BAROVY] = ms5611.getVerticalSpeed();
 }
 void updateRcInput(uint32_t * rc_input)
 {
