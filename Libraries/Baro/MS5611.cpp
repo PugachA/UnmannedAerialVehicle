@@ -173,17 +173,15 @@ double MS5611::getQFEpressure(void)
 
 void MS5611::firstVsFilter(void)
 {
-	double error = 0;
 	//calcAltitude(); //uncomment this line and comment the next one if you want to use raw altitude, and change filterAltitude to rawAltitude
 	lpAltFilter();
-    error = k1*(this->filterAltitude - this->first_filter_output);
+    double error = k1*(this->filterAltitude - this->first_filter_output);
 	this->first_filter_output += error*dt;
 }
 
 void MS5611::secondVsFilter(void)
 {
-	double error = 0;
-    error = k2*(this->first_filter_output - this->second_filter_output);
+    double error = k2*(this->first_filter_output - this->second_filter_output);
 	this->vertical_speed = error;
 	this->second_filter_output += error*dt;
 }
