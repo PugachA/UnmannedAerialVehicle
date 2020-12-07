@@ -384,7 +384,7 @@ int main(void)
 
 	uint32_t rc_input[7];
 	uint32_t pwm_output[5];
-	double data_input[6];
+	double data_input[6] = {0.0};
 
   /* USER CODE END 2 */
 
