@@ -1,7 +1,7 @@
 #include "MS5611.h"
 #include "math.h"
 
-MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c, int number_of_points_to_average, int overflows_to_Vy_calc) //constructor
+MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c, int number_of_points_to_average, double dt) //constructor
 {
   this->MS5611_addr = ms5611_addr;
   this->hi2c = hi2c;
@@ -25,9 +25,9 @@ MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c, int number_of_points
   pres_decimation = 100.0;
 	
 	
-  k1 = 13.0;
-  k2 = 17.0;
-  dt = 0.001*overflows_to_Vy_calc; //0.0001 is a timer period, idk how to put it universally
+  k1 = 10.0;
+  k2 = 12.0;
+  this-> dt = dt;
 
   k_lp_alt = 20;// 1/k = T - time constant for lpFilter, cut-off frequency = 20 rad/s ~ 3 Hz
 	
@@ -173,17 +173,15 @@ double MS5611::getQFEpressure(void)
 
 void MS5611::firstVsFilter(void)
 {
-	double error = 0;
-	//calcAltitude(); //uncomment this line and comment the next one if you want to use raw altitude
+	//calcAltitude(); //uncomment this line and comment the next one if you want to use raw altitude, and change filterAltitude to rawAltitude
 	lpAltFilter();
-    error = k1*(this->filterAltitude - this->first_filter_output);
+    double error = k1*(this->filterAltitude - this->first_filter_output);
 	this->first_filter_output += error*dt;
 }
 
 void MS5611::secondVsFilter(void)
 {
-	double error = 0;
-    error = k2*(this->first_filter_output - this->second_filter_output);
+    double error = k2*(this->first_filter_output - this->second_filter_output);
 	this->vertical_speed = error;
 	this->second_filter_output += error*dt;
 }

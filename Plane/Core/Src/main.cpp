@@ -116,6 +116,7 @@ enum Sensors
 	GYROX,
 	GYROY,
 	GYROZ,
+	BAROVY,
 };
 enum Modes
 {
@@ -165,7 +166,7 @@ uint8_t Stab(PIReg* reg)
 	return stab_flag;
 }
 
-void updateSensors(double * data_input, MS5611 ms5611, MPXV7002 mpxv7002, BNO055 bno055)
+void updateSensors(double * data_input, MS5611 &ms5611, MPXV7002 &mpxv7002, BNO055 &bno055)
 {
 	bno055_vector_t v = bno055.getVectorGyroscopeRemap();
 	data_input[BARO] = ms5611.getRawAltitude();
@@ -173,6 +174,12 @@ void updateSensors(double * data_input, MS5611 ms5611, MPXV7002 mpxv7002, BNO055
 	data_input[GYROX] = v.x;
 	data_input[GYROY] = v.y;
 	data_input[GYROZ] = v.z;
+	if(manage_vertical_speed_counter > 10*every_millisecond)
+	{
+		ms5611.calcVerticalSpeed();
+		data_input[BAROVY] = ms5611.getVerticalSpeed();
+		manage_vertical_speed_counter = 0;
+	}
 }
 void updateRcInput(uint32_t * rc_input)
 {
@@ -365,7 +372,7 @@ int main(void)
 
 	//-------------------Sensors INIT--------------------------
 	Beeper beeper(GPIOD, GPIO_PIN_13);
-	MS5611 ms5611(0x77, hi2c1, 100, overflows_to_Vy_calc);//нельзя инитить до инита i2c
+	MS5611 ms5611(0x77, hi2c1, 100, 0.01);//нельзя инитить до инита i2c
 	MPXV7002 mpxv7002(hadc1);
 	HAL_Delay(700);
 	BNO055 bno055(hi2c3);
@@ -377,7 +384,7 @@ int main(void)
 
 	uint32_t rc_input[7];
 	uint32_t pwm_output[5];
-	double data_input[5];
+	double data_input[6] = {0.0};
 
   /* USER CODE END 2 */
 
@@ -392,25 +399,14 @@ int main(void)
 
 		if(manage_UART_counter >= (50*every_millisecond))
 		{
-			sprintf(str, "t=%d;mode=%d;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d", HAL_GetTick(), (int)current_mode ,(int)(0), (int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10), (int)(data_input[BARO]*100), data_input[AIR]);
+			sprintf(str, "t=%d;mode=%d;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d;Vy=%d",\
+					HAL_GetTick(), (int)current_mode ,(int)(0),\
+					(int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10),\
+					(int)(data_input[BARO]*100), data_input[AIR], (int)(100*data_input[BAROVY]));
+
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
 			manage_UART_counter = 0;
 		}
-
-		#ifdef SERVO_DEBUG_UART
-			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", thr_rc.getPulseWidth()), 1000);
-			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", elev_rc.getPulseWidth()), 1000);
-			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", ail_rc.getPulseWidth()), 1000);
-			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", rud_rc.getPulseWidth()), 1000);
-			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d ", switch_rc.getPulseWidth()), 1000);
-			HAL_UART_Transmit(&huart2, (uint8_t*)str, sprintf(str, "%d\n", slider_rc.getPulseWidth()), 1000);
-			HAL_Delay(500);
-		#endif
-		#ifdef SENSOR_DEBUG_UART
-			sprintf(str, "gyr=%d, %d, %d, alt=%d, air=%d\n", (int) v.x*10, (int) v.y*10, (int) v.z*10, (int) (altitude*100), voltageAirSpeed);
-			HAL_UART_Transmit(&huart2, (uint8_t*)str, 100, 1000);
-			HAL_Delay(500);
-		#endif
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
