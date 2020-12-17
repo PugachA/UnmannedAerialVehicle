@@ -288,8 +288,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-	char str[200] = "test\n";
-	int overflows_to_Vy_calc = 10000;
 
   /* USER CODE END Init */
 
@@ -351,6 +349,7 @@ int main(void)
 	HAL_Delay(700);
 	bno055.setOperationModeNDOF();
 	//---------------------------------------------------------
+	char str[200] = "test\n";
 
 	uint32_t rc_input[7];
 	uint32_t pwm_output[5];
