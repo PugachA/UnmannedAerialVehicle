@@ -63,8 +63,13 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 //--------------------DEBUG DEFINES-----------------------
 
-//#define SERVO_DEBUG_UART
-//#define SENSOR_DEBUG_UART
+#define BARO_DEBUG 0
+#define GYRO_DEBUG 1
+#define AIR_DEBUG 2
+#define RADIO_DEBUG 3
+
+//раскоментить для отладки. присвоить одно из значений выше
+//#define DEBUG_MODE BARO_DEBUG
 
 //-------------------My Global VARs--------------------------
 extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
@@ -129,41 +134,6 @@ void time_manager(TIM_HandleTypeDef *htim)
 	manage_UART_counter++;
 	manage_vertical_speed_counter++;
 	manage_omega_counter++;
-}
-uint8_t Armed(Beeper* beeper)
-{
-	static uint8_t arm_flag = 0;
-	static uint8_t enter_once = 0;
-	if(slider_rc.matchMaxValue() && (enter_once == false))
-	{
-		arm_flag = 1;
-		beeper->longBeep();
-		enter_once = 1;
-	}
-	if(slider_rc.matchMinValue() && (enter_once == true))
-	{
-		arm_flag = 0;
-		beeper->longBeep();
-		enter_once = 0;
-	}
-	return arm_flag;
-}
-uint8_t Stab(PIReg* reg)
-{
-	static uint8_t stab_flag = 0;
-	static uint8_t enter_once = 0;
-	if(switch_rc.matchMidValue() && (enter_once == false))
-	{
-		stab_flag = 1;
-		enter_once = 1;
-	}
-	if((switch_rc.matchMinValue() || switch_rc.matchMaxValue()) && (enter_once == true))
-	{
-		stab_flag = 0;
-		reg->integralReset();
-		enter_once = 0;
-	}
-	return stab_flag;
 }
 
 void updateSensors(double * data_input, MS5611 &ms5611, MPXV7002 &mpxv7002, BNO055 &bno055)
@@ -318,8 +288,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-	char str[200] = "test\n";
-	int overflows_to_Vy_calc = 10000;
 
   /* USER CODE END Init */
 
@@ -381,6 +349,7 @@ int main(void)
 	HAL_Delay(700);
 	bno055.setOperationModeNDOF();
 	//---------------------------------------------------------
+	char str[200] = "test\n";
 
 	uint32_t rc_input[7];
 	uint32_t pwm_output[5];
@@ -396,17 +365,29 @@ int main(void)
 		updateSensors(data_input, ms5611, mpxv7002, bno055);
 		updateModeState(data_input, rc_input, pwm_output);
 		updateActuators(pwm_output, thr_servo, elev_servo, ail_servo_1, ail_servo_2, rud_servo);
-
 		if(manage_UART_counter >= (50*every_millisecond))
 		{
-			sprintf(str, "t=%d;mode=%d;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d;Vy=%d",\
-					HAL_GetTick(), (int)current_mode ,(int)(0),\
-					(int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10),\
-					(int)(data_input[BARO]*100), data_input[AIR], (int)(100*data_input[BAROVY]));
-
 			HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
 			manage_UART_counter = 0;
 		}
+
+		#ifndef DEBUG_MODE
+			sprintf(str, "t=%d;mode=%d;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d;Vy=%d",\
+					HAL_GetTick(), (int)current_mode ,(int)(0),\
+					(int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10),\
+					(int)(data_input[BARO]*100), (int)data_input[AIR], (int)(100*data_input[BAROVY]));
+		#else
+			#if DEBUG_MODE == BARO_DEBUG
+				sprintf(str, "alt=%d, vy=%d\n", (int)(data_input[BARO]*100), (int)(100*data_input[BAROVY]));
+			#elif DEBUG_MODE == GYRO_DEBUG
+				sprintf(str, "omega_x=%d, omega_y=%d, omega_z=%d\n", (int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10));
+			#elif DEBUG_MODE == AIR_DEBUG
+				sprintf(str, "air=%d\n", data_input[AIR]);
+			#elif DEBUG_MODE == RADIO_DEBUG
+				sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
+			#endif
+		#endif
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
