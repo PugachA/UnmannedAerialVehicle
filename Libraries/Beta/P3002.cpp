@@ -1,5 +1,4 @@
 #include "P3002.h"
-#include "math.h"
 
 P3002::P3002(ADC_HandleTypeDef hadc)
 {
