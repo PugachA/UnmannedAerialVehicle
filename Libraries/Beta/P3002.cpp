@@ -7,30 +7,36 @@ P3002::P3002(ADC_HandleTypeDef hadc)
 	b_adc_to_angle = -2.5;
 }
 
-void P3002::convertADC(void)
+uint32_t P3002::convertADC(void)
 {
+	uint32_t adc_raw = 0.0;
 	HAL_ADC_Start(&this->hadc);
 	HAL_ADC_PollForConversion(&this->hadc,100);
 	
-	this->adc_raw = HAL_ADC_GetValue(&this->hadc);
+	adc_raw = HAL_ADC_GetValue(&this->hadc);
 	
 	HAL_ADC_Stop(&this->hadc);
+
+	return adc_raw;
 }
 
 uint32_t P3002::getRawData(void)
 {
-	convertADC();
-	return this->adc_raw;
+	return convertADC();
 }
 
-void P3002::calcAngle(void)
+double P3002::calcAngle(void)
 {
-	convertADC();
-	this->angle = k_adc_to_angle*double(this->adc_raw) + b_adc_to_angle;
+	uint32_t adc_raw = 0;
+	double angle = 0.0;
+
+	adc_raw = convertADC();
+	angle = k_adc_to_angle*double(adc_raw) + b_adc_to_angle;
+
+	return angle;
 }
 
 double P3002::getAngle(void)
 {
-	calcAngle();
-	return this->angle;
+	return calcAngle();
 }

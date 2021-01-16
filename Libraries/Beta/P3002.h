@@ -5,13 +5,10 @@
 class P3002
 {
   private:
-		ADC_HandleTypeDef hadc; //pointer to ADC
+	  ADC_HandleTypeDef hadc; //pointer to ADC
 	
-	  uint32_t adc_raw;
-	  double angle;
-	
-	  void convertADC(void);
-	  void calcAngle(void);
+	  uint32_t convertADC(void);
+	  double calcAngle(void);
 	
 	  // characteristics coefficients
 	  double k_adc_to_angle;
