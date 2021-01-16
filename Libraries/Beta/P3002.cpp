@@ -9,7 +9,8 @@ P3002::P3002(ADC_HandleTypeDef hadc)
 
 uint32_t P3002::convertADC(void)
 {
-	uint32_t adc_raw = 0.0;
+	uint32_t adc_raw = 0;
+
 	HAL_ADC_Start(&this->hadc);
 	HAL_ADC_PollForConversion(&this->hadc,100);
 	
