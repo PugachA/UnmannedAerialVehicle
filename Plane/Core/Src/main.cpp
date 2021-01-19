@@ -30,6 +30,7 @@
 #include "AirSpeed/MPXV7002.h"
 #include "Gyro/bno055.h"
 #include "PIReg/PIReg.h"
+#include "Beta/P3002.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -339,6 +340,7 @@ int main(void)
 			ers_servo(htim5.Instance, 3);
 
 	//-------------------Sensors INIT--------------------------
+	P3002 beta_eng(hadc2);
 	Beeper beeper(GPIOD, GPIO_PIN_13);
 	MS5611 ms5611(0x77, hi2c1, 100, 0.01);//нельзя инитить до инита i2c
 	MPXV7002 mpxv7002(hadc1);
