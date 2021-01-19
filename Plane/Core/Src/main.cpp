@@ -123,6 +123,8 @@ enum Sensors
 	GYROY,
 	GYROZ,
 	BAROVY,
+	BETA,
+	SENSOR_ARRAY_SIZE, //этот элемент всегда должен быть последним в енуме
 };
 enum Modes
 {
@@ -137,7 +139,7 @@ void time_manager(TIM_HandleTypeDef *htim)
 	manage_omega_counter++;
 }
 
-void updateSensors(double * data_input, MS5611 &ms5611, MPXV7002 &mpxv7002, BNO055 &bno055)
+void updateSensors(double * data_input, MS5611 &ms5611, MPXV7002 &mpxv7002, BNO055 &bno055, P3002 &p3002)
 {
 	bno055_vector_t v = bno055.getVectorGyroscopeRemap();
 	data_input[BARO] = ms5611.getRawAltitude();
@@ -145,6 +147,7 @@ void updateSensors(double * data_input, MS5611 &ms5611, MPXV7002 &mpxv7002, BNO0
 	data_input[GYROX] = v.x;
 	data_input[GYROY] = v.y;
 	data_input[GYROZ] = v.z;
+	data_input[BETA] = p3002.getAngle();
 	if(manage_vertical_speed_counter > 10*every_millisecond)
 	{
 		ms5611.calcVerticalSpeed();
@@ -340,7 +343,7 @@ int main(void)
 			ers_servo(htim5.Instance, 3);
 
 	//-------------------Sensors INIT--------------------------
-	P3002 beta_eng(hadc2);
+	P3002 p3002(hadc2);
 	Beeper beeper(GPIOD, GPIO_PIN_13);
 	MS5611 ms5611(0x77, hi2c1, 100, 0.01);//нельзя инитить до инита i2c
 	MPXV7002 mpxv7002(hadc1);
@@ -355,7 +358,7 @@ int main(void)
 
 	uint32_t rc_input[7];
 	uint32_t pwm_output[5];
-	double data_input[6] = {0.0};
+	double data_input[SENSOR_ARRAY_SIZE] = {0.0};
 
   /* USER CODE END 2 */
 
@@ -364,7 +367,7 @@ int main(void)
 	while (1)
 	{
 		setMode(rc_input, &beeper);
-		updateSensors(data_input, ms5611, mpxv7002, bno055);
+		updateSensors(data_input, ms5611, mpxv7002, bno055, p3002);
 		updateModeState(data_input, rc_input, pwm_output);
 		updateActuators(pwm_output, thr_servo, elev_servo, ail_servo_1, ail_servo_2, rud_servo);
 		if(manage_UART_counter >= (50*every_millisecond))
