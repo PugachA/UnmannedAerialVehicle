@@ -3,7 +3,7 @@
 P3002::P3002(ADC_HandleTypeDef hadc)
 {
 	this->hadc = hadc;
-	k_adc_to_angle = 0.00772;
+	k_adc_to_angle = 0.0772;
 	b_adc_to_angle = 5;
 }
 

@@ -148,7 +148,7 @@ void updateSensors(double * data_input, MS5611 &ms5611, MPXV7002 &mpxv7002, BNO0
 	data_input[GYROX] = v.x;
 	data_input[GYROY] = v.y;
 	data_input[GYROZ] = v.z;
-	data_input[BETA] = p3002.getRawData();
+	data_input[BETA] = p3002.getAngle();
 	if(manage_vertical_speed_counter > 10*every_millisecond)
 	{
 		ms5611.calcVerticalSpeed();
@@ -392,7 +392,7 @@ int main(void)
 			#elif DEBUG_MODE == RADIO_DEBUG
 				sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
 			#elif DEBUG_MODE == BETA_DEBUG
-				sprintf(str, "beta=%d raw=%d, data_var=%d\n", (int)(p3002.getAngle()), (int)p3002.getRawData(), (int)data_input[BETA]);
+				sprintf(str, "beta=%d\n", (int)data_input[BETA]);
 			#endif
 		#endif
 
