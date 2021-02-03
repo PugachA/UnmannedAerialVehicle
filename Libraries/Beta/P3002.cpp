@@ -3,8 +3,8 @@
 P3002::P3002(ADC_HandleTypeDef hadc)
 {
 	this->hadc = hadc;
-	k_adc_to_angle = 0.001221;
-	b_adc_to_angle = -2.5;
+	k_adc_to_angle = 0.00772;
+	b_adc_to_angle = 5;
 }
 
 uint32_t P3002::convertADC(void)
@@ -32,7 +32,7 @@ double P3002::calcAngle(void)
 	double angle = 0.0;
 
 	adc_raw = convertADC();
-	angle = k_adc_to_angle*double(adc_raw) + b_adc_to_angle;
+	angle = k_adc_to_angle*adc_raw + b_adc_to_angle;
 
 	return angle;
 }

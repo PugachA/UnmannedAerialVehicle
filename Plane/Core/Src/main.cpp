@@ -68,9 +68,10 @@ UART_HandleTypeDef huart2;
 #define GYRO_DEBUG 1
 #define AIR_DEBUG 2
 #define RADIO_DEBUG 3
+#define BETA_DEBUG 4
 
 //раскоментить для отладки. присвоить одно из значений выше
-//#define DEBUG_MODE BARO_DEBUG
+#define DEBUG_MODE BETA_DEBUG
 
 //-------------------My Global VARs--------------------------
 extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
@@ -147,7 +148,7 @@ void updateSensors(double * data_input, MS5611 &ms5611, MPXV7002 &mpxv7002, BNO0
 	data_input[GYROX] = v.x;
 	data_input[GYROY] = v.y;
 	data_input[GYROZ] = v.z;
-	data_input[BETA] = p3002.getAngle();
+	data_input[BETA] = p3002.getRawData();
 	if(manage_vertical_speed_counter > 10*every_millisecond)
 	{
 		ms5611.calcVerticalSpeed();
@@ -377,10 +378,10 @@ int main(void)
 		}
 
 		#ifndef DEBUG_MODE
-			sprintf(str, "t=%d;mode=%d;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d;Vy=%d",\
+			sprintf(str, "t=%d;mode=%d;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d;Vy=%d;beta=%d",\
 					HAL_GetTick(), (int)current_mode ,(int)(0),\
 					(int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10),\
-					(int)(data_input[BARO]*100), (int)data_input[AIR], (int)(100*data_input[BAROVY]));
+					(int)(data_input[BARO]*100), (int)data_input[AIR], (int)(100*data_input[BAROVY]), (int)(data_input[BETA]));
 		#else
 			#if DEBUG_MODE == BARO_DEBUG
 				sprintf(str, "alt=%d, vy=%d\n", (int)(data_input[BARO]*100), (int)(100*data_input[BAROVY]));
@@ -390,6 +391,8 @@ int main(void)
 				sprintf(str, "air=%d\n", data_input[AIR]);
 			#elif DEBUG_MODE == RADIO_DEBUG
 				sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
+			#elif DEBUG_MODE == BETA_DEBUG
+				sprintf(str, "beta=%d raw=%d, data_var=%d\n", (int)(p3002.getAngle()), (int)p3002.getRawData(), (int)data_input[BETA]);
 			#endif
 		#endif
 
