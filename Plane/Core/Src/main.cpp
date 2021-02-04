@@ -71,7 +71,7 @@ UART_HandleTypeDef huart2;
 #define BETA_DEBUG 4
 
 //раскоментить для отладки. присвоить одно из значений выше
-#define DEBUG_MODE BETA_DEBUG
+#define DEBUG_MODE AIR_DEBUG
 
 //-------------------My Global VARs--------------------------
 extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
@@ -144,7 +144,7 @@ void updateSensors(double * data_input, MS5611 &ms5611, MPXV7002 &mpxv7002, BNO0
 {
 	bno055_vector_t v = bno055.getVectorGyroscopeRemap();
 	data_input[BARO] = ms5611.getRawAltitude();
-	data_input[AIR] = mpxv7002.getFilteredADC();
+	data_input[AIR] = mpxv7002.getAirSpeed();
 	data_input[GYROX] = v.x;
 	data_input[GYROY] = v.y;
 	data_input[GYROZ] = v.z;
@@ -347,7 +347,9 @@ int main(void)
 	P3002 p3002(hadc2);
 	Beeper beeper(GPIOD, GPIO_PIN_13);
 	MS5611 ms5611(0x77, hi2c1, 100, 0.01);//нельзя инитить до инита i2c
+
 	MPXV7002 mpxv7002(hadc1);
+
 	HAL_Delay(700);
 	BNO055 bno055(hi2c3);
 	HAL_Delay(700);
@@ -388,7 +390,7 @@ int main(void)
 			#elif DEBUG_MODE == GYRO_DEBUG
 				sprintf(str, "omega_x=%d, omega_y=%d, omega_z=%d\n", (int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10));
 			#elif DEBUG_MODE == AIR_DEBUG
-				sprintf(str, "air=%d\n", data_input[AIR]);
+				sprintf(str, "%d %d\n", (int)(100*mpxv7002.getAirSpeed()), (int)(100*mpxv7002.getPressure()));
 			#elif DEBUG_MODE == RADIO_DEBUG
 				sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
 			#elif DEBUG_MODE == BETA_DEBUG
