@@ -71,7 +71,7 @@ UART_HandleTypeDef huart2;
 #define BETA_DEBUG 4
 
 //раскоментить для отладки. присвоить одно из значений выше
-#define DEBUG_MODE AIR_DEBUG
+//#define DEBUG_MODE BETA_DEBUG
 
 //-------------------My Global VARs--------------------------
 extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
