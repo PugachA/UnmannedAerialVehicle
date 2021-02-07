@@ -115,6 +115,7 @@ enum Channels
 	RUD,
 	SWITCHA,
 	ARM,
+	CHANNELS_ARRAY_SIZE,
 };
 enum Sensors
 {
@@ -359,7 +360,7 @@ int main(void)
 	//---------------------------------------------------------
 	char str[200] = "test\n";
 
-	uint32_t rc_input[7];
+	uint32_t rc_input[CHANNELS_ARRAY_SIZE];
 	uint32_t pwm_output[5];
 	double data_input[SENSOR_ARRAY_SIZE] = {0.0};
 
