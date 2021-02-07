@@ -7,11 +7,13 @@ class MPXV7002
   private:
 		ADC_HandleTypeDef hadc; //pointer to ADC
 	  uint32_t adc_raw;
-	  uint32_t filtered_adc;
+	  double filtered_adc;
 	  double pressure;
 	  double airSpeed;
+	  double adc_offset;
 
 	  void convertADC(void);
+
 	  void filterADC(void);
 	  void calcPressure(void);
 	  void calcAirSpeed(void);
@@ -25,6 +27,7 @@ class MPXV7002
 	
   public:
 		MPXV7002(ADC_HandleTypeDef);//constructor
+		void calibrateZeroADC();
 	  uint32_t getRawData(void);
 	  double getPressure(void);
 	  double getAirSpeed(void);
