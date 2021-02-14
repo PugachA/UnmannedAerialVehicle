@@ -7,7 +7,7 @@ MPXV7002::MPXV7002(ADC_HandleTypeDef hadc)
 	rho = 1.225; // kg/m^3
 	k_adc_to_pressure = 0.001221;
 	b_adc_to_pressure = 0; //old = -2.5
-	adc_offset = 0.0;
+	this->adc_offset = 0.0;
 	this->filtered_adc = 0;
 }
 
@@ -25,15 +25,15 @@ void MPXV7002::calibrateZeroADC()
 	for(int i=0; i<20; i++)
 	{
 		convertADC();
-		adc_offset += adc_raw;
+		this->adc_offset += adc_raw;
 		HAL_Delay(50);
 	}
-	adc_offset /= 20;
+	this->adc_offset /= 20;
 }
 void MPXV7002::filterADC(void)
 {
 	convertADC();
-	this->filtered_adc = (1 - 0.1) *this->filtered_adc + 0.1*((double)this->adc_raw - adc_offset);
+	this->filtered_adc = (1 - 0.1) *this->filtered_adc + 0.1*((double)this->adc_raw - this->adc_offset);
 }
 void MPXV7002::calcPressure(void)
 {
