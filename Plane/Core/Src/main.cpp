@@ -30,6 +30,7 @@
 #include "AirSpeed/MPXV7002.h"
 #include "Gyro/bno055.h"
 #include "PIReg/PIReg.h"
+#include "Beta/P3002.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -67,9 +68,10 @@ UART_HandleTypeDef huart2;
 #define GYRO_DEBUG 1
 #define AIR_DEBUG 2
 #define RADIO_DEBUG 3
+#define BETA_DEBUG 4
 
 //раскоментить для отладки. присвоить одно из значений выше
-//#define DEBUG_MODE BARO_DEBUG
+//#define DEBUG_MODE BETA_DEBUG
 
 //-------------------My Global VARs--------------------------
 extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
@@ -113,6 +115,7 @@ enum Channels
 	RUD,
 	SWITCHA,
 	ARM,
+	CHANNELS_ARRAY_SIZE,
 };
 enum Sensors
 {
@@ -122,6 +125,8 @@ enum Sensors
 	GYROY,
 	GYROZ,
 	BAROVY,
+	BETA,
+	SENSOR_ARRAY_SIZE, //этот элемент всегда должен быть последним в енуме
 };
 enum Modes
 {
@@ -136,14 +141,15 @@ void time_manager(TIM_HandleTypeDef *htim)
 	manage_omega_counter++;
 }
 
-void updateSensors(double * data_input, MS5611 &ms5611, MPXV7002 &mpxv7002, BNO055 &bno055)
+void updateSensors(double * data_input, MS5611 &ms5611, MPXV7002 &mpxv7002, BNO055 &bno055, P3002 &p3002)
 {
 	bno055_vector_t v = bno055.getVectorGyroscopeRemap();
 	data_input[BARO] = ms5611.getRawAltitude();
-	data_input[AIR] = mpxv7002.getFilteredADC();
+	data_input[AIR] = mpxv7002.getAirSpeed();
 	data_input[GYROX] = v.x;
 	data_input[GYROY] = v.y;
 	data_input[GYROZ] = v.z;
+	data_input[BETA] = p3002.getAngle();
 	if(manage_vertical_speed_counter > 10*every_millisecond)
 	{
 		ms5611.calcVerticalSpeed();
@@ -339,9 +345,12 @@ int main(void)
 			ers_servo(htim5.Instance, 3);
 
 	//-------------------Sensors INIT--------------------------
+	P3002 p3002(hadc2);
 	Beeper beeper(GPIOD, GPIO_PIN_13);
 	MS5611 ms5611(0x77, hi2c1, 100, 0.01);//нельзя инитить до инита i2c
+
 	MPXV7002 mpxv7002(hadc1);
+
 	HAL_Delay(700);
 	BNO055 bno055(hi2c3);
 	HAL_Delay(700);
@@ -351,9 +360,9 @@ int main(void)
 	//---------------------------------------------------------
 	char str[200] = "test\n";
 
-	uint32_t rc_input[7];
+	uint32_t rc_input[CHANNELS_ARRAY_SIZE];
 	uint32_t pwm_output[5];
-	double data_input[6] = {0.0};
+	double data_input[SENSOR_ARRAY_SIZE] = {0.0};
 
   /* USER CODE END 2 */
 
@@ -362,7 +371,7 @@ int main(void)
 	while (1)
 	{
 		setMode(rc_input, &beeper);
-		updateSensors(data_input, ms5611, mpxv7002, bno055);
+		updateSensors(data_input, ms5611, mpxv7002, bno055, p3002);
 		updateModeState(data_input, rc_input, pwm_output);
 		updateActuators(pwm_output, thr_servo, elev_servo, ail_servo_1, ail_servo_2, rud_servo);
 		if(manage_UART_counter >= (50*every_millisecond))
@@ -372,19 +381,21 @@ int main(void)
 		}
 
 		#ifndef DEBUG_MODE
-			sprintf(str, "t=%d;mode=%d;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d;Vy=%d",\
+			sprintf(str, "t=%d;mode=%d;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d;Vy=%d;beta=%d",\
 					HAL_GetTick(), (int)current_mode ,(int)(0),\
 					(int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10),\
-					(int)(data_input[BARO]*100), (int)data_input[AIR], (int)(100*data_input[BAROVY]));
+					(int)(data_input[BARO]*100), (int)data_input[AIR], (int)(100*data_input[BAROVY]), (int)(data_input[BETA]));
 		#else
 			#if DEBUG_MODE == BARO_DEBUG
 				sprintf(str, "alt=%d, vy=%d\n", (int)(data_input[BARO]*100), (int)(100*data_input[BAROVY]));
 			#elif DEBUG_MODE == GYRO_DEBUG
 				sprintf(str, "omega_x=%d, omega_y=%d, omega_z=%d\n", (int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10));
 			#elif DEBUG_MODE == AIR_DEBUG
-				sprintf(str, "air=%d\n", data_input[AIR]);
+				sprintf(str, "%d %d\n", (int)(100*mpxv7002.getAirSpeed()), (int)(100*mpxv7002.getPressure()));
 			#elif DEBUG_MODE == RADIO_DEBUG
 				sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
+			#elif DEBUG_MODE == BETA_DEBUG
+				sprintf(str, "beta=%d\n", (int)data_input[BETA]);
 			#endif
 		#endif
 

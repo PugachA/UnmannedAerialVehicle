@@ -6,8 +6,9 @@ MPXV7002::MPXV7002(ADC_HandleTypeDef hadc)
 	this->hadc = hadc;
 	rho = 1.225; // kg/m^3
 	k_adc_to_pressure = 0.001221;
-	b_adc_to_pressure = -2.5;
-	this->adc_raw_prev = 0;
+	b_adc_to_pressure = 0; //old = -2.5
+	this->adc_offset = 0.0;
+	this->filtered_adc = 0;
 }
 
 void MPXV7002::convertADC(void)
@@ -19,39 +20,50 @@ void MPXV7002::convertADC(void)
 	
 	HAL_ADC_Stop(&this->hadc);
 }
-
-uint32_t MPXV7002::getRawData(void)
+void MPXV7002::calibrateZeroADC()
+{
+	for(int i=0; i<20; i++)
+	{
+		convertADC();
+		this->adc_offset += adc_raw;
+		HAL_Delay(50);
+	}
+	this->adc_offset /= 20;
+}
+void MPXV7002::filterADC(void)
 {
 	convertADC();
-	return this->adc_raw;
+	this->filtered_adc = (1 - 0.1) *this->filtered_adc + 0.1*((double)this->adc_raw - this->adc_offset);
 }
-
 void MPXV7002::calcPressure(void)
 {
-	convertADC();
-	this->pressure = 1000*(k_adc_to_pressure*double(this->adc_raw) + b_adc_to_pressure); //1000 converts kPa to Pa
+	filterADC();
+	this->pressure = 1000*(k_adc_to_pressure*double(this->filtered_adc)); //1000 converts kPa to Pa
 }
-
-double MPXV7002::getPressure(void)
-{
-	calcPressure();
-	return this->pressure;
-}
-
 void MPXV7002::calcAirSpeed(void)
 {
 	calcPressure();
 	this->airSpeed = sqrt(2*abs(this->pressure)/rho);
 }
-uint32_t MPXV7002::getFilteredADC(void)
+uint32_t MPXV7002::getRawData(void)
 {
 	convertADC();
-	this->adc_raw_prev = (1 - 0.1) *this->adc_raw_prev + 0.1*(this->adc_raw);
-	return this->adc_raw_prev;
+	return this->adc_raw;
+}
+uint32_t MPXV7002::getFilteredADC(void)
+{
+	filterADC();
+	return this->filtered_adc;
+}
+double MPXV7002::getPressure(void)
+{
+	calcPressure();
+	return this->pressure;
 }
 double MPXV7002::getAirSpeed(void)
 {
 	calcAirSpeed();
 	return this->airSpeed;
 }
+
 
