@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -61,6 +62,41 @@ TIM_HandleTypeDef htim6;
 
 UART_HandleTypeDef huart2;
 
+/* Definitions for defaultTask */
+osThreadId_t defaultTaskHandle;
+const osThreadAttr_t defaultTask_attributes = {
+  .name = "defaultTask",
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 128 * 4
+};
+/* Definitions for sensorsUpdate */
+osThreadId_t sensorsUpdateHandle;
+const osThreadAttr_t sensorsUpdate_attributes = {
+  .name = "sensorsUpdate",
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 128 * 4
+};
+/* Definitions for modeUpdate */
+osThreadId_t modeUpdateHandle;
+const osThreadAttr_t modeUpdate_attributes = {
+  .name = "modeUpdate",
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 128 * 4
+};
+/* Definitions for radioInputUpdat */
+osThreadId_t radioInputUpdatHandle;
+const osThreadAttr_t radioInputUpdat_attributes = {
+  .name = "radioInputUpdat",
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 128 * 4
+};
+/* Definitions for loggerUpdate */
+osThreadId_t loggerUpdateHandle;
+const osThreadAttr_t loggerUpdate_attributes = {
+  .name = "loggerUpdate",
+  .priority = (osPriority_t) osPriorityLow,
+  .stack_size = 128 * 4
+};
 /* USER CODE BEGIN PV */
 //--------------------DEBUG DEFINES-----------------------
 
@@ -100,6 +136,12 @@ static void MX_I2C1_Init(void);
 static void MX_ADC2_Init(void);
 static void MX_I2C3_Init(void);
 static void MX_TIM6_Init(void);
+void StartDefaultTask(void *argument);
+void sensorsUpdateTask(void *argument);
+void modeUpdateTask(void *argument);
+void radioInputUpdateTask(void *argument);
+void loggerUpdateTask(void *argument);
+
 /* USER CODE BEGIN PFP */
 
 //про time_manager: сейчас выполняет функцию простого диспетчера
@@ -366,6 +408,53 @@ int main(void)
 
   /* USER CODE END 2 */
 
+  /* Init scheduler */
+  osKernelInitialize();
+
+  /* USER CODE BEGIN RTOS_MUTEX */
+  /* add mutexes, ... */
+  /* USER CODE END RTOS_MUTEX */
+
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* add semaphores, ... */
+  /* USER CODE END RTOS_SEMAPHORES */
+
+  /* USER CODE BEGIN RTOS_TIMERS */
+  /* start timers, add new ones, ... */
+  /* USER CODE END RTOS_TIMERS */
+
+  /* USER CODE BEGIN RTOS_QUEUES */
+  /* add queues, ... */
+  /* USER CODE END RTOS_QUEUES */
+
+  /* Create the thread(s) */
+  /* creation of defaultTask */
+  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+
+  /* creation of sensorsUpdate */
+  sensorsUpdateHandle = osThreadNew(sensorsUpdateTask, NULL, &sensorsUpdate_attributes);
+
+  /* creation of modeUpdate */
+  modeUpdateHandle = osThreadNew(modeUpdateTask, NULL, &modeUpdate_attributes);
+
+  /* creation of radioInputUpdat */
+  radioInputUpdatHandle = osThreadNew(radioInputUpdateTask, NULL, &radioInputUpdat_attributes);
+
+  /* creation of loggerUpdate */
+  loggerUpdateHandle = osThreadNew(loggerUpdateTask, NULL, &loggerUpdate_attributes);
+
+  /* USER CODE BEGIN RTOS_THREADS */
+  /* add threads, ... */
+  /* USER CODE END RTOS_THREADS */
+
+  /* USER CODE BEGIN RTOS_EVENTS */
+  /* add events, ... */
+  /* USER CODE END RTOS_EVENTS */
+
+  /* Start scheduler */
+  osKernelStart();
+
+  /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1)
@@ -427,8 +516,8 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 4;
-  RCC_OscInitStruct.PLL.PLLN = 192;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV4;
+  RCC_OscInitStruct.PLL.PLLN = 168;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -443,7 +532,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
   {
     Error_Handler();
   }
@@ -637,7 +726,7 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 47;
+  htim2.Init.Prescaler = 83;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 65536;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -707,7 +796,7 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 47;
+  htim3.Init.Prescaler = 83;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 22000;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -779,7 +868,7 @@ static void MX_TIM5_Init(void)
 
   /* USER CODE END TIM5_Init 1 */
   htim5.Instance = TIM5;
-  htim5.Init.Prescaler = 47;
+  htim5.Init.Prescaler = 83;
   htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim5.Init.Period = 22000;
   htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -856,7 +945,7 @@ static void MX_TIM6_Init(void)
 
   /* USER CODE END TIM6_Init 1 */
   htim6.Instance = TIM6;
-  htim6.Init.Prescaler = 47;
+  htim6.Init.Prescaler = 83;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim6.Init.Period = 99;
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -951,6 +1040,117 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
+
+/* USER CODE BEGIN Header_StartDefaultTask */
+/**
+  * @brief  Function implementing the defaultTask thread.
+  * @param  argument: Not used
+  * @retval None
+  */
+/* USER CODE END Header_StartDefaultTask */
+void StartDefaultTask(void *argument)
+{
+  /* USER CODE BEGIN 5 */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END 5 */
+}
+
+/* USER CODE BEGIN Header_sensorsUpdateTask */
+/**
+* @brief Function implementing the sensorsUpdate thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_sensorsUpdateTask */
+void sensorsUpdateTask(void *argument)
+{
+  /* USER CODE BEGIN sensorsUpdateTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END sensorsUpdateTask */
+}
+
+/* USER CODE BEGIN Header_modeUpdateTask */
+/**
+* @brief Function implementing the modeUpdate thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_modeUpdateTask */
+void modeUpdateTask(void *argument)
+{
+  /* USER CODE BEGIN modeUpdateTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END modeUpdateTask */
+}
+
+/* USER CODE BEGIN Header_radioInputUpdateTask */
+/**
+* @brief Function implementing the radioInputUpdat thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_radioInputUpdateTask */
+void radioInputUpdateTask(void *argument)
+{
+  /* USER CODE BEGIN radioInputUpdateTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END radioInputUpdateTask */
+}
+
+/* USER CODE BEGIN Header_loggerUpdateTask */
+/**
+* @brief Function implementing the loggerUpdate thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_loggerUpdateTask */
+void loggerUpdateTask(void *argument)
+{
+  /* USER CODE BEGIN loggerUpdateTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END loggerUpdateTask */
+}
+
+ /**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM14 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM14) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.
