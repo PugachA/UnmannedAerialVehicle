@@ -127,12 +127,7 @@ extern const osThreadAttr_t loggerUpdate_attributes;
 //-------------------My Global VARs--------------------------
 extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
 
-uint32_t manage_UART_counter = 0;
-uint32_t manage_vertical_speed_counter = 0;
-uint32_t manage_omega_counter = 0;
-
-const uint32_t every_second = 10000;
-const uint32_t every_millisecond = 10;
+uint32_t rc_input[CHANNELS_ARRAY_SIZE];
 
 uint8_t current_mode = 0;
 uint8_t integral_reset_flag = 0;
@@ -168,14 +163,14 @@ void updateSensors_OLD(double * data_input, MS5611 &ms5611, MPXV7002 &mpxv7002, 
 	data_input[GYROY] = v.y;
 	data_input[GYROZ] = v.z;
 	data_input[BETA] = p3002.getAngle();
-	if(manage_vertical_speed_counter > 10*every_millisecond)
-	{
+	//if(manage_vertical_speed_counter > 10*every_millisecond)
+	//{
 		ms5611.calcVerticalSpeed();
 		data_input[BAROVY] = ms5611.getVerticalSpeed();
-		manage_vertical_speed_counter = 0;
-	}
+	//	manage_vertical_speed_counter = 0;
+	//}
 }
-void updateRcInput(uint32_t * rc_input)
+void updateRcInput()
 {
 	rc_input[THR] = thr_rc.getPulseWidth();
 	rc_input[ELEV] = elev_rc.getPulseWidthDif();
@@ -195,7 +190,7 @@ void updateActuators(uint32_t * actuators_pwm, Servo thr_servo, Servo elev_servo
 }
 void preFlightCheckUpdate(uint32_t * rc_input, uint32_t * output)
 {
-	updateRcInput(rc_input);
+//	updateRcInput(rc_input);
 
 	output[THR] = 989;
 	output[ELEV] = rc_input[ELEV];
@@ -205,7 +200,7 @@ void preFlightCheckUpdate(uint32_t * rc_input, uint32_t * output)
 }
 void directUpdate(uint32_t * rc_input, uint32_t * output)
 {
-	updateRcInput(rc_input);
+	//updateRcInput(rc_input);
 
 	output[THR] = rc_input[THR];
 	output[ELEV] = rc_input[ELEV];
@@ -225,7 +220,7 @@ void stabUpdate(double * input_data, uint32_t * rc_input, uint32_t * output)
 	static PIReg omega_z_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x);
 	//---------------------------------------------------------
 
-	updateRcInput(rc_input);
+	//updateRcInput(rc_input);
 	if(integral_reset_flag)
 	{
 		omega_x_PI_reg.integralReset();
@@ -243,16 +238,16 @@ void stabUpdate(double * input_data, uint32_t * rc_input, uint32_t * output)
 	output[AIL2] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
 	output[RUD] = (int)(1500+0.4*omega_y_PI_reg.getOutput());
 
-	if(manage_omega_counter >= (10*every_millisecond))
-	{
+	//if(manage_omega_counter >= (10*every_millisecond))
+	//{
 		omega_x_PI_reg.setError(omega_zad_x - input_data[GYROX]);
 		omega_x_PI_reg.calcOutput();
 		omega_y_PI_reg.setError(omega_zad_y - input_data[GYROY]);
 		omega_y_PI_reg.calcOutput();
 		omega_z_PI_reg.setError(omega_zad_z - input_data[GYROZ]);
 		omega_z_PI_reg.calcOutput();
-		manage_omega_counter = 0;
-	}
+	//	manage_omega_counter = 0;
+	//}
 
 }
 void setMode(uint32_t * rc_input, Beeper * beeper)
@@ -374,9 +369,7 @@ int main(void)
 	//HAL_Delay(700);
 	//bno055.setOperationModeNDOF();
 	//---------------------------------------------------------
-	char str[200] = "test\n";
 
-	uint32_t rc_input[CHANNELS_ARRAY_SIZE];
 	uint32_t pwm_output[5];
 	double data_input[SENSOR_ARRAY_SIZE] = {0.0};
 
@@ -1046,7 +1039,7 @@ void sensorsUpdateTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+    osDelay(100);
   }
   /* USER CODE END sensorsUpdateTask */
 }
@@ -1064,7 +1057,7 @@ void modeUpdateTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+    osDelay(100);
   }
   /* USER CODE END modeUpdateTask */
 }
@@ -1082,7 +1075,8 @@ void radioInputUpdateTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+	  updateRcInput();
+	  osDelay(50);
   }
   /* USER CODE END radioInputUpdateTask */
 }
@@ -1097,11 +1091,14 @@ void radioInputUpdateTask(void *argument)
 void loggerUpdateTask(void *argument)
 {
   /* USER CODE BEGIN loggerUpdateTask */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
+	char str[100] = "\0";
+	/* Infinite loop */
+	for(;;)
+	{
+		sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
+		HAL_UART_Transmit_IT(&huart2, (uint8_t*)str, sizeof(str));
+		osDelay(500);
+	}
   /* USER CODE END loggerUpdateTask */
 }
 
