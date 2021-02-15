@@ -41,11 +41,21 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
+//--------------------DEBUG DEFINES-----------------------
+
+#define BARO_DEBUG 0
+#define GYRO_DEBUG 1
+#define AIR_DEBUG 2
+#define RADIO_DEBUG 3
+#define BETA_DEBUG 4
+
+//#define DEBUG_MODE BETA_DEBUG //раскоментить для отладки. присвоить одно из значений выше
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -62,52 +72,29 @@ TIM_HandleTypeDef htim6;
 
 UART_HandleTypeDef huart2;
 
-/* Definitions for defaultTask */
-osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 4
-};
-/* Definitions for sensorsUpdate */
-osThreadId_t sensorsUpdateHandle;
-const osThreadAttr_t sensorsUpdate_attributes = {
-  .name = "sensorsUpdate",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 4
-};
-/* Definitions for modeUpdate */
-osThreadId_t modeUpdateHandle;
-const osThreadAttr_t modeUpdate_attributes = {
-  .name = "modeUpdate",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 4
-};
-/* Definitions for radioInputUpdat */
-osThreadId_t radioInputUpdatHandle;
-const osThreadAttr_t radioInputUpdat_attributes = {
-  .name = "radioInputUpdat",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 4
-};
-/* Definitions for loggerUpdate */
-osThreadId_t loggerUpdateHandle;
-const osThreadAttr_t loggerUpdate_attributes = {
-  .name = "loggerUpdate",
-  .priority = (osPriority_t) osPriorityLow,
-  .stack_size = 128 * 4
-};
 /* USER CODE BEGIN PV */
-//--------------------DEBUG DEFINES-----------------------
 
-#define BARO_DEBUG 0
-#define GYRO_DEBUG 1
-#define AIR_DEBUG 2
-#define RADIO_DEBUG 3
-#define BETA_DEBUG 4
+//--------------------Threads-----------------------
 
-//раскоментить для отладки. присвоить одно из значений выше
-//#define DEBUG_MODE BETA_DEBUG
+/* Definitions for defaultTask */
+extern osThreadId_t defaultTaskHandle;
+extern const osThreadAttr_t defaultTask_attributes;
+
+/* Definitions for sensorsUpdate */
+extern osThreadId_t sensorsUpdateHandle;
+extern const osThreadAttr_t sensorsUpdate_attributes;
+
+/* Definitions for modeUpdate */
+extern osThreadId_t modeUpdateHandle;
+extern const osThreadAttr_t modeUpdate_attributes;
+
+/* Definitions for radioInputUpdat */
+extern osThreadId_t radioInputUpdatHandle;
+extern const osThreadAttr_t radioInputUpdat_attributes;
+
+/* Definitions for loggerUpdate */
+extern osThreadId_t loggerUpdateHandle;
+extern const osThreadAttr_t loggerUpdate_attributes;
 
 //-------------------My Global VARs--------------------------
 extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;

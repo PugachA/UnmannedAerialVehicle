@@ -25,7 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "cmsis_os.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,7 +45,40 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
+osThreadId_t defaultTaskHandle;
+const osThreadAttr_t defaultTask_attributes = {
+  .name = "defaultTask",
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 128 * 4
+};
 
+osThreadId_t sensorsUpdateHandle;
+const osThreadAttr_t sensorsUpdate_attributes = {
+  .name = "sensorsUpdate",
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 128 * 4
+};
+
+osThreadId_t modeUpdateHandle;
+const osThreadAttr_t modeUpdate_attributes = {
+  .name = "modeUpdate",
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 128 * 4
+};
+
+osThreadId_t radioInputUpdatHandle;
+const osThreadAttr_t radioInputUpdat_attributes = {
+  .name = "radioInputUpdat",
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 128 * 4
+};
+
+osThreadId_t loggerUpdateHandle;
+const osThreadAttr_t loggerUpdate_attributes = {
+  .name = "loggerUpdate",
+  .priority = (osPriority_t) osPriorityLow,
+  .stack_size = 128 * 4
+};
 /* USER CODE END Variables */
 
 /* Private function prototypes -----------------------------------------------*/
