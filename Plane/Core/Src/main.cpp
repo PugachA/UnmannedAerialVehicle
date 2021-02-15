@@ -159,19 +159,7 @@ void loggerUpdateTask(void *argument);
 
 /* USER CODE BEGIN PFP */
 
-//про time_manager: сейчас выполняет функцию простого диспетчера
-//в ней инкрементируются флаги по переполнению таймер (колбек см ниже)
-//события наступает после определенного числа переполнений в основном
-//супер цикле
-
-void time_manager(TIM_HandleTypeDef *htim)
-{
-	manage_UART_counter++;
-	manage_vertical_speed_counter++;
-	manage_omega_counter++;
-}
-
-void updateSensors(double * data_input, MS5611 &ms5611, MPXV7002 &mpxv7002, BNO055 &bno055, P3002 &p3002)
+void updateSensors_OLD(double * data_input, MS5611 &ms5611, MPXV7002 &mpxv7002, BNO055 &bno055, P3002 &p3002)
 {
 	bno055_vector_t v = bno055.getVectorGyroscopeRemap();
 	data_input[BARO] = ms5611.getRawAltitude();
@@ -346,9 +334,7 @@ int main(void)
   MX_I2C3_Init();
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
-	HAL_TIM_Base_Start_IT(&htim6);//пока используем для диспетчеризации событий по переполнению
 
-	HAL_TIM_RegisterCallback(&htim6, HAL_TIM_PERIOD_ELAPSED_CB_ID, time_manager);//1 тик = 1 мкС, переполнение 100 тиков = 100 мкС = 0.1 мС
 	HAL_TIM_RegisterCallback(&htim2, HAL_TIM_IC_CAPTURE_CB_ID, IcHandlerTim2);
 	HAL_TIM_RegisterCallback(&htim5, HAL_TIM_IC_CAPTURE_CB_ID, IcHandlerTim5);
 
@@ -375,18 +361,18 @@ int main(void)
 			ers_servo(htim5.Instance, 3);
 
 	//-------------------Sensors INIT--------------------------
-	P3002 p3002(hadc2);
-	Beeper beeper(GPIOD, GPIO_PIN_13);
-	MS5611 ms5611(0x77, hi2c1, 100, 0.01);//нельзя инитить до инита i2c
+	//P3002 p3002(hadc2);
+	//Beeper beeper(GPIOD, GPIO_PIN_13);
+	//MS5611 ms5611(0x77, hi2c1, 100, 0.01);//нельзя инитить до инита i2c
 
-	MPXV7002 mpxv7002(hadc1);
+	//MPXV7002 mpxv7002(hadc1);
 
-	HAL_Delay(700);
-	BNO055 bno055(hi2c3);
-	HAL_Delay(700);
-	bno055.setup();
-	HAL_Delay(700);
-	bno055.setOperationModeNDOF();
+	//HAL_Delay(700);
+	//BNO055 bno055(hi2c3);
+	//HAL_Delay(700);
+	//bno055.setup();
+	//HAL_Delay(700);
+	//bno055.setOperationModeNDOF();
 	//---------------------------------------------------------
 	char str[200] = "test\n";
 
@@ -447,8 +433,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 	while (1)
 	{
-		setMode(rc_input, &beeper);
-		updateSensors(data_input, ms5611, mpxv7002, bno055, p3002);
+		/*setMode(rc_input, &beeper);
+		updateSensors_OLD(data_input, ms5611, mpxv7002, bno055, p3002);
 		updateModeState(data_input, rc_input, pwm_output);
 		updateActuators(pwm_output, thr_servo, elev_servo, ail_servo_1, ail_servo_2, rud_servo);
 		if(manage_UART_counter >= (50*every_millisecond))
@@ -474,7 +460,7 @@ int main(void)
 			#elif DEBUG_MODE == BETA_DEBUG
 				sprintf(str, "beta=%d\n", (int)data_input[BETA]);
 			#endif
-		#endif
+		#endif*/
 
     /* USER CODE END WHILE */
 
