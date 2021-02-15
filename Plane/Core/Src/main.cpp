@@ -73,6 +73,34 @@ TIM_HandleTypeDef htim6;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+enum Channels
+{
+	THR,
+	ELEV,
+	AIL1,
+	AIL2,
+	RUD,
+	SWITCHA,
+	ARM,
+	CHANNELS_ARRAY_SIZE,
+};
+enum Sensors
+{
+	BARO,
+	AIR,
+	GYROX,
+	GYROY,
+	GYROZ,
+	BAROVY,
+	BETA,
+	SENSOR_ARRAY_SIZE, //этот элемент всегда должен быть последним в енуме
+};
+enum Modes
+{
+	PREFLIGHTCHECK,
+	DIRECT,
+	STAB,
+};
 
 //--------------------Threads-----------------------
 
@@ -135,34 +163,7 @@ void loggerUpdateTask(void *argument);
 //в ней инкрементируются флаги по переполнению таймер (колбек см ниже)
 //события наступает после определенного числа переполнений в основном
 //супер цикле
-enum Channels
-{
-	THR,
-	ELEV,
-	AIL1,
-	AIL2,
-	RUD,
-	SWITCHA,
-	ARM,
-	CHANNELS_ARRAY_SIZE,
-};
-enum Sensors
-{
-	BARO,
-	AIR,
-	GYROX,
-	GYROY,
-	GYROZ,
-	BAROVY,
-	BETA,
-	SENSOR_ARRAY_SIZE, //этот элемент всегда должен быть последним в енуме
-};
-enum Modes
-{
-	PREFLIGHTCHECK,
-	DIRECT,
-	STAB,
-};
+
 void time_manager(TIM_HandleTypeDef *htim)
 {
 	manage_UART_counter++;
