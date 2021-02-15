@@ -73,6 +73,13 @@ const osThreadAttr_t radioInputUpdat_attributes = {
   .stack_size = 128 * 4
 };
 
+osThreadId_t actuatorsUpdateHandle;
+const osThreadAttr_t actuatorsUpdate_attributes = {
+  .name = "actuatorsUpdate",
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 128 * 4
+};
+
 osThreadId_t loggerUpdateHandle;
 const osThreadAttr_t loggerUpdate_attributes = {
   .name = "loggerUpdate",

@@ -120,6 +120,10 @@ extern const osThreadAttr_t modeUpdate_attributes;
 extern osThreadId_t radioInputUpdatHandle;
 extern const osThreadAttr_t radioInputUpdat_attributes;
 
+/* Definitions for actuatorsUpdate */
+extern osThreadId_t actuatorsUpdateHandle;
+extern const osThreadAttr_t actuatorsUpdate_attributes;
+
 /* Definitions for loggerUpdate */
 extern osThreadId_t loggerUpdateHandle;
 extern const osThreadAttr_t loggerUpdate_attributes;
@@ -152,6 +156,7 @@ void sensorsUpdateTask(void *argument);
 void modeUpdateTask(void *argument);
 void radioInputUpdateTask(void *argument);
 void loggerUpdateTask(void *argument);
+void actuatorsUpdateTask(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -410,6 +415,9 @@ int main(void)
 
   /* creation of loggerUpdate */
   loggerUpdateHandle = osThreadNew(loggerUpdateTask, NULL, &loggerUpdate_attributes);
+
+  /* creation of actuatorsUpdate */
+  actuatorsUpdateHandle = osThreadNew(actuatorsUpdateTask, NULL, &actuatorsUpdate_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -1101,6 +1109,24 @@ void loggerUpdateTask(void *argument)
 		osDelay(100);
 	}
   /* USER CODE END loggerUpdateTask */
+}
+
+/* USER CODE BEGIN Header_actuatorsUpdateTask */
+/**
+* @brief Function implementing the actuatorsUpdate thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_actuatorsUpdateTask */
+void actuatorsUpdateTask(void *argument)
+{
+  /* USER CODE BEGIN actuatorsUpdateTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END actuatorsUpdateTask */
 }
 
  /**
