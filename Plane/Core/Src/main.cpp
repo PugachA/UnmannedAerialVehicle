@@ -128,6 +128,7 @@ extern const osThreadAttr_t loggerUpdate_attributes;
 extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
 
 uint32_t rc_input[CHANNELS_ARRAY_SIZE];
+char str[100] = "\0";
 
 uint8_t current_mode = 0;
 uint8_t integral_reset_flag = 0;
@@ -1091,13 +1092,13 @@ void radioInputUpdateTask(void *argument)
 void loggerUpdateTask(void *argument)
 {
   /* USER CODE BEGIN loggerUpdateTask */
-	char str[100] = "\0";
+
 	/* Infinite loop */
 	for(;;)
 	{
 		sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
 		HAL_UART_Transmit_IT(&huart2, (uint8_t*)str, sizeof(str));
-		osDelay(500);
+		osDelay(100);
 	}
   /* USER CODE END loggerUpdateTask */
 }
@@ -1131,7 +1132,8 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-
+	//sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
+			HAL_UART_Transmit_IT(&huart2, (uint8_t*)"fuck", 4);
   /* USER CODE END Error_Handler_Debug */
 }
 
