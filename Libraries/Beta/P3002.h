@@ -5,7 +5,7 @@
 class P3002
 {
   private:
-	  ADC_HandleTypeDef hadc; //pointer to ADC
+	  ADC_HandleTypeDef *hadc; //pointer to ADC
 	
 	  uint32_t convertADC(void);
 	  double calcAngle(void);
@@ -17,7 +17,7 @@ class P3002
 	  		
 	
   public:
-	  P3002(ADC_HandleTypeDef);//constructor
+	  P3002(ADC_HandleTypeDef *hadc);//constructor
 	  uint32_t getRawData(void);
 	  double getAngle(void);
 };

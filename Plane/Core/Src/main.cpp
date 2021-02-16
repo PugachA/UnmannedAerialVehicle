@@ -50,7 +50,7 @@
 #define RADIO_DEBUG 3
 #define BETA_DEBUG 4
 
-#define DEBUG_MODE BARO_DEBUG //раскоментить для отладки. присвоить одно из значений выше
+#define DEBUG_MODE BETA_DEBUG //раскоментить для отладки. присвоить одно из значений выше
 
 /* USER CODE END PD */
 
@@ -365,8 +365,6 @@ int main(void)
 	//-------------------Sensors INIT--------------------------
 	//P3002 p3002(hadc2);
 	//Beeper beeper(GPIOD, GPIO_PIN_13);
-
-	//MPXV7002 mpxv7002(hadc1);
 
 	//HAL_Delay(700);
 	//BNO055 bno055(hi2c3);
@@ -1024,11 +1022,14 @@ void StartDefaultTask(void *argument)
 void sensorsUpdateTask(void *argument)
 {
   /* USER CODE BEGIN sensorsUpdateTask */
+	//MPXV7002 mpxv7002(hadc1);
+	P3002 p3002(&hadc2);
 	MS5611 ms5611(0x77, &hi2c1, 100, 0.01);//нельзя инитить до инита i2c
   /* Infinite loop */
   for(;;)
   {
 	  data_input[BARO] = ms5611.getRawAltitude();
+	  data_input[BETA] = p3002.getAngle();
 	  osDelay(100);
   }
   /* USER CODE END sensorsUpdateTask */
