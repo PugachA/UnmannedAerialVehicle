@@ -7,7 +7,7 @@ class MS5611
 {
   private:
     uint8_t MS5611_addr; //address of the sensor on the bus
-    I2C_HandleTypeDef hi2c; //pointer to the i2c bus
+    I2C_HandleTypeDef *hi2c; //pointer to the i2c bus
 	
     double pressure_QFE; //used in getAltitude to calc altitude AGL
 	
@@ -66,7 +66,7 @@ class MS5611
 		
 	
   public:
-    MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef hi2c,int number_of_points_to_average, double dt); //constructor
+    MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef *hi2c,int number_of_points_to_average, double dt); //constructor
 	
     double getPressure(void); //return pressure
     double getTemperature(void); //return temperature
