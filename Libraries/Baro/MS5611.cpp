@@ -157,8 +157,9 @@ void MS5611::updateQFE(void)
 {
   double sum = 0;
   double pressure = 0;
-	
-  for(int i = 0; i < points_to_average; i++) {
+  int i;
+
+  for(i = 0; i < points_to_average; i++) {
     pressure = getPressure();
     sum = sum + pressure;
   }

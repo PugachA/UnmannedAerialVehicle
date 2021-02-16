@@ -56,7 +56,7 @@ osThreadId_t sensorsUpdateHandle;
 const osThreadAttr_t sensorsUpdate_attributes = {
   .name = "sensorsUpdate",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 4
+  .stack_size = 1024 * 4
 };
 
 osThreadId_t modeUpdateHandle;

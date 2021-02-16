@@ -1033,7 +1033,7 @@ void sensorsUpdateTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	  //data_input[BARO] = ms5611.getRawAltitude();
+	  data_input[BARO] = ms5611.getRawAltitude();
 	  osDelay(100);
   }
   /* USER CODE END sensorsUpdateTask */
