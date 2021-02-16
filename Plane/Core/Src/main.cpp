@@ -139,7 +139,7 @@ Servo 	thr_servo(&htim3, 1),
 		ers_servo(&htim5, 3);
 
 //-------------------Sensors INIT--------------------------
-MS5611 ms5611(0x77, &hi2c1, 100, 0.01);//нельзя инитить до инита i2c
+
 
 uint32_t output[5];
 uint32_t rc_input[CHANNELS_ARRAY_SIZE];
@@ -1029,10 +1029,11 @@ void StartDefaultTask(void *argument)
 void sensorsUpdateTask(void *argument)
 {
   /* USER CODE BEGIN sensorsUpdateTask */
+	MS5611 ms5611(0x77, &hi2c1, 100, 0.01);//нельзя инитить до инита i2c
   /* Infinite loop */
   for(;;)
   {
-	  data_input[BARO] = ms5611.getRawAltitude();
+	  //data_input[BARO] = ms5611.getRawAltitude();
 	  osDelay(100);
   }
   /* USER CODE END sensorsUpdateTask */

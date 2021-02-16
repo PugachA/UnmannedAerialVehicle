@@ -33,7 +33,7 @@ MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef *hi2c, int number_of_point
 	
   //------------------------MS5611 Initialising---------------------------
   // Reset
-  HAL_I2C_Master_Transmit(this->hi2c, this->MS5611_addr << 1,&RST, comandSize, timeout);
+  HAL_I2C_Master_Transmit_IT(this->hi2c, this->MS5611_addr << 1,&RST, comandSize);
 
   osDelay(10);
 
@@ -55,7 +55,7 @@ short MS5611::readProm(unsigned char reg_addr)
 {
   const uint16_t bufSize = 2;
   uint8_t buf[bufSize];
-  HAL_I2C_Mem_Read(this->hi2c, this->MS5611_addr << 1, reg_addr, I2C_MEMADD_SIZE_8BIT, buf, bufSize, timeout);
+  HAL_I2C_Mem_Read_IT(this->hi2c, this->MS5611_addr << 1, reg_addr, I2C_MEMADD_SIZE_8BIT, buf, bufSize);
   return (buf[0] << 8) | buf[1];
 }
 
@@ -64,10 +64,10 @@ unsigned long MS5611::readBaro(void)
   const uint16_t bufSize = 3;
   uint8_t buf[bufSize];
 
-  HAL_I2C_Master_Transmit(this->hi2c, this->MS5611_addr << 1,&D1_OSR, comandSize, timeout); //initiating pressure conversion
+  HAL_I2C_Master_Transmit_IT(this->hi2c, this->MS5611_addr << 1,&D1_OSR, comandSize); //initiating pressure conversion
   osDelay(10);
-  HAL_I2C_Master_Transmit(this->hi2c, this->MS5611_addr << 1,&ADC_READ, comandSize, timeout); //initiating ADC reading
-  HAL_I2C_Master_Receive(this->hi2c, this->MS5611_addr << 1, buf, bufSize, timeout);
+  HAL_I2C_Master_Transmit_IT(this->hi2c, this->MS5611_addr << 1,&ADC_READ, comandSize); //initiating ADC reading
+  HAL_I2C_Master_Receive_IT(this->hi2c, this->MS5611_addr << 1, buf, bufSize);
 	
   return (buf[0] << 16) | (buf[1] << 8) | buf[2];
 }
@@ -77,10 +77,10 @@ unsigned long MS5611::readTemp(void)
   const uint16_t bufSize = 3;
   uint8_t buf[bufSize];
 
-  HAL_I2C_Master_Transmit(this->hi2c, this->MS5611_addr << 1,&D2_OSR, comandSize, timeout); //initiating temperature conversion
+  HAL_I2C_Master_Transmit_IT(this->hi2c, this->MS5611_addr << 1,&D2_OSR, comandSize); //initiating temperature conversion
   osDelay(10);
-  HAL_I2C_Master_Transmit(this->hi2c, this->MS5611_addr << 1,&ADC_READ, comandSize, timeout); //initiating ADC reading
-  HAL_I2C_Master_Receive(this->hi2c, this->MS5611_addr << 1, buf, bufSize, timeout);
+  HAL_I2C_Master_Transmit_IT(this->hi2c, this->MS5611_addr << 1,&ADC_READ, comandSize); //initiating ADC reading
+  HAL_I2C_Master_Receive_IT(this->hi2c, this->MS5611_addr << 1, buf, bufSize);
 	
   return (buf[0] << 16) | (buf[1] << 8) | buf[2];
 }
