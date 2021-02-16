@@ -35,7 +35,7 @@ MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef *hi2c, int number_of_point
   // Reset
   HAL_I2C_Master_Transmit(this->hi2c, this->MS5611_addr << 1,&RST, comandSize, timeout);
 
-  HAL_Delay(10);
+  osDelay(10);
 
   // Read calibration data
   ms5611_C1 = readProm(0xA2);
@@ -65,7 +65,7 @@ unsigned long MS5611::readBaro(void)
   uint8_t buf[bufSize];
 
   HAL_I2C_Master_Transmit(this->hi2c, this->MS5611_addr << 1,&D1_OSR, comandSize, timeout); //initiating pressure conversion
-  HAL_Delay(10);
+  osDelay(10);
   HAL_I2C_Master_Transmit(this->hi2c, this->MS5611_addr << 1,&ADC_READ, comandSize, timeout); //initiating ADC reading
   HAL_I2C_Master_Receive(this->hi2c, this->MS5611_addr << 1, buf, bufSize, timeout);
 	
@@ -78,7 +78,7 @@ unsigned long MS5611::readTemp(void)
   uint8_t buf[bufSize];
 
   HAL_I2C_Master_Transmit(this->hi2c, this->MS5611_addr << 1,&D2_OSR, comandSize, timeout); //initiating temperature conversion
-  HAL_Delay(10);
+  osDelay(10);
   HAL_I2C_Master_Transmit(this->hi2c, this->MS5611_addr << 1,&ADC_READ, comandSize, timeout); //initiating ADC reading
   HAL_I2C_Master_Receive(this->hi2c, this->MS5611_addr << 1, buf, bufSize, timeout);
 	

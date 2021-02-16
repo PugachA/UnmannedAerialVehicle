@@ -2,6 +2,7 @@
 #define _MS5611_LIB_H_
 
 #include "stm32f4xx_hal.h"
+#include "cmsis_os.h"
 
 class MS5611
 {
