@@ -50,7 +50,7 @@
 #define RADIO_DEBUG 3
 #define BETA_DEBUG 4
 
-//#define DEBUG_MODE BETA_DEBUG //раскоментить для отладки. присвоить одно из значений выше
+#define DEBUG_MODE BARO_DEBUG //раскоментить для отладки. присвоить одно из значений выше
 
 /* USER CODE END PD */
 
@@ -138,8 +138,12 @@ Servo 	thr_servo(&htim3, 1),
 		rud_servo(&htim5, 4),
 		ers_servo(&htim5, 3);
 
+//-------------------Sensors INIT--------------------------
+MS5611 ms5611(0x77, &hi2c1, 100, 0.01);//нельзя инитить до инита i2c
+
 uint32_t output[5];
 uint32_t rc_input[CHANNELS_ARRAY_SIZE];
+double data_input[SENSOR_ARRAY_SIZE] = {0.0};
 
 char str[100] = "\0";
 
@@ -345,9 +349,9 @@ int main(void)
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
+  	//-------------------Radio PWM IC INIT--------------------------
 	HAL_TIM_RegisterCallback(&htim2, HAL_TIM_IC_CAPTURE_CB_ID, IcHandlerTim2);
 	HAL_TIM_RegisterCallback(&htim5, HAL_TIM_IC_CAPTURE_CB_ID, IcHandlerTim5);
-
 	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);//PA5 thr input
 	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);//PB3 elev input
 	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_3);//PB10 ail input
@@ -355,7 +359,7 @@ int main(void)
 	HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_1);//PA0 switch input
 	HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_2);//PA1 slider input
 
-	//-------------------Servo INIT--------------------------
+	//-------------------Servo PWM INIT--------------------------
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);//PA6 thr output
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);//PA7 elev servo output
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);//PB0 ail servo 1 output
@@ -366,7 +370,6 @@ int main(void)
 	//-------------------Sensors INIT--------------------------
 	//P3002 p3002(hadc2);
 	//Beeper beeper(GPIOD, GPIO_PIN_13);
-	//MS5611 ms5611(0x77, hi2c1, 100, 0.01);//нельзя инитить до инита i2c
 
 	//MPXV7002 mpxv7002(hadc1);
 
@@ -377,8 +380,6 @@ int main(void)
 	//HAL_Delay(700);
 	//bno055.setOperationModeNDOF();
 	//---------------------------------------------------------
-
-	double data_input[SENSOR_ARRAY_SIZE] = {0.0};
 
   /* USER CODE END 2 */
 
@@ -446,24 +447,6 @@ int main(void)
 			manage_UART_counter = 0;
 		}
 
-		#ifndef DEBUG_MODE
-			sprintf(str, "t=%d;mode=%d;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d;Vy=%d;beta=%d",\
-					HAL_GetTick(), (int)current_mode ,(int)(0),\
-					(int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10),\
-					(int)(data_input[BARO]*100), (int)data_input[AIR], (int)(100*data_input[BAROVY]), (int)(data_input[BETA]));
-		#else
-			#if DEBUG_MODE == BARO_DEBUG
-				sprintf(str, "alt=%d, vy=%d\n", (int)(data_input[BARO]*100), (int)(100*data_input[BAROVY]));
-			#elif DEBUG_MODE == GYRO_DEBUG
-				sprintf(str, "omega_x=%d, omega_y=%d, omega_z=%d\n", (int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10));
-			#elif DEBUG_MODE == AIR_DEBUG
-				sprintf(str, "%d %d\n", (int)(100*mpxv7002.getAirSpeed()), (int)(100*mpxv7002.getPressure()));
-			#elif DEBUG_MODE == RADIO_DEBUG
-				sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
-			#elif DEBUG_MODE == BETA_DEBUG
-				sprintf(str, "beta=%d\n", (int)data_input[BETA]);
-			#endif
-		#endif*/
 
     /* USER CODE END WHILE */
 
@@ -1049,7 +1032,8 @@ void sensorsUpdateTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(100);
+	  data_input[BARO] = ms5611.getRawAltitude();
+	  osDelay(100);
   }
   /* USER CODE END sensorsUpdateTask */
 }
@@ -1106,7 +1090,25 @@ void loggerUpdateTask(void *argument)
 	/* Infinite loop */
 	for(;;)
 	{
-		sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
+		#ifndef DEBUG_MODE
+			sprintf(str, "t=%d;mode=%d;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d;Vy=%d;beta=%d",\
+					HAL_GetTick(), (int)current_mode ,(int)(0),\
+					(int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10),\
+					(int)(data_input[BARO]*100), (int)data_input[AIR], (int)(100*data_input[BAROVY]), (int)(data_input[BETA]));
+		#else
+			#if DEBUG_MODE == BARO_DEBUG
+				sprintf(str, "alt=%d, vy=%d\n", (int)(data_input[BARO]*100), (int)(100*data_input[BAROVY]));
+			#elif DEBUG_MODE == GYRO_DEBUG
+				sprintf(str, "omega_x=%d, omega_y=%d, omega_z=%d\n", (int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10));
+			#elif DEBUG_MODE == AIR_DEBUG
+				sprintf(str, "%d %d\n", (int)(100*mpxv7002.getAirSpeed()), (int)(100*mpxv7002.getPressure()));
+			#elif DEBUG_MODE == RADIO_DEBUG
+				sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
+			#elif DEBUG_MODE == BETA_DEBUG
+				sprintf(str, "beta=%d\n", (int)data_input[BETA]);
+			#endif
+		#endif
+		//sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
 		HAL_UART_Transmit_IT(&huart2, (uint8_t*)str, sizeof(str));
 		osDelay(100);
 	}
