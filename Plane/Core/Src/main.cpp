@@ -140,7 +140,6 @@ Servo 	thr_servo(&htim3, 1),
 
 //-------------------Sensors INIT--------------------------
 
-
 uint32_t output[5];
 uint32_t rc_input[CHANNELS_ARRAY_SIZE];
 double data_input[SENSOR_ARRAY_SIZE] = {0.0};
@@ -209,18 +208,14 @@ void updateActuators()
 }
 void preFlightCheckUpdate()
 {
-//	updateRcInput(rc_input);
-
 	output[THR] = 989;
 	output[ELEV] = rc_input[ELEV];
 	output[AIL1] = rc_input[AIL1];
 	output[AIL2] = rc_input[AIL2];
 	output[RUD] = rc_input[RUD];
 }
-void directUpdate(uint32_t * rc_input, uint32_t * output)
+void directUpdate()
 {
-	//updateRcInput(rc_input);
-
 	output[THR] = rc_input[THR];
 	output[ELEV] = rc_input[ELEV];
 	output[AIL1] = rc_input[AIL1];
@@ -269,7 +264,7 @@ void stabUpdate(double * input_data, uint32_t * rc_input, uint32_t * output)
 	//}
 
 }
-void setMode(uint32_t * rc_input, Beeper * beeper)
+void setMode()
 {
 	static uint8_t prev_mode = 0;
 
@@ -292,13 +287,13 @@ void setMode(uint32_t * rc_input, Beeper * beeper)
 			current_mode = STAB;
 	}
 }
-void updateModeState(double * input_data, uint32_t * rc_input, uint32_t * output)
+void updateModeState()
 {
 	switch(current_mode)
 	{
-		//case PREFLIGHTCHECK: preFlightCheckUpdate(rc_input, output); break;
-		case DIRECT: directUpdate(rc_input, output); break;
-		case STAB: stabUpdate(input_data, rc_input, output); break;
+		case PREFLIGHTCHECK: preFlightCheckUpdate(); break;
+		case DIRECT: directUpdate(); break;
+		//case STAB: stabUpdate(); break;
 	}
 }
 
@@ -1052,7 +1047,8 @@ void modeUpdateTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	  preFlightCheckUpdate();
+	  setMode();
+	  updateModeState();
 	  osDelay(10);
   }
   /* USER CODE END modeUpdateTask */
