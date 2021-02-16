@@ -131,7 +131,16 @@ extern const osThreadAttr_t loggerUpdate_attributes;
 //-------------------My Global VARs--------------------------
 extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
 
+Servo 	thr_servo(&htim3, 1),
+		elev_servo(&htim3, 2),
+		ail_servo_1(&htim3, 3),
+		ail_servo_2(&htim3, 4),
+		rud_servo(&htim5, 4),
+		ers_servo(&htim5, 3);
+
+uint32_t output[5];
 uint32_t rc_input[CHANNELS_ARRAY_SIZE];
+
 char str[100] = "\0";
 
 uint8_t current_mode = 0;
@@ -186,15 +195,15 @@ void updateRcInput()
 	rc_input[SWITCHA] = switch_rc.getPulseWidth();
 	rc_input[ARM] = slider_rc.getPulseWidth();
 }
-void updateActuators(uint32_t * actuators_pwm, Servo thr_servo, Servo elev_servo, Servo ail_servo_1, Servo ail_servo_2, Servo rud_servo)
+void updateActuators()
 {
-	thr_servo.setPositionMicroSeconds(actuators_pwm[THR]);
-	elev_servo.setPositionMicroSeconds(actuators_pwm[ELEV]);
-	ail_servo_1.setPositionMicroSeconds(actuators_pwm[AIL1]);
-	ail_servo_2.setPositionMicroSeconds(actuators_pwm[AIL2]);
-	rud_servo.setPositionMicroSeconds(actuators_pwm[RUD]);
+	thr_servo.setPositionMicroSeconds(output[THR]);
+	elev_servo.setPositionMicroSeconds(output[ELEV]);
+	ail_servo_1.setPositionMicroSeconds(output[AIL1]);
+	ail_servo_2.setPositionMicroSeconds(output[AIL2]);
+	rud_servo.setPositionMicroSeconds(output[RUD]);
 }
-void preFlightCheckUpdate(uint32_t * rc_input, uint32_t * output)
+void preFlightCheckUpdate()
 {
 //	updateRcInput(rc_input);
 
@@ -283,7 +292,7 @@ void updateModeState(double * input_data, uint32_t * rc_input, uint32_t * output
 {
 	switch(current_mode)
 	{
-		case PREFLIGHTCHECK: preFlightCheckUpdate(rc_input, output); break;
+		//case PREFLIGHTCHECK: preFlightCheckUpdate(rc_input, output); break;
 		case DIRECT: directUpdate(rc_input, output); break;
 		case STAB: stabUpdate(input_data, rc_input, output); break;
 	}
@@ -354,13 +363,6 @@ int main(void)
 	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_4);//PA3 rud servo 2 output
 	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_3);//PA2 ers servo 2 output
 
-	Servo 	thr_servo(htim3.Instance, 1),
-			elev_servo(htim3.Instance, 2),
-			ail_servo_1(htim3.Instance, 3),
-			ail_servo_2(htim3.Instance, 4),
-			rud_servo(htim5.Instance, 4),
-			ers_servo(htim5.Instance, 3);
-
 	//-------------------Sensors INIT--------------------------
 	//P3002 p3002(hadc2);
 	//Beeper beeper(GPIOD, GPIO_PIN_13);
@@ -376,7 +378,6 @@ int main(void)
 	//bno055.setOperationModeNDOF();
 	//---------------------------------------------------------
 
-	uint32_t pwm_output[5];
 	double data_input[SENSOR_ARRAY_SIZE] = {0.0};
 
   /* USER CODE END 2 */
@@ -1030,7 +1031,7 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+    osDelay(1000);
   }
   /* USER CODE END 5 */
 }
@@ -1066,7 +1067,8 @@ void modeUpdateTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(100);
+	  preFlightCheckUpdate();
+	  osDelay(10);
   }
   /* USER CODE END modeUpdateTask */
 }
@@ -1124,7 +1126,8 @@ void actuatorsUpdateTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+	  updateActuators();
+	  osDelay(50);
   }
   /* USER CODE END actuatorsUpdateTask */
 }
