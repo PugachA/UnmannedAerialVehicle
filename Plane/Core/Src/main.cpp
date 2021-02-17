@@ -172,22 +172,6 @@ void actuatorsUpdateTask(void *argument);
 
 /* USER CODE BEGIN PFP */
 
-void updateSensors_OLD(double * data_input, MS5611 &ms5611, MPXV7002 &mpxv7002, BNO055 &bno055, P3002 &p3002)
-{
-	bno055_vector_t v = bno055.getVectorGyroscopeRemap();
-	data_input[BARO] = ms5611.getRawAltitude();
-	data_input[AIR] = mpxv7002.getAirSpeed();
-	data_input[GYROX] = v.x;
-	data_input[GYROY] = v.y;
-	data_input[GYROZ] = v.z;
-	data_input[BETA] = p3002.getAngle();
-	//if(manage_vertical_speed_counter > 10*every_millisecond)
-	//{
-		ms5611.calcVerticalSpeed();
-		data_input[BAROVY] = ms5611.getVerticalSpeed();
-	//	manage_vertical_speed_counter = 0;
-	//}
-}
 void updateRcInput()
 {
 	rc_input[THR] = thr_rc.getPulseWidth();
@@ -222,7 +206,7 @@ void directUpdate()
 	output[AIL2] = rc_input[AIL2];
 	output[RUD] = rc_input[RUD];
 }
-void stabUpdate(double * input_data, uint32_t * rc_input, uint32_t * output)
+void stabUpdate()
 {
 	//------------------Regulators INIT------------------------
 	double k_int_omega_x = 2.5;
@@ -234,7 +218,6 @@ void stabUpdate(double * input_data, uint32_t * rc_input, uint32_t * output)
 	static PIReg omega_z_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x);
 	//---------------------------------------------------------
 
-	//updateRcInput(rc_input);
 	if(integral_reset_flag)
 	{
 		omega_x_PI_reg.integralReset();
@@ -252,16 +235,12 @@ void stabUpdate(double * input_data, uint32_t * rc_input, uint32_t * output)
 	output[AIL2] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
 	output[RUD] = (int)(1500+0.4*omega_y_PI_reg.getOutput());
 
-	//if(manage_omega_counter >= (10*every_millisecond))
-	//{
-		omega_x_PI_reg.setError(omega_zad_x - input_data[GYROX]);
-		omega_x_PI_reg.calcOutput();
-		omega_y_PI_reg.setError(omega_zad_y - input_data[GYROY]);
-		omega_y_PI_reg.calcOutput();
-		omega_z_PI_reg.setError(omega_zad_z - input_data[GYROZ]);
-		omega_z_PI_reg.calcOutput();
-	//	manage_omega_counter = 0;
-	//}
+	omega_x_PI_reg.setError(omega_zad_x - data_input[GYROX]);
+	omega_x_PI_reg.calcOutput();
+	omega_y_PI_reg.setError(omega_zad_y - data_input[GYROY]);
+	omega_y_PI_reg.calcOutput();
+	omega_z_PI_reg.setError(omega_zad_z - data_input[GYROZ]);
+	omega_z_PI_reg.calcOutput();
 
 }
 void setMode()
@@ -293,7 +272,7 @@ void updateModeState()
 	{
 		case PREFLIGHTCHECK: preFlightCheckUpdate(); break;
 		case DIRECT: directUpdate(); break;
-		//case STAB: stabUpdate(); break;
+		case STAB: stabUpdate(); break;
 	}
 }
 
@@ -422,17 +401,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 	while (1)
 	{
-		/*setMode(rc_input, &beeper);
-		updateSensors_OLD(data_input, ms5611, mpxv7002, bno055, p3002);
-		updateModeState(data_input, rc_input, pwm_output);
-		updateActuators(pwm_output, thr_servo, elev_servo, ail_servo_1, ail_servo_2, rud_servo);
-		if(manage_UART_counter >= (50*every_millisecond))
-		{
-			HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
-			manage_UART_counter = 0;
-		}
-
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
