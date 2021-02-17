@@ -209,7 +209,7 @@ class BNO055
 
   private:
 
-    I2C_HandleTypeDef hi2c; //pointer to the i2c bus
+    I2C_HandleTypeDef *hi2c; //pointer to the i2c bus
 
     uint16_t accelScale;
     uint16_t tempScale;
@@ -296,7 +296,7 @@ class BNO055
 
   public:
 
-	BNO055(I2C_HandleTypeDef); //constructor
+	BNO055(I2C_HandleTypeDef *hi2c); //constructor
 
     void setup(void);
     void reset(void);
