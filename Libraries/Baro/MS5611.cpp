@@ -201,7 +201,7 @@ double MS5611::getVerticalSpeed(void)
 
 void MS5611::lpAltFilter(void)
 {
-	calcAltitude();
+	//calcAltitude();
 	double error = 0;
 	error = k_lp_alt*(this->rawAltitude - this->lpFilterOutput);
 	this->lpFilterOutput += error*dt;
