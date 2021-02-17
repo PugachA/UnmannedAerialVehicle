@@ -50,7 +50,7 @@
 #define RADIO_DEBUG 3
 #define BETA_DEBUG 4
 
-#define DEBUG_MODE GYRO_DEBUG //раскоментить для отладки. присвоить одно из значений выше
+#define DEBUG_MODE BARO_DEBUG //раскоментить для отладки. присвоить одно из значений выше
 
 /* USER CODE END PD */
 
@@ -1034,8 +1034,10 @@ void sensorsUpdateTask(void *argument)
 	  data_input[GYROY] = v.y;
 	  data_input[GYROZ] = v.z;
 	  data_input[BARO] = ms5611.getRawAltitude();
+	  ms5611.calcVerticalSpeed();
+	  data_input[BAROVY] = ms5611.getVerticalSpeed();
 	  data_input[BETA] = p3002.getAngle();
-	  osDelay(100);
+	  osDelay(10);
   }
   /* USER CODE END sensorsUpdateTask */
 }
