@@ -50,7 +50,7 @@
 #define RADIO_DEBUG 3
 #define BETA_DEBUG 4
 
-#define DEBUG_MODE BETA_DEBUG //раскоментить для отладки. присвоить одно из значений выше
+#define DEBUG_MODE GYRO_DEBUG //раскоментить для отладки. присвоить одно из значений выше
 
 /* USER CODE END PD */
 
@@ -363,15 +363,7 @@ int main(void)
 	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_3);//PA2 ers servo 2 output
 
 	//-------------------Sensors INIT--------------------------
-	//P3002 p3002(hadc2);
 	//Beeper beeper(GPIOD, GPIO_PIN_13);
-
-	//HAL_Delay(700);
-	//BNO055 bno055(hi2c3);
-	//HAL_Delay(700);
-	//bno055.setup();
-	//HAL_Delay(700);
-	//bno055.setOperationModeNDOF();
 	//---------------------------------------------------------
 
   /* USER CODE END 2 */
@@ -1023,11 +1015,24 @@ void sensorsUpdateTask(void *argument)
 {
   /* USER CODE BEGIN sensorsUpdateTask */
 	//MPXV7002 mpxv7002(hadc1);
+
+	BNO055 bno055(&hi2c3);
+	osDelay(700);
+	bno055.setup();
+	osDelay(700);
+	bno055.setOperationModeNDOF();
+	bno055_vector_t v;
+
 	P3002 p3002(&hadc2);
+
 	MS5611 ms5611(0x77, &hi2c1, 100, 0.01);//нельзя инитить до инита i2c
   /* Infinite loop */
   for(;;)
   {
+	  v = bno055.getVectorGyroscopeRemap();
+	  data_input[GYROX] = v.x;
+	  data_input[GYROY] = v.y;
+	  data_input[GYROZ] = v.z;
 	  data_input[BARO] = ms5611.getRawAltitude();
 	  data_input[BETA] = p3002.getAngle();
 	  osDelay(100);
