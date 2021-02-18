@@ -86,6 +86,13 @@ const osThreadAttr_t loggerUpdate_attributes = {
   .priority = (osPriority_t) osPriorityLow,
   .stack_size = 128 * 4
 };
+
+osThreadId_t baroUpdateHandle;
+const osThreadAttr_t baroUpdate_attributes = {
+  .name = "baroUpdate",
+  .priority = (osPriority_t) osPriorityLow,
+  .stack_size = 512 * 4
+};
 /* USER CODE END Variables */
 
 /* Private function prototypes -----------------------------------------------*/

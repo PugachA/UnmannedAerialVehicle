@@ -128,6 +128,10 @@ extern const osThreadAttr_t actuatorsUpdate_attributes;
 extern osThreadId_t loggerUpdateHandle;
 extern const osThreadAttr_t loggerUpdate_attributes;
 
+/* Definitions for baroUpdate */
+extern osThreadId_t baroUpdateHandle;
+extern const osThreadAttr_t baroUpdate_attributes;
+
 //-------------------My Global VARs--------------------------
 extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
 
@@ -145,6 +149,7 @@ uint32_t rc_input[CHANNELS_ARRAY_SIZE];
 double data_input[SENSOR_ARRAY_SIZE] = {0.0};
 
 char str[100] = "\0";
+MS5611 ms5611(0x77, &hi2c1, 100, 0.01);
 
 uint8_t current_mode = 0;
 uint8_t integral_reset_flag = 0;
@@ -169,6 +174,7 @@ void modeUpdateTask(void *argument);
 void radioInputUpdateTask(void *argument);
 void loggerUpdateTask(void *argument);
 void actuatorsUpdateTask(void *argument);
+void baroUpdateTask(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -384,6 +390,9 @@ int main(void)
 
   /* creation of actuatorsUpdate */
   actuatorsUpdateHandle = osThreadNew(actuatorsUpdateTask, NULL, &actuatorsUpdate_attributes);
+
+  /* creation of baroUpdate */
+  baroUpdateHandle = osThreadNew(baroUpdateTask, NULL, &baroUpdate_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -993,20 +1002,18 @@ void sensorsUpdateTask(void *argument)
 
 	P3002 p3002(&hadc2);
 
-	MS5611 ms5611(0x77, &hi2c1, 100, 0.01);//нельзя инитить до инита i2c
   /* Infinite loop */
-  for(;;)
-  {
-	  v = bno055.getVectorGyroscopeRemap();
-	  data_input[GYROX] = v.x;
-	  data_input[GYROY] = v.y;
-	  data_input[GYROZ] = v.z;
-	  data_input[BARO] = ms5611.getRawAltitude();
-	  ms5611.calcVerticalSpeed();
-	  data_input[BAROVY] = ms5611.getVerticalSpeed();
-	  data_input[BETA] = p3002.getAngle();
-	  osDelay(10);
-  }
+	for(;;)
+	{
+		v = bno055.getVectorGyroscopeRemap();
+		data_input[GYROX] = v.x;
+		data_input[GYROY] = v.y;
+		data_input[GYROZ] = v.z;
+		data_input[BARO] = ms5611.getRawAltitude();
+		data_input[BAROVY] = ms5611.getVerticalSpeed();
+		data_input[BETA] = p3002.getAngle();
+		osDelay(10);
+	}
   /* USER CODE END sensorsUpdateTask */
 }
 
@@ -1105,6 +1112,25 @@ void actuatorsUpdateTask(void *argument)
 	  osDelay(50);
   }
   /* USER CODE END actuatorsUpdateTask */
+}
+
+/* USER CODE BEGIN Header_baroUpdateTask */
+/**
+* @brief Function implementing the baroUpdate thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_baroUpdateTask */
+void baroUpdateTask(void *argument)
+{
+  /* USER CODE BEGIN baroUpdateTask */
+  /* Infinite loop */
+	for(;;)
+	{
+		ms5611.calcVerticalSpeed();
+		osDelay(2);// в функции вычисления высоты 2 задержки по 9 мС -> цикличность вызоыва каждые 20 мС
+	}
+  /* USER CODE END baroUpdateTask */
 }
 
  /**
