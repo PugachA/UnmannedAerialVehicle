@@ -48,7 +48,6 @@ class MS5611
     unsigned long readBaro(void); //read raw pressure
     unsigned long readTemp(void); //read raw temperature
     void convertRaw(void); //convert pressure and temp from raw
-	void calcAltitude(void); //calculating altitude depending on pressure on ground
 
 	void lpAltFilter(); //low pass filter for raw altitude
 	double lpFilterOutput;
@@ -68,7 +67,7 @@ class MS5611
 	
   public:
     MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef *hi2c,int number_of_points_to_average, double dt); //constructor
-	
+    void calcAltitude(void); //calculating altitude depending on pressure on ground
     double getPressure(void); //return pressure
     double getTemperature(void); //return temperature
     double getRawAltitude(void); //return raw altitude

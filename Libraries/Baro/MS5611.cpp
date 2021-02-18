@@ -65,7 +65,7 @@ unsigned long MS5611::readBaro(void)
   uint8_t buf[bufSize];
 
   HAL_I2C_Master_Transmit(this->hi2c, this->MS5611_addr << 1,&D1_OSR, comandSize, timeout); //initiating pressure conversion
-  osDelay(10);
+  osDelay(9);
   HAL_I2C_Master_Transmit(this->hi2c, this->MS5611_addr << 1,&ADC_READ, comandSize, timeout); //initiating ADC reading
   HAL_I2C_Master_Receive(this->hi2c, this->MS5611_addr << 1, buf, bufSize, timeout);
 	
@@ -78,7 +78,7 @@ unsigned long MS5611::readTemp(void)
   uint8_t buf[bufSize];
 
   HAL_I2C_Master_Transmit(this->hi2c, this->MS5611_addr << 1,&D2_OSR, comandSize, timeout); //initiating temperature conversion
-  osDelay(10);
+  osDelay(9);
   HAL_I2C_Master_Transmit(this->hi2c, this->MS5611_addr << 1,&ADC_READ, comandSize, timeout); //initiating ADC reading
   HAL_I2C_Master_Receive(this->hi2c, this->MS5611_addr << 1, buf, bufSize, timeout);
 	
@@ -149,7 +149,6 @@ void MS5611::calcAltitude(void)
 
 double MS5611::getRawAltitude(void)
 {
-  calcAltitude();
   return this->rawAltitude;
 }
 
