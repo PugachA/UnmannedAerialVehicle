@@ -54,8 +54,8 @@ class MS5611
 	double k_lp_alt; //coefficient for altitude low pass filter
 		
 	//Vy calc
-	double first_filter_output;
-	double second_filter_output;
+	double first_filter_output = 0;
+	double second_filter_output = 0;
 	double k1; //coefficient in the first filter for Vy calculation
 	double k2; //coefficient in the second filter for Vy calculation
 	double vertical_speed;

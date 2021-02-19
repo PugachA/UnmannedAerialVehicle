@@ -148,8 +148,9 @@ uint32_t output[5];
 uint32_t rc_input[CHANNELS_ARRAY_SIZE];
 double data_input[SENSOR_ARRAY_SIZE] = {0.0};
 
+uint32_t timeNowMs = 0;
+
 char str[100] = "\0";
-MS5611 ms5611(0x77, &hi2c1, 100, 0.01);
 
 uint8_t current_mode = 0;
 uint8_t integral_reset_flag = 0;
@@ -1009,8 +1010,6 @@ void sensorsUpdateTask(void *argument)
 		data_input[GYROX] = v.x;
 		data_input[GYROY] = v.y;
 		data_input[GYROZ] = v.z;
-		data_input[BARO] = ms5611.getRawAltitude();
-		data_input[BAROVY] = ms5611.getVerticalSpeed();
 		data_input[BETA] = p3002.getAngle();
 		osDelay(10);
 	}
@@ -1070,6 +1069,7 @@ void loggerUpdateTask(void *argument)
 	/* Infinite loop */
 	for(;;)
 	{
+		memset(str, '\0', sizeof(str));
 		#ifndef DEBUG_MODE
 			sprintf(str, "t=%d;mode=%d;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d;Vy=%d;beta=%d",\
 					HAL_GetTick(), (int)current_mode ,(int)(0),\
@@ -1077,7 +1077,7 @@ void loggerUpdateTask(void *argument)
 					(int)(data_input[BARO]*100), (int)data_input[AIR], (int)(100*data_input[BAROVY]), (int)(data_input[BETA]));
 		#else
 			#if DEBUG_MODE == BARO_DEBUG
-				sprintf(str, "alt=%d, vy=%d\n", (int)(data_input[BARO]*100), (int)(100*data_input[BAROVY]));
+				sprintf(str, "%d alt=%d, vy=%d\n", timeNowMs, (int)(data_input[BARO]*100), (int)(100*data_input[BAROVY]));
 			#elif DEBUG_MODE == GYRO_DEBUG
 				sprintf(str, "omega_x=%d, omega_y=%d, omega_z=%d\n", (int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10));
 			#elif DEBUG_MODE == AIR_DEBUG
@@ -1088,7 +1088,7 @@ void loggerUpdateTask(void *argument)
 				sprintf(str, "beta=%d\n", (int)data_input[BETA]);
 			#endif
 		#endif
-		//sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
+		//sprintf(str, "%d\n", timeNowMs);
 		HAL_UART_Transmit_IT(&huart2, (uint8_t*)str, sizeof(str));
 		osDelay(100);
 	}
@@ -1125,9 +1125,18 @@ void baroUpdateTask(void *argument)
 {
   /* USER CODE BEGIN baroUpdateTask */
   /* Infinite loop */
+	MS5611 ms5611(0x77, &hi2c1, 100, 0.02);
+
 	for(;;)
 	{
+		timeNowMs = HAL_GetTick();
+		//ms5611.calcVerticalSpeed();
+		ms5611.calcAltitude();
+		data_input[BARO] = ms5611.getRawAltitude();
+
 		ms5611.calcVerticalSpeed();
+		data_input[BAROVY] = ms5611.getVerticalSpeed();
+
 		osDelay(2);// в функции вычисления высоты 2 задержки по 9 мС -> цикличность вызоыва каждые 20 мС
 	}
   /* USER CODE END baroUpdateTask */

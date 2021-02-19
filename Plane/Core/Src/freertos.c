@@ -48,7 +48,7 @@
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
-  .priority = (osPriority_t) osPriorityNormal,
+  .priority = (osPriority_t) osPriorityLow,
   .stack_size = 128 * 4
 };
 
@@ -90,8 +90,8 @@ const osThreadAttr_t loggerUpdate_attributes = {
 osThreadId_t baroUpdateHandle;
 const osThreadAttr_t baroUpdate_attributes = {
   .name = "baroUpdate",
-  .priority = (osPriority_t) osPriorityLow,
-  .stack_size = 512 * 4
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 1024 * 4
 };
 /* USER CODE END Variables */
 
