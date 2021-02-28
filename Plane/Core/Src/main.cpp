@@ -213,7 +213,7 @@ void directUpdate()
 	output[AIL2] = rc_input[AIL2];
 	output[RUD] = rc_input[RUD];
 }
-void stabUpdate()
+void stabOmegaUpdate()
 {
 	//------------------Regulators INIT------------------------
 	double k_int_omega_x = 2.5;
@@ -279,7 +279,7 @@ void updateModeState()
 	{
 		case PREFLIGHTCHECK: preFlightCheckUpdate(); break;
 		case DIRECT: directUpdate(); break;
-		case STAB: stabUpdate(); break;
+		case STAB: stabOmegaUpdate(); break;
 	}
 }
 
