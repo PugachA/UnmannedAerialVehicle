@@ -250,6 +250,32 @@ void stabOmegaUpdate()
 	omega_z_PI_reg.calcOutput();
 
 }
+void stabVyUpdate()
+{
+	//------------------Regulators INIT------------------------
+	double k_pr_Vy = 8.0;
+	double k_int_Vy = 3.5;
+	double int_lim_Vy = 1000;
+	double vert_speed_zad = 0;
+	static PIReg vert_speed_PI_reg(k_pr_Vy, k_int_Vy, 0.01, int_lim_Vy);
+	//---------------------------------------------------------
+	if(integral_reset_flag)
+	{
+		vert_speed_PI_reg.integralReset();
+		integral_reset_flag = 0;
+	}
+	vert_speed_zad = (0.01953125*rc_input[ELEV] - 29.3164062); // minus 10 to 10 m/s
+
+	output[THR] = rc_input[THR];
+	output[ELEV] = (int)(1500+vert_speed_PI_reg.getOutput());
+	output[AIL1] = rc_input[AIL1];
+	output[AIL2] = rc_input[AIL2];
+	output[RUD] = rc_input[RUD];
+
+	vert_speed_PI_reg.setError(vert_speed_zad - data_input[BAROVY]);
+	vert_speed_PI_reg.calcOutput();
+
+}
 void setMode()
 {
 	static uint8_t prev_mode = 0;
@@ -279,7 +305,8 @@ void updateModeState()
 	{
 		case PREFLIGHTCHECK: preFlightCheckUpdate(); break;
 		case DIRECT: directUpdate(); break;
-		case STAB: stabOmegaUpdate(); break;
+		//case STAB: stabOmegaUpdate(); break;
+		case STAB: stabVyUpdate(); break;
 	}
 }
 
