@@ -1105,7 +1105,7 @@ void loggerUpdateTask(void *argument)
 					(int)(data_input[BARO]*100), (int)data_input[AIR], (int)(100*data_input[BAROVY]), (int)(data_input[BETA]));
 		#else
 			#if DEBUG_MODE == BARO_DEBUG
-				sprintf(str, "%d alt=%d, vy=%d\n", timeNowMs, (int)(data_input[BARO]*100), (int)(100*data_input[BAROVY]));
+				sprintf(str, "%d, %d\n", (int)(data_input[BARO]*100), (int)(100*data_input[BAROVY]));
 			#elif DEBUG_MODE == GYRO_DEBUG
 				sprintf(str, "omega_x=%d, omega_y=%d, omega_z=%d\n", (int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10));
 			#elif DEBUG_MODE == AIR_DEBUG
