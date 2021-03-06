@@ -50,7 +50,7 @@
 #define RADIO_DEBUG 3
 #define BETA_DEBUG 4
 
-#define DEBUG_MODE BARO_DEBUG //раскоментить для отладки. присвоить одно из значений выше
+//#define DEBUG_MODE BARO_DEBUG //раскоментить для отладки. присвоить одно из значений выше
 
 /* USER CODE END PD */
 
@@ -254,8 +254,8 @@ void stabUpdate()
 void stabVyUpdate()
 {
 	//------------------Regulators INIT------------------------
-	double k_pr_Vy = 8.0;
-	double k_int_Vy = 3.5;
+	double k_pr_Vy = 30;
+	double k_int_Vy = 15;
 	double int_lim_Vy = 1000;
 	double vert_speed_zad = 0;
 	static PIReg vert_speed_PI_reg(k_pr_Vy, k_int_Vy, 0.01, int_lim_Vy);
