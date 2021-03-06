@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -40,11 +41,21 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
+//--------------------DEBUG DEFINES-----------------------
+
+#define BARO_DEBUG 0
+#define GYRO_DEBUG 1
+#define AIR_DEBUG 2
+#define RADIO_DEBUG 3
+#define BETA_DEBUG 4
+
+#define DEBUG_MODE BARO_DEBUG //раскоментить для отладки. присвоить одно из значений выше
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -62,50 +73,6 @@ TIM_HandleTypeDef htim6;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-//--------------------DEBUG DEFINES-----------------------
-
-#define BARO_DEBUG 0
-#define GYRO_DEBUG 1
-#define AIR_DEBUG 2
-#define RADIO_DEBUG 3
-#define BETA_DEBUG 4
-
-//раскоментить для отладки. присвоить одно из значений выше
-//#define DEBUG_MODE BETA_DEBUG
-
-//-------------------My Global VARs--------------------------
-extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
-
-uint32_t manage_UART_counter = 0;
-uint32_t manage_vertical_speed_counter = 0;
-uint32_t manage_omega_counter = 0;
-
-const uint32_t every_second = 10000;
-const uint32_t every_millisecond = 10;
-
-uint8_t current_mode = 0;
-uint8_t integral_reset_flag = 0;
-//-----------------------------------------------------------
-/* USER CODE END PV */
-
-/* Private function prototypes -----------------------------------------------*/
-void SystemClock_Config(void);
-static void MX_GPIO_Init(void);
-static void MX_TIM2_Init(void);
-static void MX_USART2_UART_Init(void);
-static void MX_TIM3_Init(void);
-static void MX_TIM5_Init(void);
-static void MX_ADC1_Init(void);
-static void MX_I2C1_Init(void);
-static void MX_ADC2_Init(void);
-static void MX_I2C3_Init(void);
-static void MX_TIM6_Init(void);
-/* USER CODE BEGIN PFP */
-
-//про time_manager: сейчас выполняет функцию простого диспетчера
-//в ней инкрементируются флаги по переполнению таймер (колбек см ниже)
-//события наступает после определенного числа переполнений в основном
-//супер цикле
 enum Channels
 {
 	THR,
@@ -134,30 +101,85 @@ enum Modes
 	DIRECT,
 	STAB,
 };
-void time_manager(TIM_HandleTypeDef *htim)
-{
-	manage_UART_counter++;
-	manage_vertical_speed_counter++;
-	manage_omega_counter++;
-}
 
-void updateSensors(double * data_input, MS5611 &ms5611, MPXV7002 &mpxv7002, BNO055 &bno055, P3002 &p3002)
-{
-	bno055_vector_t v = bno055.getVectorGyroscopeRemap();
-	data_input[BARO] = ms5611.getRawAltitude();
-	data_input[AIR] = mpxv7002.getAirSpeed();
-	data_input[GYROX] = v.x;
-	data_input[GYROY] = v.y;
-	data_input[GYROZ] = v.z;
-	data_input[BETA] = p3002.getAngle();
-	if(manage_vertical_speed_counter > 10*every_millisecond)
-	{
-		ms5611.calcVerticalSpeed();
-		data_input[BAROVY] = ms5611.getVerticalSpeed();
-		manage_vertical_speed_counter = 0;
-	}
-}
-void updateRcInput(uint32_t * rc_input)
+//--------------------Threads-----------------------
+
+/* Definitions for defaultTask */
+extern osThreadId_t defaultTaskHandle;
+extern const osThreadAttr_t defaultTask_attributes;
+
+/* Definitions for sensorsUpdate */
+extern osThreadId_t sensorsUpdateHandle;
+extern const osThreadAttr_t sensorsUpdate_attributes;
+
+/* Definitions for modeUpdate */
+extern osThreadId_t modeUpdateHandle;
+extern const osThreadAttr_t modeUpdate_attributes;
+
+/* Definitions for radioInputUpdat */
+extern osThreadId_t radioInputUpdatHandle;
+extern const osThreadAttr_t radioInputUpdat_attributes;
+
+/* Definitions for actuatorsUpdate */
+extern osThreadId_t actuatorsUpdateHandle;
+extern const osThreadAttr_t actuatorsUpdate_attributes;
+
+/* Definitions for loggerUpdate */
+extern osThreadId_t loggerUpdateHandle;
+extern const osThreadAttr_t loggerUpdate_attributes;
+
+/* Definitions for baroUpdate */
+extern osThreadId_t baroUpdateHandle;
+extern const osThreadAttr_t baroUpdate_attributes;
+
+//-------------------My Global VARs--------------------------
+extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
+
+Servo 	thr_servo(&htim3, 1),
+		elev_servo(&htim3, 2),
+		ail_servo_1(&htim3, 3),
+		ail_servo_2(&htim3, 4),
+		rud_servo(&htim5, 4),
+		ers_servo(&htim5, 3);
+
+//-------------------Sensors INIT--------------------------
+
+uint32_t output[5];
+uint32_t rc_input[CHANNELS_ARRAY_SIZE];
+double data_input[SENSOR_ARRAY_SIZE] = {0.0};
+
+uint32_t timeNowMs = 0;
+
+char str[100] = "\0";
+
+uint8_t current_mode = 0;
+uint8_t integral_reset_flag = 0;
+//-----------------------------------------------------------
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_TIM2_Init(void);
+static void MX_USART2_UART_Init(void);
+static void MX_TIM3_Init(void);
+static void MX_TIM5_Init(void);
+static void MX_ADC1_Init(void);
+static void MX_I2C1_Init(void);
+static void MX_ADC2_Init(void);
+static void MX_I2C3_Init(void);
+static void MX_TIM6_Init(void);
+void StartDefaultTask(void *argument);
+void sensorsUpdateTask(void *argument);
+void modeUpdateTask(void *argument);
+void radioInputUpdateTask(void *argument);
+void loggerUpdateTask(void *argument);
+void actuatorsUpdateTask(void *argument);
+void baroUpdateTask(void *argument);
+
+/* USER CODE BEGIN PFP */
+
+void updateRcInput()
 {
 	rc_input[THR] = thr_rc.getPulseWidth();
 	rc_input[ELEV] = elev_rc.getPulseWidthDif();
@@ -167,35 +189,31 @@ void updateRcInput(uint32_t * rc_input)
 	rc_input[SWITCHA] = switch_rc.getPulseWidth();
 	rc_input[ARM] = slider_rc.getPulseWidth();
 }
-void updateActuators(uint32_t * actuators_pwm, Servo thr_servo, Servo elev_servo, Servo ail_servo_1, Servo ail_servo_2, Servo rud_servo)
+void updateActuators()
 {
-	thr_servo.setPositionMicroSeconds(actuators_pwm[THR]);
-	elev_servo.setPositionMicroSeconds(actuators_pwm[ELEV]);
-	ail_servo_1.setPositionMicroSeconds(actuators_pwm[AIL1]);
-	ail_servo_2.setPositionMicroSeconds(actuators_pwm[AIL2]);
-	rud_servo.setPositionMicroSeconds(actuators_pwm[RUD]);
+	thr_servo.setPositionMicroSeconds(output[THR]);
+	elev_servo.setPositionMicroSeconds(output[ELEV]);
+	ail_servo_1.setPositionMicroSeconds(output[AIL1]);
+	ail_servo_2.setPositionMicroSeconds(output[AIL2]);
+	rud_servo.setPositionMicroSeconds(output[RUD]);
 }
-void preFlightCheckUpdate(uint32_t * rc_input, uint32_t * output)
+void preFlightCheckUpdate()
 {
-	updateRcInput(rc_input);
-
 	output[THR] = 989;
 	output[ELEV] = rc_input[ELEV];
 	output[AIL1] = rc_input[AIL1];
 	output[AIL2] = rc_input[AIL2];
 	output[RUD] = rc_input[RUD];
 }
-void directUpdate(uint32_t * rc_input, uint32_t * output)
+void directUpdate()
 {
-	updateRcInput(rc_input);
-
 	output[THR] = rc_input[THR];
 	output[ELEV] = rc_input[ELEV];
 	output[AIL1] = rc_input[AIL1];
 	output[AIL2] = rc_input[AIL2];
 	output[RUD] = rc_input[RUD];
 }
-void stabUpdate(double * input_data, uint32_t * rc_input, uint32_t * output)
+void stabUpdate()
 {
 	//------------------Regulators INIT------------------------
 	double k_int_omega_x = 2.5;
@@ -207,7 +225,6 @@ void stabUpdate(double * input_data, uint32_t * rc_input, uint32_t * output)
 	static PIReg omega_z_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x);
 	//---------------------------------------------------------
 
-	updateRcInput(rc_input);
 	if(integral_reset_flag)
 	{
 		omega_x_PI_reg.integralReset();
@@ -225,19 +242,15 @@ void stabUpdate(double * input_data, uint32_t * rc_input, uint32_t * output)
 	output[AIL2] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
 	output[RUD] = (int)(1500+0.4*omega_y_PI_reg.getOutput());
 
-	if(manage_omega_counter >= (10*every_millisecond))
-	{
-		omega_x_PI_reg.setError(omega_zad_x - input_data[GYROX]);
-		omega_x_PI_reg.calcOutput();
-		omega_y_PI_reg.setError(omega_zad_y - input_data[GYROY]);
-		omega_y_PI_reg.calcOutput();
-		omega_z_PI_reg.setError(omega_zad_z - input_data[GYROZ]);
-		omega_z_PI_reg.calcOutput();
-		manage_omega_counter = 0;
-	}
+	omega_x_PI_reg.setError(omega_zad_x - data_input[GYROX]);
+	omega_x_PI_reg.calcOutput();
+	omega_y_PI_reg.setError(omega_zad_y - data_input[GYROY]);
+	omega_y_PI_reg.calcOutput();
+	omega_z_PI_reg.setError(omega_zad_z - data_input[GYROZ]);
+	omega_z_PI_reg.calcOutput();
 
 }
-void setMode(uint32_t * rc_input, Beeper * beeper)
+void setMode()
 {
 	static uint8_t prev_mode = 0;
 
@@ -260,13 +273,13 @@ void setMode(uint32_t * rc_input, Beeper * beeper)
 			current_mode = STAB;
 	}
 }
-void updateModeState(double * input_data, uint32_t * rc_input, uint32_t * output)
+void updateModeState()
 {
 	switch(current_mode)
 	{
-		case PREFLIGHTCHECK: preFlightCheckUpdate(rc_input, output); break;
-		case DIRECT: directUpdate(rc_input, output); break;
-		case STAB: stabUpdate(input_data, rc_input, output); break;
+		case PREFLIGHTCHECK: preFlightCheckUpdate(); break;
+		case DIRECT: directUpdate(); break;
+		case STAB: stabUpdate(); break;
 	}
 }
 
@@ -316,12 +329,10 @@ int main(void)
   MX_I2C3_Init();
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
-	HAL_TIM_Base_Start_IT(&htim6);//пока используем для диспетчеризации событий по переполнению
 
-	HAL_TIM_RegisterCallback(&htim6, HAL_TIM_PERIOD_ELAPSED_CB_ID, time_manager);//1 тик = 1 мкС, переполнение 100 тиков = 100 мкС = 0.1 мС
+  	//-------------------Radio PWM IC INIT--------------------------
 	HAL_TIM_RegisterCallback(&htim2, HAL_TIM_IC_CAPTURE_CB_ID, IcHandlerTim2);
 	HAL_TIM_RegisterCallback(&htim5, HAL_TIM_IC_CAPTURE_CB_ID, IcHandlerTim5);
-
 	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);//PA5 thr input
 	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);//PB3 elev input
 	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_3);//PB10 ail input
@@ -329,7 +340,7 @@ int main(void)
 	HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_1);//PA0 switch input
 	HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_2);//PA1 slider input
 
-	//-------------------Servo INIT--------------------------
+	//-------------------Servo PWM INIT--------------------------
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);//PA6 thr output
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);//PA7 elev servo output
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);//PB0 ail servo 1 output
@@ -337,68 +348,69 @@ int main(void)
 	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_4);//PA3 rud servo 2 output
 	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_3);//PA2 ers servo 2 output
 
-	Servo 	thr_servo(htim3.Instance, 1),
-			elev_servo(htim3.Instance, 2),
-			ail_servo_1(htim3.Instance, 3),
-			ail_servo_2(htim3.Instance, 4),
-			rud_servo(htim5.Instance, 4),
-			ers_servo(htim5.Instance, 3);
-
 	//-------------------Sensors INIT--------------------------
-	P3002 p3002(hadc2);
-	Beeper beeper(GPIOD, GPIO_PIN_13);
-	MS5611 ms5611(0x77, hi2c1, 100, 0.01);//нельзя инитить до инита i2c
-
-	MPXV7002 mpxv7002(hadc1);
-
-	HAL_Delay(700);
-	BNO055 bno055(hi2c3);
-	HAL_Delay(700);
-	bno055.setup();
-	HAL_Delay(700);
-	bno055.setOperationModeNDOF();
+	//Beeper beeper(GPIOD, GPIO_PIN_13);
 	//---------------------------------------------------------
-	char str[200] = "test\n";
-
-	uint32_t rc_input[CHANNELS_ARRAY_SIZE];
-	uint32_t pwm_output[5];
-	double data_input[SENSOR_ARRAY_SIZE] = {0.0};
 
   /* USER CODE END 2 */
 
+  /* Init scheduler */
+  osKernelInitialize();
+
+  /* USER CODE BEGIN RTOS_MUTEX */
+  /* add mutexes, ... */
+  /* USER CODE END RTOS_MUTEX */
+
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* add semaphores, ... */
+  /* USER CODE END RTOS_SEMAPHORES */
+
+  /* USER CODE BEGIN RTOS_TIMERS */
+  /* start timers, add new ones, ... */
+  /* USER CODE END RTOS_TIMERS */
+
+  /* USER CODE BEGIN RTOS_QUEUES */
+  /* add queues, ... */
+  /* USER CODE END RTOS_QUEUES */
+
+  /* Create the thread(s) */
+  /* creation of defaultTask */
+  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+
+  /* creation of sensorsUpdate */
+  sensorsUpdateHandle = osThreadNew(sensorsUpdateTask, NULL, &sensorsUpdate_attributes);
+
+  /* creation of modeUpdate */
+  modeUpdateHandle = osThreadNew(modeUpdateTask, NULL, &modeUpdate_attributes);
+
+  /* creation of radioInputUpdat */
+  radioInputUpdatHandle = osThreadNew(radioInputUpdateTask, NULL, &radioInputUpdat_attributes);
+
+  /* creation of loggerUpdate */
+  loggerUpdateHandle = osThreadNew(loggerUpdateTask, NULL, &loggerUpdate_attributes);
+
+  /* creation of actuatorsUpdate */
+  actuatorsUpdateHandle = osThreadNew(actuatorsUpdateTask, NULL, &actuatorsUpdate_attributes);
+
+  /* creation of baroUpdate */
+  baroUpdateHandle = osThreadNew(baroUpdateTask, NULL, &baroUpdate_attributes);
+
+  /* USER CODE BEGIN RTOS_THREADS */
+  /* add threads, ... */
+  /* USER CODE END RTOS_THREADS */
+
+  /* USER CODE BEGIN RTOS_EVENTS */
+  /* add events, ... */
+  /* USER CODE END RTOS_EVENTS */
+
+  /* Start scheduler */
+  osKernelStart();
+
+  /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1)
 	{
-		setMode(rc_input, &beeper);
-		updateSensors(data_input, ms5611, mpxv7002, bno055, p3002);
-		updateModeState(data_input, rc_input, pwm_output);
-		updateActuators(pwm_output, thr_servo, elev_servo, ail_servo_1, ail_servo_2, rud_servo);
-		if(manage_UART_counter >= (50*every_millisecond))
-		{
-			HAL_UART_Transmit(&huart2, (uint8_t*)str, sizeof(str), 1000);
-			manage_UART_counter = 0;
-		}
-
-		#ifndef DEBUG_MODE
-			sprintf(str, "t=%d;mode=%d;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d;Vy=%d;beta=%d",\
-					HAL_GetTick(), (int)current_mode ,(int)(0),\
-					(int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10),\
-					(int)(data_input[BARO]*100), (int)data_input[AIR], (int)(100*data_input[BAROVY]), (int)(data_input[BETA]));
-		#else
-			#if DEBUG_MODE == BARO_DEBUG
-				sprintf(str, "alt=%d, vy=%d\n", (int)(data_input[BARO]*100), (int)(100*data_input[BAROVY]));
-			#elif DEBUG_MODE == GYRO_DEBUG
-				sprintf(str, "omega_x=%d, omega_y=%d, omega_z=%d\n", (int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10));
-			#elif DEBUG_MODE == AIR_DEBUG
-				sprintf(str, "%d %d\n", (int)(100*mpxv7002.getAirSpeed()), (int)(100*mpxv7002.getPressure()));
-			#elif DEBUG_MODE == RADIO_DEBUG
-				sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
-			#elif DEBUG_MODE == BETA_DEBUG
-				sprintf(str, "beta=%d\n", (int)data_input[BETA]);
-			#endif
-		#endif
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -427,8 +439,8 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 4;
-  RCC_OscInitStruct.PLL.PLLN = 192;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV4;
+  RCC_OscInitStruct.PLL.PLLN = 168;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -443,7 +455,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
   {
     Error_Handler();
   }
@@ -637,7 +649,7 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 47;
+  htim2.Init.Prescaler = 83;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 65536;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -707,7 +719,7 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 47;
+  htim3.Init.Prescaler = 83;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 22000;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -779,7 +791,7 @@ static void MX_TIM5_Init(void)
 
   /* USER CODE END TIM5_Init 1 */
   htim5.Instance = TIM5;
-  htim5.Init.Prescaler = 47;
+  htim5.Init.Prescaler = 83;
   htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim5.Init.Period = 22000;
   htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -856,7 +868,7 @@ static void MX_TIM6_Init(void)
 
   /* USER CODE END TIM6_Init 1 */
   htim6.Instance = TIM6;
-  htim6.Init.Prescaler = 47;
+  htim6.Init.Prescaler = 83;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim6.Init.Period = 99;
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -952,6 +964,205 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE END 4 */
 
+/* USER CODE BEGIN Header_StartDefaultTask */
+/**
+  * @brief  Function implementing the defaultTask thread.
+  * @param  argument: Not used
+  * @retval None
+  */
+/* USER CODE END Header_StartDefaultTask */
+void StartDefaultTask(void *argument)
+{
+  /* USER CODE BEGIN 5 */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1000);
+  }
+  /* USER CODE END 5 */
+}
+
+/* USER CODE BEGIN Header_sensorsUpdateTask */
+/**
+* @brief Function implementing the sensorsUpdate thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_sensorsUpdateTask */
+void sensorsUpdateTask(void *argument)
+{
+  /* USER CODE BEGIN sensorsUpdateTask */
+	//MPXV7002 mpxv7002(hadc1);
+
+	BNO055 bno055(&hi2c3);
+	osDelay(700);
+	bno055.setup();
+	osDelay(700);
+	bno055.setOperationModeNDOF();
+	bno055_vector_t v;
+
+	P3002 p3002(&hadc2);
+
+  /* Infinite loop */
+	for(;;)
+	{
+		v = bno055.getVectorGyroscopeRemap();
+		data_input[GYROX] = v.x;
+		data_input[GYROY] = v.y;
+		data_input[GYROZ] = v.z;
+		data_input[BETA] = p3002.getAngle();
+		osDelay(10);
+	}
+  /* USER CODE END sensorsUpdateTask */
+}
+
+/* USER CODE BEGIN Header_modeUpdateTask */
+/**
+* @brief Function implementing the modeUpdate thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_modeUpdateTask */
+void modeUpdateTask(void *argument)
+{
+  /* USER CODE BEGIN modeUpdateTask */
+  /* Infinite loop */
+  for(;;)
+  {
+	  setMode();
+	  updateModeState();
+	  osDelay(10);
+  }
+  /* USER CODE END modeUpdateTask */
+}
+
+/* USER CODE BEGIN Header_radioInputUpdateTask */
+/**
+* @brief Function implementing the radioInputUpdat thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_radioInputUpdateTask */
+void radioInputUpdateTask(void *argument)
+{
+  /* USER CODE BEGIN radioInputUpdateTask */
+  /* Infinite loop */
+  for(;;)
+  {
+	  updateRcInput();
+	  osDelay(50);
+  }
+  /* USER CODE END radioInputUpdateTask */
+}
+
+/* USER CODE BEGIN Header_loggerUpdateTask */
+/**
+* @brief Function implementing the loggerUpdate thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_loggerUpdateTask */
+void loggerUpdateTask(void *argument)
+{
+  /* USER CODE BEGIN loggerUpdateTask */
+
+	/* Infinite loop */
+	for(;;)
+	{
+		memset(str, '\0', sizeof(str));
+		#ifndef DEBUG_MODE
+			sprintf(str, "t=%d;mode=%d;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d;Vy=%d;beta=%d",\
+					HAL_GetTick(), (int)current_mode ,(int)(0),\
+					(int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10),\
+					(int)(data_input[BARO]*100), (int)data_input[AIR], (int)(100*data_input[BAROVY]), (int)(data_input[BETA]));
+		#else
+			#if DEBUG_MODE == BARO_DEBUG
+				sprintf(str, "%d alt=%d, vy=%d\n", timeNowMs, (int)(data_input[BARO]*100), (int)(100*data_input[BAROVY]));
+			#elif DEBUG_MODE == GYRO_DEBUG
+				sprintf(str, "omega_x=%d, omega_y=%d, omega_z=%d\n", (int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10));
+			#elif DEBUG_MODE == AIR_DEBUG
+				sprintf(str, "%d %d\n", (int)(100*mpxv7002.getAirSpeed()), (int)(100*mpxv7002.getPressure()));
+			#elif DEBUG_MODE == RADIO_DEBUG
+				sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
+			#elif DEBUG_MODE == BETA_DEBUG
+				sprintf(str, "beta=%d\n", (int)data_input[BETA]);
+			#endif
+		#endif
+		//sprintf(str, "%d\n", timeNowMs);
+		HAL_UART_Transmit_IT(&huart2, (uint8_t*)str, sizeof(str));
+		osDelay(100);
+	}
+  /* USER CODE END loggerUpdateTask */
+}
+
+/* USER CODE BEGIN Header_actuatorsUpdateTask */
+/**
+* @brief Function implementing the actuatorsUpdate thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_actuatorsUpdateTask */
+void actuatorsUpdateTask(void *argument)
+{
+  /* USER CODE BEGIN actuatorsUpdateTask */
+  /* Infinite loop */
+  for(;;)
+  {
+	  updateActuators();
+	  osDelay(50);
+  }
+  /* USER CODE END actuatorsUpdateTask */
+}
+
+/* USER CODE BEGIN Header_baroUpdateTask */
+/**
+* @brief Function implementing the baroUpdate thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_baroUpdateTask */
+void baroUpdateTask(void *argument)
+{
+  /* USER CODE BEGIN baroUpdateTask */
+  /* Infinite loop */
+	MS5611 ms5611(0x77, &hi2c1, 100, 0.02);
+
+	for(;;)
+	{
+		timeNowMs = HAL_GetTick();
+		//ms5611.calcVerticalSpeed();
+		ms5611.calcAltitude();
+		data_input[BARO] = ms5611.getRawAltitude();
+
+		ms5611.calcVerticalSpeed();
+		data_input[BAROVY] = ms5611.getVerticalSpeed();
+
+		osDelay(2);// в функции вычисления высоты 2 задержки по 9 мС -> цикличность вызоыва каждые 20 мС
+	}
+  /* USER CODE END baroUpdateTask */
+}
+
+ /**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM14 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM14) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
+
 /**
   * @brief  This function is executed in case of error occurrence.
   * @retval None
@@ -960,7 +1171,8 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-
+	//sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
+			HAL_UART_Transmit_IT(&huart2, (uint8_t*)"fuck", 4);
   /* USER CODE END Error_Handler_Debug */
 }
 
