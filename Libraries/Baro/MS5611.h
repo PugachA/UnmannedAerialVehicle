@@ -56,12 +56,18 @@ class MS5611
 	//Vy calc
 	double first_filter_output = 0;
 	double second_filter_output = 0;
+	double third_filter_output = 0;
+	double fourth_filter_output = 0;
 	double k1; //coefficient in the first filter for Vy calculation
 	double k2; //coefficient in the second filter for Vy calculation
+	double k3; //coefficient in the third filter for Vy calculation
+	double k4; //coefficient in the foutrth filter for Vy calculation
 	double vertical_speed;
 		
 	void firstVsFilter();
 	void secondVsFilter();
+	void thirdVsFilter();
+	void fourthVsFilter();
 		
 		
 	

@@ -25,8 +25,10 @@ MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef *hi2c, int number_of_point
   pres_decimation = 100.0;
 	
 	
-  k1 = 5.0;//5
-  k2 = 7.0;//7
+  k1 = 3.5;//5
+  k2 = 6.5;//7
+  k3 = 5;//13
+  k4 = 7;//17
   this-> dt = dt;
 
   k_lp_alt = 20;// 1/k = T - time constant for lpFilter, cut-off frequency = 20 rad/s ~ 3 Hz
@@ -182,14 +184,29 @@ void MS5611::firstVsFilter(void)
 void MS5611::secondVsFilter(void)
 {
     double error = k2*(this->first_filter_output - this->second_filter_output);
-	this->vertical_speed = error;
+	//this->vertical_speed = error;
 	this->second_filter_output += error*dt;
+}
+
+void MS5611::thirdVsFilter(void)
+{
+	double error = k3*(this->second_filter_output - this->third_filter_output);
+	this->third_filter_output += error*dt;
+}
+
+void MS5611::fourthVsFilter(void)
+{
+	double error = k4*(this->third_filter_output - this->fourth_filter_output);
+	this->vertical_speed = error;
+	this->fourth_filter_output += error*dt;
 }
 
 void MS5611::calcVerticalSpeed(void)
 {
 	firstVsFilter();
 	secondVsFilter();
+	thirdVsFilter();
+	fourthVsFilter();
 }
 
 double MS5611::getVerticalSpeed(void)
