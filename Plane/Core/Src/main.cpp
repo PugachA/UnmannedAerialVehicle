@@ -150,7 +150,7 @@ double data_input[SENSOR_ARRAY_SIZE] = {0.0};
 
 uint32_t timeNowMs = 0;
 
-char str[100] = "\0";
+char str[200] = "\0";
 
 uint8_t current_mode = 0;
 uint8_t integral_reset_flag = 0;
@@ -378,6 +378,7 @@ int main(void)
 
 	//-------------------Sensors INIT--------------------------
 	//Beeper beeper(GPIOD, GPIO_PIN_13);
+	HAL_Delay(1000);
 	//---------------------------------------------------------
 
   /* USER CODE END 2 */
