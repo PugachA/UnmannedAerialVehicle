@@ -122,8 +122,16 @@ bool PWMCapturer::matchMaxValue()
 bool PWMCapturer::matchOutOfInterval()
 {
 	if((difference < (min_value - measurement_error)) || (difference > (max_value + measurement_error)))
-			return true;
+		return true;
 
-		return false;
+	return false;
+}
+
+bool PWMCapturer::matchValue(uint16_t value)
+{
+	if((difference > (value - measurement_error)) && (difference < (value + measurement_error)))
+		return true;
+
+	return false;
 }
 

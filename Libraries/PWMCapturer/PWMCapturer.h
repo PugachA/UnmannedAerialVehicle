@@ -35,6 +35,7 @@ class PWMCapturer
 		bool matchMidValue();
 		bool matchMaxValue();
 		bool matchOutOfInterval();
+		bool matchValue(uint16_t value);
 
 	private:
 		uint16_t max_value = 0;

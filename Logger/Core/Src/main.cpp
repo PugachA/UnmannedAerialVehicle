@@ -104,9 +104,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		isDataRecieved = true;
 }
 
+const uint16_t ers_pwm = 1900;
 bool enableLogging = true;
-const double ers_open_position = 165; //градусы
-const double ers_close_position = 60; //градусы
+const double ers_push_position = 128; //градусы
+const double ers_open_position = 35; //градусы
+const double ers_close_position = 0; //градусы
 /* USER CODE END 0 */
 
 /**
@@ -201,19 +203,22 @@ int main(void)
 			HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_10);
 	}
 
-	if(ersCapturer.matchMaxValue()) //срабатывание ERS
+	if(ersCapturer.matchValue(ers_pwm)) //срабатывание ERS
 	{
 		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, GPIO_PIN_RESET); //остановка двигателя
 
 		if(!ersFlag)
+		{
 			beeper.beep(1000); // задержка 1 секунды плюс пищалка
+			ersServo.setPosition(ers_open_position); //открытие капсылы парашюта
+			HAL_Delay(500);
+		}
 
+		ersServo.setPosition(ers_push_position); //выпуск вытяжного парашюта
 		beeper.seriesBeepAsync(1000); //чтобы не мешать записи логов и передачи телеметрии
-		ersServo.setPosition(ers_open_position); //открытие капсылы парашюта
 		ersFlag = true;
 	}
-
-	if(ersCapturer.matchMidValue() || ersCapturer.matchMinValue()) //обычный режим работы
+	else //обычный режим работы
 	{
 		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, GPIO_PIN_SET); //запуск питания на двигатель
 
@@ -221,9 +226,6 @@ int main(void)
 		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7, GPIO_PIN_RESET); //выключение пищалки
 		ersFlag = false;
 	}
-
-	if(ersCapturer.matchOutOfInterval() && enableLogging) //Некорретный сигнал с пульта
-		planeLogger.Info("Некорретный сигнал с пульта");
   }
   /* USER CODE END 3 */
 }
