@@ -254,27 +254,59 @@ void stabUpdate()
 void stabVyUpdate()
 {
 	//------------------Regulators INIT------------------------
-	double k_pr_Vy = 30;
-	double k_int_Vy = 15;
+	double k_pr_Vy = 3.0;
+	double k_int_Vy = 0.0;
 	double int_lim_Vy = 1000;
 	double vert_speed_zad = 0;
+
 	static PIReg vert_speed_PI_reg(k_pr_Vy, k_int_Vy, 0.01, int_lim_Vy);
+
+	double k_int_omega_x = 2.5;
+	double k_pr_omega_x = 5.5;
+
+	double k_int_omega_y = 2.5;
+	double k_pr_omega_y = 5.5;
+
+	double k_int_omega_z = 2.5;
+	double k_pr_omega_z = 5.5;
+
+	double int_lim_omega = 1000;
+	double omega_zad_x = 0, omega_zad_y = 0, omega_zad_z = 0;
+
+	static PIReg omega_x_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega);
+	static PIReg omega_y_PI_reg(k_pr_omega_y, k_int_omega_y, 0.01, int_lim_omega);
+	static PIReg omega_z_PI_reg(k_pr_omega_z, k_int_omega_z, 0.01, int_lim_omega);
 	//---------------------------------------------------------
 	if(integral_reset_flag)
 	{
+		omega_x_PI_reg.integralReset();
+		omega_y_PI_reg.integralReset();
+		omega_z_PI_reg.integralReset();
 		vert_speed_PI_reg.integralReset();
 		integral_reset_flag = 0;
 	}
-	vert_speed_zad = (0.01953125*rc_input[ELEV] - 29.3164062); // minus 10 to 10 m/s
 
-	output[THR] = rc_input[THR];
-	output[ELEV] = (int)(1500+vert_speed_PI_reg.getOutput());
-	output[AIL1] = rc_input[AIL1];
-	output[AIL2] = rc_input[AIL2];
-	output[RUD] = rc_input[RUD];
+	vert_speed_zad = (0.01953125*rc_input[ELEV] - 29.3164062); // minus 10 to 10 m/s
 
 	vert_speed_PI_reg.setError(vert_speed_zad - data_input[BAROVY]);
 	vert_speed_PI_reg.calcOutput();
+
+	omega_zad_x = (0.234375*rc_input[AIL2] - 351.5625);
+	omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
+	omega_zad_z = vert_speed_PI_reg.getOutput();
+
+	omega_x_PI_reg.setError(omega_zad_x - data_input[GYROX]);
+	omega_x_PI_reg.calcOutput();
+	omega_y_PI_reg.setError(omega_zad_y - data_input[GYROY]);
+	omega_y_PI_reg.calcOutput();
+	omega_z_PI_reg.setError(omega_zad_z - data_input[GYROZ]);
+	omega_z_PI_reg.calcOutput();
+
+	output[THR] = rc_input[THR];
+	output[ELEV] = (int)(1500+0.4*omega_z_PI_reg.getOutput());
+	output[AIL1] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
+	output[AIL2] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
+	output[RUD] = (int)(1500+0.4*omega_y_PI_reg.getOutput());
 
 }
 void setMode()
