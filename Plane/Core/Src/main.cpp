@@ -142,6 +142,8 @@ Servo 	thr_servo(&htim3, 1),
 		rud_servo(&htim5, 4),
 		ers_servo(&htim5, 3);
 
+int g_flaperon_delta = 0;
+
 //-------------------Sensors INIT--------------------------
 
 uint32_t output[5];
@@ -209,8 +211,8 @@ void directUpdate()
 {
 	output[THR] = rc_input[THR];
 	output[ELEV] = rc_input[ELEV];
-	output[AIL1] = rc_input[AIL1];
-	output[AIL2] = rc_input[AIL2];
+	output[AIL1] = rc_input[AIL1]+g_flaperon_delta;
+	output[AIL2] = rc_input[AIL2]+g_flaperon_delta;
 	output[RUD] = rc_input[RUD];
 }
 void stabUpdate()
@@ -309,6 +311,32 @@ void stabVyUpdate()
 	output[RUD] = (int)(1500+0.4*omega_y_PI_reg.getOutput());
 
 }
+
+void flapsUpdate()
+{
+	int flaperon_delta_limit = 170; // 1/6 from the whole range
+
+	if (1) //need to replace with flag from RC
+	{
+		g_flaperon_delta += 1;
+	}
+	else
+	{
+		g_flaperon_delta += -1;
+	}
+
+	//limitations
+	if (g_flaperon_delta >= flaperon_delta_limit)
+	{
+		g_flaperon_delta = flaperon_delta_limit;
+	}
+	else
+		if (g_flaperon_delta <= 0)
+		{
+			g_flaperon_delta = 0;
+		}
+}
+
 void setMode()
 {
 	static uint8_t prev_mode = 0;
@@ -1091,6 +1119,7 @@ void modeUpdateTask(void *argument)
   for(;;)
   {
 	  setMode();
+	  flapsUpdate();
 	  updateModeState();
 	  osDelay(10);
   }
