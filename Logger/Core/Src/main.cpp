@@ -104,7 +104,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		isDataRecieved = true;
 }
 
-const uint16_t ers_pwm = 1900;
+const uint16_t ers_pwm = 2012;
 bool enableLogging = true;
 const double ers_push_position = 128; //градусы
 const double ers_open_position = 35; //градусы
