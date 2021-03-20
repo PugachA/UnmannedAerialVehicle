@@ -24,7 +24,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
-#include "RcChannel/RcChannel.h"
 #include "Servo/Servo.h"
 #include "Beeper/Beeper.h"
 #include "Baro/MS5611.h"
@@ -32,6 +31,7 @@
 #include "Gyro/bno055.h"
 #include "PIReg/PIReg.h"
 #include "Beta/P3002.h"
+#include "PWMCapturer/PWMCapturer.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -133,7 +133,63 @@ extern osThreadId_t baroUpdateHandle;
 extern const osThreadAttr_t baroUpdate_attributes;
 
 //-------------------My Global VARs--------------------------
-extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
+
+//------------------------RC---------------------------------
+//extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
+
+PWMCapturer thr_rc(&htim2, 1),
+			elev_rc(&htim2, 2),
+			ail_rc(&htim2, 3),
+			rud_rc(&htim2, 4),
+			switch_rc(&htim5, 1, 989, 2012, 5),
+			slider_rc(&htim5, 2);
+
+void IcHandlerTim2(TIM_HandleTypeDef *htim)
+{
+	switch ( (uint8_t) htim->Channel )
+	{
+		case HAL_TIM_ACTIVE_CHANNEL_1:
+		{
+			thr_rc.calculatePulseWidth();
+		} break;
+		case HAL_TIM_ACTIVE_CHANNEL_2:
+		{
+			elev_rc.calculatePulseWidth();
+		} break;
+		case HAL_TIM_ACTIVE_CHANNEL_3:
+		{
+			ail_rc.calculatePulseWidth();
+		} break;
+		case HAL_TIM_ACTIVE_CHANNEL_4:
+		{
+			rud_rc.calculatePulseWidth();
+		} break;
+	}
+}
+
+void IcHandlerTim5(TIM_HandleTypeDef *htim)
+{
+	switch ( (uint8_t) htim->Channel )
+	{
+		case HAL_TIM_ACTIVE_CHANNEL_1:
+		{
+			switch_rc.calculatePulseWidth();
+		} break;
+		case HAL_TIM_ACTIVE_CHANNEL_2:
+		{
+			slider_rc.calculatePulseWidth();
+		} break;
+		case HAL_TIM_ACTIVE_CHANNEL_3:
+		{
+
+		} break;
+		case HAL_TIM_ACTIVE_CHANNEL_4:
+		{
+
+		} break;
+	}
+}
+//-----------------------------------------------------------
 
 Servo 	thr_servo(&htim3, 1),
 		elev_servo(&htim3, 2),
