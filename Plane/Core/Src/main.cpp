@@ -50,7 +50,7 @@
 #define RADIO_DEBUG 3
 #define BETA_DEBUG 4
 
-//#define DEBUG_MODE BARO_DEBUG //раскоментить для отладки. присвоить одно из значений выше
+#define DEBUG_MODE RADIO_DEBUG //раскоментить для отладки. присвоить одно из значений выше
 
 /* USER CODE END PD */
 
@@ -137,12 +137,12 @@ extern const osThreadAttr_t baroUpdate_attributes;
 //------------------------RC---------------------------------
 //extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
 
-PWMCapturer thr_rc(&htim2, 1),
-			elev_rc(&htim2, 2),
-			ail_rc(&htim2, 3),
-			rud_rc(&htim2, 4),
+PWMCapturer thr_rc(&htim2, 1, 989, 1500, 2012, 5),
+			elev_rc(&htim2, 2, 989, 1500, 2012, 5),
+			ail_rc(&htim2, 3, 989, 1500, 2012, 5),
+			rud_rc(&htim2, 4, 989, 1500, 2012, 5),
 			switch_rc(&htim5, 1, 989, 2012, 5),
-			slider_rc(&htim5, 2);
+			slider_rc(&htim5, 2, 989, 1500, 2012, 5);
 
 void IcHandlerTim2(TIM_HandleTypeDef *htim)
 {
@@ -202,8 +202,8 @@ int g_flaperon_delta = 0;
 
 //-------------------Sensors INIT--------------------------
 
-uint32_t output[5];
-uint32_t rc_input[CHANNELS_ARRAY_SIZE];
+uint32_t output[5] = {0};
+uint32_t rc_input[CHANNELS_ARRAY_SIZE] = {1500};
 double data_input[SENSOR_ARRAY_SIZE] = {0.0};
 
 uint32_t timeNowMs = 0;
@@ -240,9 +240,9 @@ void baroUpdateTask(void *argument);
 void updateRcInput()
 {
 	rc_input[THR] = thr_rc.getPulseWidth();
-	rc_input[ELEV] = elev_rc.getPulseWidthDif();
-	rc_input[AIL1] = ail_rc.getPulseWidthDif();
-	rc_input[AIL2] = ail_rc.getPulseWidthDif();
+	rc_input[ELEV] = elev_rc.getPulseWidthDif();//dif
+	rc_input[AIL1] = ail_rc.getPulseWidthDif();//dif
+	rc_input[AIL2] = ail_rc.getPulseWidthDif();//dif
 	rc_input[RUD] = rud_rc.getPulseWidth();
 	rc_input[SWITCHA] = switch_rc.getPulseWidth();
 	rc_input[ARM] = slider_rc.getPulseWidth();
@@ -1175,7 +1175,7 @@ void modeUpdateTask(void *argument)
   for(;;)
   {
 	  setMode();
-	  flapsUpdate();
+	  //flapsUpdate();
 	  updateModeState();
 	  osDelay(10);
   }
@@ -1229,7 +1229,7 @@ void loggerUpdateTask(void *argument)
 			#elif DEBUG_MODE == AIR_DEBUG
 				sprintf(str, "%d %d\n", (int)(100*mpxv7002.getAirSpeed()), (int)(100*mpxv7002.getPressure()));
 			#elif DEBUG_MODE == RADIO_DEBUG
-				sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
+				sprintf(str, "thr=%d, elev=%d, ail1=%d, ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
 			#elif DEBUG_MODE == BETA_DEBUG
 				sprintf(str, "beta=%d\n", (int)data_input[BETA]);
 			#endif
