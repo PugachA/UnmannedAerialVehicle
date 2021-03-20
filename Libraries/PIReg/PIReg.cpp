@@ -42,3 +42,9 @@ void PIReg::integralReset(void)
 {
 	this->integral = 0;
 }
+
+void PIReg::setGainParams(double k_pr, double k_int)
+{
+	this->k_pr = k_pr;
+	this->k_int = k_int;
+}

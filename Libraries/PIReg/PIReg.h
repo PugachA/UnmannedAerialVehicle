@@ -18,6 +18,7 @@ public:
 	void calcOutput(void);
 	double getOutput(void);
 	void integralReset(void);
+	void setGainParams(double k_pr, double k_int);
 
 };
 #endif
