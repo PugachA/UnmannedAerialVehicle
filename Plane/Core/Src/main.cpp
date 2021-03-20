@@ -282,7 +282,7 @@ void directUpdate()
 	output[THR] = rc_input[THR];
 	output[ELEV] = rc_input[ELEV];
 	output[AIL1] = rc_input[AIL1];
-	output[AIL2] = rc_input[AIL2]
+	output[AIL2] = rc_input[AIL2];
 	output[RUD] = rc_input[RUD];
 }
 void flapsUpdate(uint8_t activate_flaps)
@@ -311,7 +311,7 @@ void flapsUpdate(uint8_t activate_flaps)
 }
 void directFlapsUpdate()
 {
-	activate_flaps = 1;
+	g_activate_flaps = 1;
 	output[THR] = rc_input[THR];
 	output[ELEV] = rc_input[ELEV];
 	output[AIL1] = rc_input[AIL1]+g_flaperon_delta;
