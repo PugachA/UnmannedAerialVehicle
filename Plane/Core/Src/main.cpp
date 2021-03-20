@@ -141,6 +141,7 @@ extern const osThreadAttr_t baroUpdate_attributes;
 const uint8_t TUNE_K_P = 1;
 const uint8_t TUNE_K_I = 2;
 const uint8_t TUNE_OFF = 0;
+
 uint8_t g_activate_flaps = 0;
 
 double k_pr_omega_z = 5.5;
@@ -250,7 +251,30 @@ void actuatorsUpdateTask(void *argument);
 void baroUpdateTask(void *argument);
 
 /* USER CODE BEGIN PFP */
+void flapsUpdate(uint8_t activate_flaps)
+{
+	int flaperon_delta_limit = 170; // 1/6 from the whole range
 
+	if (activate_flaps) //need to replace with flag from RC
+	{
+		g_flaperon_delta += 1;
+	}
+	else
+	{
+		g_flaperon_delta += -1;
+	}
+
+	//limitations
+	if (g_flaperon_delta >= flaperon_delta_limit)
+	{
+		g_flaperon_delta = flaperon_delta_limit;
+	}
+	else
+		if (g_flaperon_delta <= 0)
+		{
+			g_flaperon_delta = 0;
+		}
+}
 void updateRcInput()
 {
 	rc_input[THR] = thr_rc.getPulseWidth();
@@ -281,41 +305,8 @@ void directUpdate()
 {
 	output[THR] = rc_input[THR];
 	output[ELEV] = rc_input[ELEV];
-	output[AIL1] = rc_input[AIL1];
-	output[AIL2] = rc_input[AIL2];
-	output[RUD] = rc_input[RUD];
-}
-void flapsUpdate(uint8_t activate_flaps)
-{
-	int flaperon_delta_limit = 170; // 1/6 from the whole range
-
-	if (activate_flaps) //need to replace with flag from RC
-	{
-		g_flaperon_delta += 1;
-	}
-	else
-	{
-		g_flaperon_delta += -1;
-	}
-
-	//limitations
-	if (g_flaperon_delta >= flaperon_delta_limit)
-	{
-		g_flaperon_delta = flaperon_delta_limit;
-	}
-	else
-		if (g_flaperon_delta <= 0)
-		{
-			g_flaperon_delta = 0;
-		}
-}
-void directFlapsUpdate()
-{
-	g_activate_flaps = true;
-	output[THR] = rc_input[THR];
-	output[ELEV] = rc_input[ELEV];
 	output[AIL1] = rc_input[AIL1]+g_flaperon_delta;
-	output[AIL2] = rc_input[AIL2]+g_flaperon_delta;
+	output[AIL2] = rc_input[AIL2]-g_flaperon_delta;;
 	output[RUD] = rc_input[RUD];
 }
 void stabOmegaUpdate(uint8_t tune_mode)
@@ -481,7 +472,10 @@ void updateModeState()
 		case DIRECT: directUpdate(); break;
 		case OMEGA_STAB: stabOmegaUpdate(TUNE_OFF); break;
 		case VY_STAB: stabVyUpdate(TUNE_OFF); break;
-		case DIRECT_FLAPS: directFlapsUpdate(); break;
+		case DIRECT_FLAPS: {
+				g_activate_flaps = true;
+				directUpdate();
+			}break;
 		case OMEGA_STAB_K_TUNE: stabOmegaUpdate(TUNE_K_P); break;
 		case OMEGA_STAB_I_TUNE:	stabOmegaUpdate(TUNE_K_I); break;
 		case VY_STAB_K_TUNE: stabVyUpdate(TUNE_K_P); break;
