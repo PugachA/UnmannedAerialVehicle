@@ -38,6 +38,7 @@ class PWMCapturer
 		bool matchMaxValue();
 		bool matchOutOfInterval();
 		bool matchValue(uint16_t value);
+		bool isInRange(uint16_t left_constrain, uint16_t right_constrain);
 
 	private:
 		uint16_t max_value = 0;

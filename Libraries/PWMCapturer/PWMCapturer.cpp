@@ -159,3 +159,10 @@ bool PWMCapturer::matchValue(uint16_t value)
 	return false;
 }
 
+bool PWMCapturer::isInRange(uint16_t left_constrain, uint16_t right_constrain)
+{
+	if((difference <= right_constrain) && (difference >= left_constrain))
+		return true;
+
+	return false;
+}
