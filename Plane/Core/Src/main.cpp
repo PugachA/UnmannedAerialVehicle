@@ -141,6 +141,7 @@ extern const osThreadAttr_t baroUpdate_attributes;
 const uint8_t TUNE_K_P = 1;
 const uint8_t TUNE_K_I = 2;
 const uint8_t TUNE_OFF = 0;
+uint8_t g_activate_flaps = 0;
 
 double k_pr_omega_z = 5.5;
 double k_int_omega_z = 2.5;
@@ -280,6 +281,39 @@ void directUpdate()
 {
 	output[THR] = rc_input[THR];
 	output[ELEV] = rc_input[ELEV];
+	output[AIL1] = rc_input[AIL1];
+	output[AIL2] = rc_input[AIL2]
+	output[RUD] = rc_input[RUD];
+}
+void flapsUpdate(uint8_t activate_flaps)
+{
+	int flaperon_delta_limit = 170; // 1/6 from the whole range
+
+	if (activate_flaps) //need to replace with flag from RC
+	{
+		g_flaperon_delta += 1;
+	}
+	else
+	{
+		g_flaperon_delta += -1;
+	}
+
+	//limitations
+	if (g_flaperon_delta >= flaperon_delta_limit)
+	{
+		g_flaperon_delta = flaperon_delta_limit;
+	}
+	else
+		if (g_flaperon_delta <= 0)
+		{
+			g_flaperon_delta = 0;
+		}
+}
+void directFlapsUpdate()
+{
+	activate_flaps = 1;
+	output[THR] = rc_input[THR];
+	output[ELEV] = rc_input[ELEV];
 	output[AIL1] = rc_input[AIL1]+g_flaperon_delta;
 	output[AIL2] = rc_input[AIL2]+g_flaperon_delta;
 	output[RUD] = rc_input[RUD];
@@ -398,31 +432,6 @@ void stabVyUpdate(uint8_t tune_mode)
 
 }
 
-void flapsUpdate()
-{
-	int flaperon_delta_limit = 170; // 1/6 from the whole range
-
-	if (1) //need to replace with flag from RC
-	{
-		g_flaperon_delta += 1;
-	}
-	else
-	{
-		g_flaperon_delta += -1;
-	}
-
-	//limitations
-	if (g_flaperon_delta >= flaperon_delta_limit)
-	{
-		g_flaperon_delta = flaperon_delta_limit;
-	}
-	else
-		if (g_flaperon_delta <= 0)
-		{
-			g_flaperon_delta = 0;
-		}
-}
-
 void setMode()
 {
 	static uint8_t prev_mode = 0;
@@ -430,6 +439,7 @@ void setMode()
 	if(prev_mode != current_mode)
 	{
 		//beeper->longBeep();
+		g_activate_flaps = 0;
 		integral_reset_flag = 1;
 	}
 	prev_mode = current_mode;
@@ -471,7 +481,7 @@ void updateModeState()
 		case DIRECT: directUpdate(); break;
 		case OMEGA_STAB: stabOmegaUpdate(TUNE_OFF); break;
 		case VY_STAB: stabVyUpdate(TUNE_OFF); break;
-		case DIRECT_FLAPS: break;
+		case DIRECT_FLAPS: directFlapsUpdate(); break;
 		case OMEGA_STAB_K_TUNE: stabOmegaUpdate(TUNE_K_P); break;
 		case OMEGA_STAB_I_TUNE:	stabOmegaUpdate(TUNE_K_I); break;
 		case VY_STAB_K_TUNE: stabVyUpdate(TUNE_K_P); break;
@@ -1225,8 +1235,8 @@ void modeUpdateTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
+	  flapsUpdate(g_activate_flaps);
 	  setMode();
-	  //flapsUpdate();
 	  updateModeState();
 	  osDelay(10);
   }
