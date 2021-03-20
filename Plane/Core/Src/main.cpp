@@ -99,7 +99,12 @@ enum Modes
 {
 	PREFLIGHTCHECK,
 	DIRECT,
-	STAB,
+	OMEGA_STAB,
+	VY_STAB,
+	DIRECT_FLAPS,
+	OMEGA_STAB_K_TUNE,
+	OMEGA_STAB_I_TUNE,
+	VY_STAB_K_TUNE,
 };
 
 //--------------------Threads-----------------------
@@ -404,16 +409,33 @@ void setMode()
 	}
 	prev_mode = current_mode;
 
-	if(rc_input[ARM] < 1500)
+	if(switch_rc.matchMinValue() || switch_rc.matchMaxValue())
 		current_mode = PREFLIGHTCHECK;
 	else
 	{
-		if(rc_input[SWITCHA] > 988 -4 && rc_input[SWITCHA] < 988 + 4)
+		if(switch_rc.isInRange(1000, 1100))
 		{
 			current_mode = DIRECT;
 		}
-		if(rc_input[SWITCHA] > 1500 -4 && rc_input[SWITCHA] < 1500 + 4)
-			current_mode = STAB;
+		else
+		{
+			if(switch_rc.isInRange(1100, 1300) || switch_rc.isInRange(1400, 1500))
+				current_mode = OMEGA_STAB;
+			else
+			{
+				if(switch_rc.isInRange(1300, 1400))
+					current_mode = OMEGA_STAB_K_TUNE;
+				if(switch_rc.isInRange(1300, 1400))
+					current_mode = OMEGA_STAB_I_TUNE;
+			}
+			if(switch_rc.isInRange(1700, 1800))
+				current_mode = VY_STAB;
+			else
+				if(switch_rc.isInRange(1800, 1900))
+					current_mode = VY_STAB_K_TUNE;
+			if(switch_rc.isInRange(1900, 1950))
+				current_mode = DIRECT_FLAPS;
+		}
 	}
 }
 void updateModeState()
