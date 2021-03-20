@@ -322,12 +322,12 @@ void stabOmegaUpdate(uint8_t tune_mode)
 	{
 		if(tune_mode == TUNE_K_P)
 		{
-			k_pr_omega_z = 1;
+			k_pr_omega_z = (rc_input[SLIDER] - 979)/100;
 			omega_z_PI_reg.setGainParams(k_pr_omega_z, k_int_omega_z);
 		}
 		if(tune_mode == TUNE_K_I)
 		{
-			k_int_omega_z = 1;
+			k_int_omega_z = (rc_input[SLIDER] - 979)/100;;
 			omega_z_PI_reg.setGainParams(k_pr_omega_z, k_int_omega_z);
 		}
 	}
@@ -384,7 +384,7 @@ void stabVyUpdate(uint8_t tune_mode)
 	{
 		if(tune_mode == TUNE_K_P)
 		{
-			k_pr_Vy = 1;
+			k_pr_Vy = (rc_input[SLIDER] - 979)/100;
 			vert_speed_PI_reg.setGainParams(k_pr_Vy, k_int_Vy);
 			omega_z_PI_reg.setGainParams(k_pr_omega_z, k_int_omega_z);
 		}
