@@ -311,7 +311,7 @@ void flapsUpdate(uint8_t activate_flaps)
 }
 void directFlapsUpdate()
 {
-	g_activate_flaps = 1;
+	g_activate_flaps = true;
 	output[THR] = rc_input[THR];
 	output[ELEV] = rc_input[ELEV];
 	output[AIL1] = rc_input[AIL1]+g_flaperon_delta;
@@ -439,8 +439,8 @@ void setMode()
 	if(prev_mode != current_mode)
 	{
 		//beeper->longBeep();
-		g_activate_flaps = 0;
-		integral_reset_flag = 1;
+		g_activate_flaps = false;
+		integral_reset_flag = true;
 	}
 	prev_mode = current_mode;
 
