@@ -24,6 +24,8 @@ class PWMCapturer
 				uint16_t min_value,
 				uint16_t max_value,
 				uint8_t measurement_error);
+		PWMCapturer(TIM_HandleTypeDef *htim,
+				uint8_t channel);
 		virtual ~PWMCapturer();
 		void calculatePulseWidth();
 		uint32_t getPulseWidthDif();
