@@ -81,7 +81,7 @@ enum Channels
 	AIL2,
 	RUD,
 	SWITCHA,
-	ARM,
+	SLIDER,
 	CHANNELS_ARRAY_SIZE,
 };
 enum Sensors
@@ -250,7 +250,7 @@ void updateRcInput()
 	rc_input[AIL2] = ail_rc.getPulseWidthDif();//dif
 	rc_input[RUD] = rud_rc.getPulseWidth();
 	rc_input[SWITCHA] = switch_rc.getPulseWidth();
-	rc_input[ARM] = slider_rc.getPulseWidth();
+	rc_input[SLIDER] = slider_rc.getPulseWidth();
 }
 void updateActuators()
 {
@@ -1251,7 +1251,7 @@ void loggerUpdateTask(void *argument)
 			#elif DEBUG_MODE == AIR_DEBUG
 				sprintf(str, "%d %d\n", (int)(100*mpxv7002.getAirSpeed()), (int)(100*mpxv7002.getPressure()));
 			#elif DEBUG_MODE == RADIO_DEBUG
-				sprintf(str, "thr=%d, elev=%d, ail1=%d, ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
+				sprintf(str, "thr=%d, elev=%d, ail1=%d, ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[SLIDER]);
 			#elif DEBUG_MODE == BETA_DEBUG
 				sprintf(str, "beta=%d\n", (int)data_input[BETA]);
 			#endif
@@ -1339,7 +1339,7 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-	//sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
+	//sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[SLIDER]);
 			HAL_UART_Transmit_IT(&huart2, (uint8_t*)"fuck", 4);
   /* USER CODE END Error_Handler_Debug */
 }
