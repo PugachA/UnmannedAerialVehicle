@@ -138,7 +138,15 @@ extern osThreadId_t baroUpdateHandle;
 extern const osThreadAttr_t baroUpdate_attributes;
 
 //-------------------My Global VARs--------------------------
+const uint8_t TUNE_K_P = 1;
+const uint8_t TUNE_K_I = 2;
+const uint8_t TUNE_OFF = 0;
 
+double k_pr_omega_z = 5.5;
+double k_int_omega_z = 2.5;
+
+double k_pr_Vy = 3.0;
+double k_int_Vy = 0.0;
 //------------------------RC---------------------------------
 //extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
 
@@ -276,17 +284,28 @@ void directUpdate()
 	output[AIL2] = rc_input[AIL2]+g_flaperon_delta;
 	output[RUD] = rc_input[RUD];
 }
-void stabOmegaUpdate()
+void stabOmegaUpdate(uint8_t tune_mode)
 {
 	//------------------Regulators INIT------------------------
-	double k_int_omega_z = 2.5;
-	double k_pr_omega_z = 5.5;
 	double int_lim_omega_z = 1000;
 	double omega_zad_x = 0, omega_zad_y = 0, omega_zad_z = 0;
 	//static PIReg omega_x_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x);
 	//static PIReg omega_y_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x);
 	static PIReg omega_z_PI_reg(k_pr_omega_z, k_int_omega_z, 0.01, int_lim_omega_z);
 	//---------------------------------------------------------
+	if(tune_mode != TUNE_OFF)
+	{
+		if(tune_mode == TUNE_K_P)
+		{
+			k_pr_omega_z = 1;
+			omega_z_PI_reg.setGainParams(k_pr_omega_z, k_int_omega_z);
+		}
+		if(tune_mode == TUNE_K_I)
+		{
+			k_int_omega_z = 1;
+			omega_z_PI_reg.setGainParams(k_pr_omega_z, k_int_omega_z);
+		}
+	}
 
 	if(integral_reset_flag)
 	{
@@ -314,11 +333,10 @@ void stabOmegaUpdate()
 
 }
 
-void stabVyUpdate()
+void stabVyUpdate(uint8_t tune_mode)
 {
 	//------------------Regulators INIT------------------------
-	double k_pr_Vy = 3.0;
-	double k_int_Vy = 0.0;
+
 	double int_lim_Vy = 1000;
 	double vert_speed_zad = 0;
 
@@ -330,9 +348,6 @@ void stabVyUpdate()
 	//double k_int_omega_y = 2.5;
 	//double k_pr_omega_y = 5.5;
 
-	double k_int_omega_z = 2.5;
-	double k_pr_omega_z = 5.5;
-
 	double int_lim_omega = 1000;
 	double omega_zad_x = 0, omega_zad_y = 0, omega_zad_z = 0;
 
@@ -340,10 +355,20 @@ void stabVyUpdate()
 	//static PIReg omega_y_PI_reg(k_pr_omega_y, k_int_omega_y, 0.01, int_lim_omega);
 	static PIReg omega_z_PI_reg(k_pr_omega_z, k_int_omega_z, 0.01, int_lim_omega);
 	//---------------------------------------------------------
+	if(tune_mode != TUNE_OFF)
+	{
+		if(tune_mode == TUNE_K_P)
+		{
+			k_pr_Vy = 1;
+			vert_speed_PI_reg.setGainParams(k_pr_Vy, k_int_Vy);
+			omega_z_PI_reg.setGainParams(k_pr_omega_z, k_int_omega_z);
+		}
+	}
+
 	if(integral_reset_flag)
 	{
-		omega_x_PI_reg.integralReset();
-		omega_y_PI_reg.integralReset();
+		//omega_x_PI_reg.integralReset();
+		//omega_y_PI_reg.integralReset();
 		omega_z_PI_reg.integralReset();
 		vert_speed_PI_reg.integralReset();
 		integral_reset_flag = 0;
@@ -367,9 +392,9 @@ void stabVyUpdate()
 
 	output[THR] = rc_input[THR];
 	output[ELEV] = (int)(1500+0.4*omega_z_PI_reg.getOutput());
-	output[AIL1] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
-	output[AIL2] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
-	output[RUD] = (int)(1500+0.4*omega_y_PI_reg.getOutput());
+	output[AIL1] = rc_input[AIL1];
+	output[AIL2] = rc_input[AIL2];
+	output[RUD] = rc_input[RUD];
 
 }
 
@@ -444,12 +469,12 @@ void updateModeState()
 	{
 		case PREFLIGHTCHECK: preFlightCheckUpdate(); break;
 		case DIRECT: directUpdate(); break;
-		case OMEGA_STAB: stabOmegaUpdate(); break;
-		case VY_STAB: stabVyUpdate(); break;
+		case OMEGA_STAB: stabOmegaUpdate(TUNE_OFF); break;
+		case VY_STAB: stabVyUpdate(TUNE_OFF); break;
 		case DIRECT_FLAPS: break;
-		case OMEGA_STAB_K_TUNE: break;
-		case OMEGA_STAB_I_TUNE: break;
-		case VY_STAB_K_TUNE: break;
+		case OMEGA_STAB_K_TUNE: stabOmegaUpdate(TUNE_K_P); break;
+		case OMEGA_STAB_I_TUNE:	stabOmegaUpdate(TUNE_K_I); break;
+		case VY_STAB_K_TUNE: stabVyUpdate(TUNE_K_P); break;
 	}
 }
 
