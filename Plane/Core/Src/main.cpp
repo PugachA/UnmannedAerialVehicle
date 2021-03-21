@@ -231,7 +231,7 @@ double logger_data[4] = {0.0};
 
 uint32_t timeNowMs = 0;
 
-char str[200] = "\0";
+char str[150] = "\0";
 
 uint8_t current_mode = 0;
 uint8_t integral_reset_flag = 0;
@@ -330,12 +330,12 @@ void stabOmegaUpdate(uint8_t tune_mode)
 	{
 		if(tune_mode == TUNE_K_P)
 		{
-			k_pr_omega_z = (rc_input[SLIDER] - 979)/100;
+			k_pr_omega_z = ((double)rc_input[SLIDER] - 979.0)/100.0;
 			omega_z_PI_reg.setGainParams(k_pr_omega_z, k_int_omega_z);
 		}
 		if(tune_mode == TUNE_K_I)
 		{
-			k_int_omega_z = (rc_input[SLIDER] - 979)/100;;
+			k_int_omega_z = ((double)rc_input[SLIDER] - 979.0)/100.0;;
 			omega_z_PI_reg.setGainParams(k_pr_omega_z, k_int_omega_z);
 		}
 	}
@@ -393,7 +393,7 @@ void stabVyUpdate(uint8_t tune_mode)
 	{
 		if(tune_mode == TUNE_K_P)
 		{
-			k_pr_Vy = (rc_input[SLIDER] - 979)/100;
+			k_pr_Vy = ((double)rc_input[SLIDER] - 979.0)/100.0;
 			vert_speed_PI_reg.setGainParams(k_pr_Vy, k_int_Vy);
 			omega_z_PI_reg.setGainParams(k_pr_omega_z, k_int_omega_z);
 		}
@@ -462,7 +462,7 @@ void setMode()
 			{
 				if(switch_rc.isInRange(1300, 1400))
 					current_mode = OMEGA_STAB_K_TUNE;
-				if(switch_rc.isInRange(1300, 1400))
+				if(switch_rc.isInRange(1500, 1700))
 					current_mode = OMEGA_STAB_I_TUNE;
 			}
 			if(switch_rc.isInRange(1700, 1800))
@@ -1283,7 +1283,7 @@ void loggerUpdateTask(void *argument)
 	{
 		memset(str, '\0', sizeof(str));
 		#ifndef DEBUG_MODE
-			sprintf(str, "%d;%d;%d;%d;%d;%d;%d;%d;%d;%d,%d;%d;%d;%d;%d;%d;%d;%d;%d",\
+			sprintf(str, "%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d",\
 					HAL_GetTick(), (int)(10*logger_data[OMEGA_X_ZAD]), (int)(data_input[GYROX]*10),\
 					(int)(10*logger_data[OMEGA_Y_ZAD]), (int)(data_input[GYROY]*10), (int)(10*logger_data[OMEGA_Z_ZAD]),\
 					(int)(data_input[GYROZ]*10), (int)(data_input[BARO]*100), (int)(100*logger_data[VY_ZAD]),\
