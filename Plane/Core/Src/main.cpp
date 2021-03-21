@@ -50,7 +50,7 @@
 #define RADIO_DEBUG 3
 #define BETA_DEBUG 4
 
-#define DEBUG_MODE RADIO_DEBUG //раскоментить для отладки. присвоить одно из значений выше
+//#define DEBUG_MODE RADIO_DEBUG //раскоментить для отладки. присвоить одно из значений выше
 
 /* USER CODE END PD */
 
@@ -105,6 +105,13 @@ enum Modes
 	OMEGA_STAB_K_TUNE,
 	OMEGA_STAB_I_TUNE,
 	VY_STAB_K_TUNE,
+};
+enum Logs
+{
+	OMEGA_X_ZAD,
+	OMEGA_Y_ZAD,
+	OMEGA_Z_ZAD,
+	VY_ZAD,
 };
 
 //--------------------Threads-----------------------
@@ -220,6 +227,7 @@ int g_flaperon_delta = 0;
 uint32_t output[5] = {0};
 uint32_t rc_input[CHANNELS_ARRAY_SIZE] = {1500};
 double data_input[SENSOR_ARRAY_SIZE] = {0.0};
+double logger_data[4] = {0.0};
 
 uint32_t timeNowMs = 0;
 
@@ -253,7 +261,7 @@ void baroUpdateTask(void *argument);
 /* USER CODE BEGIN PFP */
 void flapsUpdate(uint8_t activate_flaps)
 {
-	int flaperon_delta_limit = 170; // 1/6 from the whole range
+	int flaperon_delta_limit = 340; // 2/6 from the whole range
 
 	if (activate_flaps) //need to replace with flag from RC
 	{
@@ -342,6 +350,7 @@ void stabOmegaUpdate(uint8_t tune_mode)
 	//omega_zad_x = (0.234375*rc_input[AIL2] - 351.5625);
 	//omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
 	omega_zad_z = (0.234375*rc_input[ELEV] - 351.5625);
+	logger_data[OMEGA_Z_ZAD] = omega_zad_z;
 
 	output[THR] = rc_input[THR];
 	output[ELEV] = (int)(1500+0.4*omega_z_PI_reg.getOutput());
@@ -400,6 +409,7 @@ void stabVyUpdate(uint8_t tune_mode)
 	}
 
 	vert_speed_zad = (0.01953125*rc_input[ELEV] - 29.3164062); // minus 10 to 10 m/s
+	logger_data[VY_ZAD] = vert_speed_zad;
 
 	vert_speed_PI_reg.setError(vert_speed_zad - data_input[BAROVY]);
 	vert_speed_PI_reg.calcOutput();
@@ -407,6 +417,7 @@ void stabVyUpdate(uint8_t tune_mode)
 	//omega_zad_x = (0.234375*rc_input[AIL2] - 351.5625);
 	//omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
 	omega_zad_z = vert_speed_PI_reg.getOutput();
+	logger_data[OMEGA_Z_ZAD] = omega_zad_z;
 
 	//omega_x_PI_reg.setError(omega_zad_x - data_input[GYROX]);
 	//omega_x_PI_reg.calcOutput();
@@ -1272,10 +1283,14 @@ void loggerUpdateTask(void *argument)
 	{
 		memset(str, '\0', sizeof(str));
 		#ifndef DEBUG_MODE
-			sprintf(str, "t=%d;mode=%d;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d;Vy=%d;beta=%d",\
-					HAL_GetTick(), (int)current_mode ,(int)(0),\
-					(int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10),\
-					(int)(data_input[BARO]*100), (int)data_input[AIR], (int)(100*data_input[BAROVY]), (int)(data_input[BETA]));
+			sprintf(str, "%d;%d;%d;%d;%d;%d;%d;%d;%d;%d,%d;%d;%d;%d;%d;%d;%d;%d;%d",\
+					HAL_GetTick(), (int)(10*logger_data[OMEGA_X_ZAD]), (int)(data_input[GYROX]*10),\
+					(int)(10*logger_data[OMEGA_Y_ZAD]), (int)(data_input[GYROY]*10), (int)(10*logger_data[OMEGA_Z_ZAD]),\
+					(int)(data_input[GYROZ]*10), (int)(data_input[BARO]*100), (int)(100*logger_data[VY_ZAD]),\
+					(int)(100*data_input[BAROVY]), (int)(data_input[BETA]),	0,\
+					0, 0, 0,\
+					(int)(10*k_pr_omega_z), (int)(100*k_int_omega_z), (int)(10*k_pr_Vy),\
+					switch_rc.getPulseWidth());
 		#else
 			#if DEBUG_MODE == BARO_DEBUG
 				sprintf(str, "%d, %d\n", (int)(data_input[BARO]*100), (int)(100*data_input[BAROVY]));
