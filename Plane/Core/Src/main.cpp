@@ -50,7 +50,7 @@
 #define RADIO_DEBUG 3
 #define BETA_DEBUG 4
 
-//#define DEBUG_MODE RADIO_DEBUG //раскоментить для отладки. присвоить одно из значений выше
+//#define DEBUG_MODE GYRO_DEBUG //раскоментить для отладки. присвоить одно из значений выше
 
 /* USER CODE END PD */
 
@@ -112,6 +112,7 @@ enum Logs
 	OMEGA_Y_ZAD,
 	OMEGA_Z_ZAD,
 	VY_ZAD,
+	LOG_ARRAY_SIZE,
 };
 
 //--------------------Threads-----------------------
@@ -227,7 +228,7 @@ int g_flaperon_delta = 0;
 uint32_t output[5] = {0};
 uint32_t rc_input[CHANNELS_ARRAY_SIZE] = {1500};
 double data_input[SENSOR_ARRAY_SIZE] = {0.0};
-double logger_data[4] = {0.0};
+double logger_data[LOG_ARRAY_SIZE] = {0.0};
 
 uint32_t timeNowMs = 0;
 
@@ -349,8 +350,9 @@ void stabOmegaUpdate(uint8_t tune_mode)
 	}
 	//omega_zad_x = (0.234375*rc_input[AIL2] - 351.5625);
 	//omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
-	omega_zad_z = (0.234375*rc_input[ELEV] - 351.5625);
+	omega_zad_z = (0.234375*rc_input[ELEV] - 350.0625);
 	logger_data[OMEGA_Z_ZAD] = omega_zad_z;
+
 
 	output[THR] = rc_input[THR];
 	output[ELEV] = (int)(1500+0.4*omega_z_PI_reg.getOutput());
@@ -1221,7 +1223,7 @@ void sensorsUpdateTask(void *argument)
 		data_input[GYROX] = v.x;
 		data_input[GYROY] = v.y;
 		data_input[GYROZ] = v.z;
-		data_input[BETA] = p3002.getAngle();
+		//data_input[BETA] = p3002.getAngle();
 		osDelay(10);
 	}
   /* USER CODE END sensorsUpdateTask */
@@ -1295,7 +1297,8 @@ void loggerUpdateTask(void *argument)
 			#if DEBUG_MODE == BARO_DEBUG
 				sprintf(str, "%d, %d\n", (int)(data_input[BARO]*100), (int)(100*data_input[BAROVY]));
 			#elif DEBUG_MODE == GYRO_DEBUG
-				sprintf(str, "omega_x=%d, omega_y=%d, omega_z=%d\n", (int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10));
+				//sprintf(str, "omega_x=%d, omega_y=%d, omega_z=%d\n", (int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10));
+				sprintf(str, "%d %d\n", (int)(data_input[GYROZ]*10), (int)(logger_data[OMEGA_Z_ZAD]*10));
 			#elif DEBUG_MODE == AIR_DEBUG
 				sprintf(str, "%d %d\n", (int)(100*mpxv7002.getAirSpeed()), (int)(100*mpxv7002.getPressure()));
 			#elif DEBUG_MODE == RADIO_DEBUG
