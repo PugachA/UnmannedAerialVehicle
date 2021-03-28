@@ -45,48 +45,49 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
+/* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
   .priority = (osPriority_t) osPriorityLow,
   .stack_size = 128 * 4
 };
-
+/* Definitions for sensorsUpdate */
 osThreadId_t sensorsUpdateHandle;
 const osThreadAttr_t sensorsUpdate_attributes = {
   .name = "sensorsUpdate",
   .priority = (osPriority_t) osPriorityNormal,
   .stack_size = 1024 * 4
 };
-
+/* Definitions for modeUpdate */
 osThreadId_t modeUpdateHandle;
 const osThreadAttr_t modeUpdate_attributes = {
   .name = "modeUpdate",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 4
+  .stack_size = 256 * 4
 };
-
+/* Definitions for radioInputUpdat */
 osThreadId_t radioInputUpdatHandle;
 const osThreadAttr_t radioInputUpdat_attributes = {
   .name = "radioInputUpdat",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 4
+  .stack_size = 512 * 4
 };
-
-osThreadId_t actuatorsUpdateHandle;
-const osThreadAttr_t actuatorsUpdate_attributes = {
-  .name = "actuatorsUpdate",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 4
-};
-
+/* Definitions for loggerUpdate */
 osThreadId_t loggerUpdateHandle;
 const osThreadAttr_t loggerUpdate_attributes = {
   .name = "loggerUpdate",
   .priority = (osPriority_t) osPriorityLow,
-  .stack_size = 128 * 4
+  .stack_size = 1024 * 4
 };
-
+/* Definitions for actuatorsUpdate */
+osThreadId_t actuatorsUpdateHandle;
+const osThreadAttr_t actuatorsUpdate_attributes = {
+  .name = "actuatorsUpdate",
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 512 * 4
+};
+/* Definitions for baroUpdate */
 osThreadId_t baroUpdateHandle;
 const osThreadAttr_t baroUpdate_attributes = {
   .name = "baroUpdate",

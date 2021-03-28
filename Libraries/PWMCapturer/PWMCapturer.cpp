@@ -44,6 +44,30 @@ PWMCapturer::PWMCapturer(TIM_HandleTypeDef *htim,
 		uint8_t measurement_error)
 	: PWMCapturer(htim, channel, min_value, min_value + (max_value - min_value)/2, max_value, measurement_error)
 {}
+PWMCapturer::PWMCapturer(TIM_HandleTypeDef *htim, uint8_t channel)
+{
+	this->min_value = 0;
+	this->max_value = 0;
+	this->mid_value = 0;
+	this->measurement_error = 0;
+
+	this->htim = htim;
+	switch(channel)
+	{
+		case 1:
+			this->channel = TIM_CHANNEL_1;
+			break;
+		case 2:
+			this->channel = TIM_CHANNEL_2;
+			break;
+		case 3:
+			this->channel = TIM_CHANNEL_3;
+			break;
+		case 4:
+			this->channel = TIM_CHANNEL_4;
+			break;
+	}
+}
 
 PWMCapturer::~PWMCapturer() {
 	// TODO Auto-generated destructor stub
@@ -135,3 +159,10 @@ bool PWMCapturer::matchValue(uint16_t value)
 	return false;
 }
 
+bool PWMCapturer::isInRange(uint16_t left_constrain, uint16_t right_constrain)
+{
+	if((difference <= right_constrain) && (difference >= left_constrain))
+		return true;
+
+	return false;
+}

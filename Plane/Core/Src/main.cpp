@@ -24,7 +24,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
-#include "RcChannel/RcChannel.h"
 #include "Servo/Servo.h"
 #include "Beeper/Beeper.h"
 #include "Baro/MS5611.h"
@@ -32,6 +31,7 @@
 #include "Gyro/bno055.h"
 #include "PIReg/PIReg.h"
 #include "Beta/P3002.h"
+#include "PWMCapturer/PWMCapturer.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,7 +50,7 @@
 #define RADIO_DEBUG 3
 #define BETA_DEBUG 4
 
-//#define DEBUG_MODE BARO_DEBUG //раскоментить для отладки. присвоить одно из значений выше
+//#define DEBUG_MODE GYRO_DEBUG //раскоментить для отладки. присвоить одно из значений выше
 
 /* USER CODE END PD */
 
@@ -81,7 +81,7 @@ enum Channels
 	AIL2,
 	RUD,
 	SWITCHA,
-	ARM,
+	SLIDER,
 	CHANNELS_ARRAY_SIZE,
 };
 enum Sensors
@@ -99,7 +99,20 @@ enum Modes
 {
 	PREFLIGHTCHECK,
 	DIRECT,
-	STAB,
+	OMEGA_STAB,
+	VY_STAB,
+	DIRECT_FLAPS,
+	OMEGA_STAB_K_TUNE,
+	OMEGA_STAB_I_TUNE,
+	VY_STAB_K_TUNE,
+};
+enum Logs
+{
+	OMEGA_X_ZAD,
+	OMEGA_Y_ZAD,
+	OMEGA_Z_ZAD,
+	VY_ZAD,
+	LOG_ARRAY_SIZE,
 };
 
 //--------------------Threads-----------------------
@@ -133,7 +146,73 @@ extern osThreadId_t baroUpdateHandle;
 extern const osThreadAttr_t baroUpdate_attributes;
 
 //-------------------My Global VARs--------------------------
-extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
+const uint8_t TUNE_K_P = 1;
+const uint8_t TUNE_K_I = 2;
+const uint8_t TUNE_OFF = 0;
+
+uint8_t g_activate_flaps = 0;
+
+double k_pr_omega_z = 5.5;
+double k_int_omega_z = 2.5;
+
+double k_pr_Vy = 3.0;
+double k_int_Vy = 0.0;
+//------------------------RC---------------------------------
+//extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
+
+PWMCapturer thr_rc(&htim2, 1, 989, 1500, 2012, 5),
+			elev_rc(&htim2, 2, 989, 1500, 2012, 5),
+			ail_rc(&htim2, 3, 989, 1500, 2012, 5),
+			rud_rc(&htim2, 4, 989, 1500, 2012, 5),
+			switch_rc(&htim5, 1, 989, 2012, 5),
+			slider_rc(&htim5, 2, 989, 1500, 2012, 5);
+
+void IcHandlerTim2(TIM_HandleTypeDef *htim)
+{
+	switch ( (uint8_t) htim->Channel )
+	{
+		case HAL_TIM_ACTIVE_CHANNEL_1:
+		{
+			thr_rc.calculatePulseWidth();
+		} break;
+		case HAL_TIM_ACTIVE_CHANNEL_2:
+		{
+			elev_rc.calculatePulseWidth();
+		} break;
+		case HAL_TIM_ACTIVE_CHANNEL_3:
+		{
+			ail_rc.calculatePulseWidth();
+		} break;
+		case HAL_TIM_ACTIVE_CHANNEL_4:
+		{
+			rud_rc.calculatePulseWidth();
+		} break;
+	}
+}
+
+void IcHandlerTim5(TIM_HandleTypeDef *htim)
+{
+	switch ( (uint8_t) htim->Channel )
+	{
+		case HAL_TIM_ACTIVE_CHANNEL_1:
+		{
+			switch_rc.calculatePulseWidth();
+		} break;
+		case HAL_TIM_ACTIVE_CHANNEL_2:
+		{
+			slider_rc.calculatePulseWidth();
+		} break;
+		case HAL_TIM_ACTIVE_CHANNEL_3:
+		{
+
+		} break;
+		case HAL_TIM_ACTIVE_CHANNEL_4:
+		{
+
+		} break;
+	}
+}
+//-----------------------------------------------------------
 
 Servo 	thr_servo(&htim3, 1),
 		elev_servo(&htim3, 2),
@@ -142,15 +221,18 @@ Servo 	thr_servo(&htim3, 1),
 		rud_servo(&htim5, 4),
 		ers_servo(&htim5, 3);
 
+int g_flaperon_delta = 0;
+
 //-------------------Sensors INIT--------------------------
 
-uint32_t output[5];
-uint32_t rc_input[CHANNELS_ARRAY_SIZE];
+uint32_t output[5] = {0};
+uint32_t rc_input[CHANNELS_ARRAY_SIZE] = {1500};
 double data_input[SENSOR_ARRAY_SIZE] = {0.0};
+double logger_data[LOG_ARRAY_SIZE] = {0.0};
 
 uint32_t timeNowMs = 0;
 
-char str[200] = "\0";
+char str[150] = "\0";
 
 uint8_t current_mode = 0;
 uint8_t integral_reset_flag = 0;
@@ -178,16 +260,39 @@ void actuatorsUpdateTask(void *argument);
 void baroUpdateTask(void *argument);
 
 /* USER CODE BEGIN PFP */
+void flapsUpdate(uint8_t activate_flaps)
+{
+	int flaperon_delta_limit = 340; // 2/6 from the whole range
 
+	if (activate_flaps) //need to replace with flag from RC
+	{
+		g_flaperon_delta += 1;
+	}
+	else
+	{
+		g_flaperon_delta += -1;
+	}
+
+	//limitations
+	if (g_flaperon_delta >= flaperon_delta_limit)
+	{
+		g_flaperon_delta = flaperon_delta_limit;
+	}
+	else
+		if (g_flaperon_delta <= 0)
+		{
+			g_flaperon_delta = 0;
+		}
+}
 void updateRcInput()
 {
 	rc_input[THR] = thr_rc.getPulseWidth();
-	rc_input[ELEV] = elev_rc.getPulseWidthDif();
-	rc_input[AIL1] = ail_rc.getPulseWidthDif();
-	rc_input[AIL2] = ail_rc.getPulseWidthDif();
+	rc_input[ELEV] = elev_rc.getPulseWidthDif();//dif
+	rc_input[AIL1] = ail_rc.getPulseWidthDif();//dif
+	rc_input[AIL2] = ail_rc.getPulseWidth();//dif
 	rc_input[RUD] = rud_rc.getPulseWidth();
 	rc_input[SWITCHA] = switch_rc.getPulseWidth();
-	rc_input[ARM] = slider_rc.getPulseWidth();
+	rc_input[SLIDER] = slider_rc.getPulseWidth();
 }
 void updateActuators()
 {
@@ -209,106 +314,128 @@ void directUpdate()
 {
 	output[THR] = rc_input[THR];
 	output[ELEV] = rc_input[ELEV];
-	output[AIL1] = rc_input[AIL1];
-	output[AIL2] = rc_input[AIL2];
+	output[AIL1] = rc_input[AIL1]+g_flaperon_delta;
+	output[AIL2] = rc_input[AIL2]+g_flaperon_delta;;
 	output[RUD] = rc_input[RUD];
 }
-void stabUpdate()
+void stabOmegaUpdate(uint8_t tune_mode)
 {
 	//------------------Regulators INIT------------------------
-	double k_int_omega_x = 2.5;
-	double k_pr_omega_x = 5.5;
-	double int_lim_omega_x = 1000;
+	double int_lim_omega_z = 1000;
 	double omega_zad_x = 0, omega_zad_y = 0, omega_zad_z = 0;
-	static PIReg omega_x_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x);
-	static PIReg omega_y_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x);
-	static PIReg omega_z_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x);
+	//static PIReg omega_x_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x);
+	//static PIReg omega_y_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x);
+	static PIReg omega_z_PI_reg(k_pr_omega_z, k_int_omega_z, 0.01, int_lim_omega_z);
 	//---------------------------------------------------------
+	if(tune_mode != TUNE_OFF)
+	{
+		if(tune_mode == TUNE_K_P)
+		{
+			k_pr_omega_z = ((double)rc_input[SLIDER] - 979.0)/100.0;
+			omega_z_PI_reg.setGainParams(k_pr_omega_z, k_int_omega_z);
+		}
+		if(tune_mode == TUNE_K_I)
+		{
+			k_int_omega_z = ((double)rc_input[SLIDER] - 979.0)/100.0;;
+			omega_z_PI_reg.setGainParams(k_pr_omega_z, k_int_omega_z);
+		}
+	}
 
 	if(integral_reset_flag)
 	{
-		omega_x_PI_reg.integralReset();
-		omega_y_PI_reg.integralReset();
+		//omega_x_PI_reg.integralReset();
+		//omega_y_PI_reg.integralReset();
 		omega_z_PI_reg.integralReset();
 		integral_reset_flag = 0;
 	}
-	omega_zad_x = (0.234375*rc_input[AIL2] - 351.5625);
-	omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
-	omega_zad_z = (0.234375*rc_input[ELEV] - 351.5625);
+	//omega_zad_x = (0.234375*rc_input[AIL2] - 351.5625);
+	//omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
+	omega_zad_z = (0.234375*rc_input[ELEV] - 350.0625);
+	logger_data[OMEGA_Z_ZAD] = omega_zad_z;
+
 
 	output[THR] = rc_input[THR];
 	output[ELEV] = (int)(1500+0.4*omega_z_PI_reg.getOutput());
-	output[AIL1] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
-	output[AIL2] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
-	output[RUD] = (int)(1500+0.4*omega_y_PI_reg.getOutput());
+	output[AIL1] = rc_input[AIL1];
+	output[AIL2] = rc_input[AIL2];
+	output[RUD] = rc_input[RUD];
 
-	omega_x_PI_reg.setError(omega_zad_x - data_input[GYROX]);
-	omega_x_PI_reg.calcOutput();
-	omega_y_PI_reg.setError(omega_zad_y - data_input[GYROY]);
-	omega_y_PI_reg.calcOutput();
+	//omega_x_PI_reg.setError(omega_zad_x - data_input[GYROX]);
+	//omega_x_PI_reg.calcOutput();
+	//omega_y_PI_reg.setError(omega_zad_y - data_input[GYROY]);
+	//omega_y_PI_reg.calcOutput();
 	omega_z_PI_reg.setError(omega_zad_z - data_input[GYROZ]);
 	omega_z_PI_reg.calcOutput();
 
 }
 
-void stabVyUpdate()
+void stabVyUpdate(uint8_t tune_mode)
 {
 	//------------------Regulators INIT------------------------
-	double k_pr_Vy = 3.0;
-	double k_int_Vy = 0.0;
+
 	double int_lim_Vy = 1000;
 	double vert_speed_zad = 0;
 
 	static PIReg vert_speed_PI_reg(k_pr_Vy, k_int_Vy, 0.01, int_lim_Vy);
 
-	double k_int_omega_x = 2.5;
-	double k_pr_omega_x = 5.5;
+	//double k_int_omega_x = 2.5;
+	//double k_pr_omega_x = 5.5;
 
-	double k_int_omega_y = 2.5;
-	double k_pr_omega_y = 5.5;
-
-	double k_int_omega_z = 2.5;
-	double k_pr_omega_z = 5.5;
+	//double k_int_omega_y = 2.5;
+	//double k_pr_omega_y = 5.5;
 
 	double int_lim_omega = 1000;
 	double omega_zad_x = 0, omega_zad_y = 0, omega_zad_z = 0;
 
-	static PIReg omega_x_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega);
-	static PIReg omega_y_PI_reg(k_pr_omega_y, k_int_omega_y, 0.01, int_lim_omega);
+	//static PIReg omega_x_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega);
+	//static PIReg omega_y_PI_reg(k_pr_omega_y, k_int_omega_y, 0.01, int_lim_omega);
 	static PIReg omega_z_PI_reg(k_pr_omega_z, k_int_omega_z, 0.01, int_lim_omega);
 	//---------------------------------------------------------
+	if(tune_mode != TUNE_OFF)
+	{
+		if(tune_mode == TUNE_K_P)
+		{
+			k_pr_Vy = ((double)rc_input[SLIDER] - 979.0)/100.0;
+			vert_speed_PI_reg.setGainParams(k_pr_Vy, k_int_Vy);
+			omega_z_PI_reg.setGainParams(k_pr_omega_z, k_int_omega_z);
+		}
+	}
+
 	if(integral_reset_flag)
 	{
-		omega_x_PI_reg.integralReset();
-		omega_y_PI_reg.integralReset();
+		//omega_x_PI_reg.integralReset();
+		//omega_y_PI_reg.integralReset();
 		omega_z_PI_reg.integralReset();
 		vert_speed_PI_reg.integralReset();
 		integral_reset_flag = 0;
 	}
 
 	vert_speed_zad = (0.01953125*rc_input[ELEV] - 29.3164062); // minus 10 to 10 m/s
+	logger_data[VY_ZAD] = vert_speed_zad;
 
 	vert_speed_PI_reg.setError(vert_speed_zad - data_input[BAROVY]);
 	vert_speed_PI_reg.calcOutput();
 
-	omega_zad_x = (0.234375*rc_input[AIL2] - 351.5625);
-	omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
+	//omega_zad_x = (0.234375*rc_input[AIL2] - 351.5625);
+	//omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
 	omega_zad_z = vert_speed_PI_reg.getOutput();
+	logger_data[OMEGA_Z_ZAD] = omega_zad_z;
 
-	omega_x_PI_reg.setError(omega_zad_x - data_input[GYROX]);
-	omega_x_PI_reg.calcOutput();
-	omega_y_PI_reg.setError(omega_zad_y - data_input[GYROY]);
-	omega_y_PI_reg.calcOutput();
+	//omega_x_PI_reg.setError(omega_zad_x - data_input[GYROX]);
+	//omega_x_PI_reg.calcOutput();
+	//omega_y_PI_reg.setError(omega_zad_y - data_input[GYROY]);
+	//omega_y_PI_reg.calcOutput();
 	omega_z_PI_reg.setError(omega_zad_z - data_input[GYROZ]);
 	omega_z_PI_reg.calcOutput();
 
 	output[THR] = rc_input[THR];
 	output[ELEV] = (int)(1500+0.4*omega_z_PI_reg.getOutput());
-	output[AIL1] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
-	output[AIL2] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
-	output[RUD] = (int)(1500+0.4*omega_y_PI_reg.getOutput());
+	output[AIL1] = rc_input[AIL1];
+	output[AIL2] = rc_input[AIL2];
+	output[RUD] = rc_input[RUD];
 
 }
+
 void setMode()
 {
 	static uint8_t prev_mode = 0;
@@ -316,20 +443,38 @@ void setMode()
 	if(prev_mode != current_mode)
 	{
 		//beeper->longBeep();
-		integral_reset_flag = 1;
+		g_activate_flaps = false;
+		integral_reset_flag = true;
 	}
 	prev_mode = current_mode;
 
-	if(rc_input[ARM] < 1500)
+	if(switch_rc.matchMinValue() || switch_rc.matchMaxValue())
 		current_mode = PREFLIGHTCHECK;
 	else
 	{
-		if(rc_input[SWITCHA] > 988 -4 && rc_input[SWITCHA] < 988 + 4)
+		if(switch_rc.isInRange(1000, 1100))
 		{
 			current_mode = DIRECT;
 		}
-		if(rc_input[SWITCHA] > 1500 -4 && rc_input[SWITCHA] < 1500 + 4)
-			current_mode = STAB;
+		else
+		{
+			if(switch_rc.isInRange(1100, 1300) || switch_rc.isInRange(1400, 1500))
+				current_mode = OMEGA_STAB;
+			else
+			{
+				if(switch_rc.isInRange(1300, 1400))
+					current_mode = OMEGA_STAB_K_TUNE;
+				if(switch_rc.isInRange(1500, 1700))
+					current_mode = OMEGA_STAB_I_TUNE;
+			}
+			if(switch_rc.isInRange(1700, 1800))
+				current_mode = VY_STAB;
+			else
+				if(switch_rc.isInRange(1800, 1900))
+					current_mode = VY_STAB_K_TUNE;
+			if(switch_rc.isInRange(1900, 1950))
+				current_mode = DIRECT_FLAPS;
+		}
 	}
 }
 void updateModeState()
@@ -338,8 +483,15 @@ void updateModeState()
 	{
 		case PREFLIGHTCHECK: preFlightCheckUpdate(); break;
 		case DIRECT: directUpdate(); break;
-		//case STAB: stabUpdate(); break;
-		case STAB: stabVyUpdate(); break;
+		case OMEGA_STAB: stabOmegaUpdate(TUNE_OFF); break;
+		case VY_STAB: stabVyUpdate(TUNE_OFF); break;
+		case DIRECT_FLAPS: {
+				g_activate_flaps = true;
+				directUpdate();
+			}break;
+		case OMEGA_STAB_K_TUNE: stabOmegaUpdate(TUNE_K_P); break;
+		case OMEGA_STAB_I_TUNE:	stabOmegaUpdate(TUNE_K_I); break;
+		case VY_STAB_K_TUNE: stabVyUpdate(TUNE_K_P); break;
 	}
 }
 
@@ -1071,7 +1223,7 @@ void sensorsUpdateTask(void *argument)
 		data_input[GYROX] = v.x;
 		data_input[GYROY] = v.y;
 		data_input[GYROZ] = v.z;
-		data_input[BETA] = p3002.getAngle();
+		//data_input[BETA] = p3002.getAngle();
 		osDelay(10);
 	}
   /* USER CODE END sensorsUpdateTask */
@@ -1090,6 +1242,7 @@ void modeUpdateTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
+	  flapsUpdate(g_activate_flaps);
 	  setMode();
 	  updateModeState();
 	  osDelay(10);
@@ -1132,19 +1285,24 @@ void loggerUpdateTask(void *argument)
 	{
 		memset(str, '\0', sizeof(str));
 		#ifndef DEBUG_MODE
-			sprintf(str, "t=%d;mode=%d;omega_x_zad=%d;omega_x=%d;omega_y=%d;omega_z=%d;alt=%d;air_spd=%d;Vy=%d;beta=%d",\
-					HAL_GetTick(), (int)current_mode ,(int)(0),\
-					(int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10),\
-					(int)(data_input[BARO]*100), (int)data_input[AIR], (int)(100*data_input[BAROVY]), (int)(data_input[BETA]));
+			sprintf(str, "%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d",\
+					HAL_GetTick(), (int)(10*logger_data[OMEGA_X_ZAD]), (int)(data_input[GYROX]*10),\
+					(int)(10*logger_data[OMEGA_Y_ZAD]), (int)(data_input[GYROY]*10), (int)(10*logger_data[OMEGA_Z_ZAD]),\
+					(int)(data_input[GYROZ]*10), (int)(data_input[BARO]*100), (int)(100*logger_data[VY_ZAD]),\
+					(int)(100*data_input[BAROVY]), (int)(data_input[BETA]),	0,\
+					0, 0, 0,\
+					(int)(10*k_pr_omega_z), (int)(100*k_int_omega_z), (int)(10*k_pr_Vy),\
+					switch_rc.getPulseWidth());
 		#else
 			#if DEBUG_MODE == BARO_DEBUG
 				sprintf(str, "%d, %d\n", (int)(data_input[BARO]*100), (int)(100*data_input[BAROVY]));
 			#elif DEBUG_MODE == GYRO_DEBUG
-				sprintf(str, "omega_x=%d, omega_y=%d, omega_z=%d\n", (int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10));
+				//sprintf(str, "omega_x=%d, omega_y=%d, omega_z=%d\n", (int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10));
+				sprintf(str, "%d %d\n", (int)(data_input[GYROZ]*10), (int)(logger_data[OMEGA_Z_ZAD]*10));
 			#elif DEBUG_MODE == AIR_DEBUG
 				sprintf(str, "%d %d\n", (int)(100*mpxv7002.getAirSpeed()), (int)(100*mpxv7002.getPressure()));
 			#elif DEBUG_MODE == RADIO_DEBUG
-				sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
+				sprintf(str, "thr=%d, elev=%d, ail1=%d, ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[SLIDER]);
 			#elif DEBUG_MODE == BETA_DEBUG
 				sprintf(str, "beta=%d\n", (int)data_input[BETA]);
 			#endif
@@ -1232,7 +1390,7 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-	//sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[ARM]);
+	//sprintf(str, "thr=%d, elev=%d, ail1=%d. ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[SLIDER]);
 			HAL_UART_Transmit_IT(&huart2, (uint8_t*)"fuck", 4);
   /* USER CODE END Error_Handler_Debug */
 }

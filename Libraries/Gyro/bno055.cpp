@@ -18,7 +18,9 @@ void BNO055::writeData(uint8_t reg, uint8_t data)
 {
   uint8_t txdata[2] = {reg, data};
   uint8_t status;
+  vTaskSuspendAll();
   status = HAL_I2C_Master_Transmit(this->hi2c, BNO055_I2C_ADDR << 1, txdata, sizeof(txdata), 10);
+  xTaskResumeAll();
   if (status == HAL_OK)
 	{
     return;
@@ -120,8 +122,10 @@ void BNO055::writeData(uint8_t reg, uint8_t data)
 
 void BNO055::readData(uint8_t reg, uint8_t *data, uint8_t len)
 {
+	vTaskSuspendAll();
   HAL_I2C_Master_Transmit(this->hi2c, BNO055_I2C_ADDR << 1, &reg, 1, 100);
   HAL_I2C_Master_Receive(this->hi2c, BNO055_I2C_ADDR << 1, data, len, 100);
+  xTaskResumeAll();
 }
 
 void BNO055::setPage(uint8_t page)
