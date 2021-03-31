@@ -61,7 +61,7 @@ short MS5611::readProm(unsigned char reg_addr)
   return (buf[0] << 8) | buf[1];
 }
 
-unsigned long MS5611::readBaro(void)
+uint32_t MS5611::readBaro(void)
 {
   const uint16_t bufSize = 3;
   uint8_t buf[bufSize];
@@ -74,7 +74,7 @@ unsigned long MS5611::readBaro(void)
   return (buf[0] << 16) | (buf[1] << 8) | buf[2];
 }
 
-unsigned long MS5611::readTemp(void)
+uint32_t MS5611::readTemp(void)
 {
   const uint16_t bufSize = 3;
   uint8_t buf[bufSize];
@@ -105,29 +105,30 @@ void MS5611::convertRaw(void)
   dT = D2 - (ms5611_C5 << 8);
   TEMP = 2000 + ((dT * ms5611_C6) >> 23);
   OFF = (ms5611_C2 << 16) + ((ms5611_C4 * dT) >> 7);
-  SENS = ((long long)ms5611_C1 << 15 ) + (((long long)ms5611_C3 * (long long)dT ) >> 8);
+  SENS = (ms5611_C1 << 15 ) + ((ms5611_C3 * dT ) >> 8);
 
   if (TEMP >= 2000) {
     T2 = 0;
     OFF2 = 0;
     SENS2 = 0;
-	}
-	else if (TEMP < 2000) {
-    T2 = (((long long)dT * (long long)dT) >> 31);
-    OFF2 = 5 * (((long long)TEMP - 2000) * ((long long)TEMP - 2000)) >> 1;
-    SENS2 = 5 * (((long long)TEMP - 2000) * ((long long)TEMP - 2000)) >> 2;
-    if (TEMP < -1500 ) {
-      OFF2 = OFF2 + 7 * (((long long)TEMP + 1500) * ((long long)TEMP + 1500));
-      SENS2 = SENS2 + ((11 *(((long long)TEMP + 1500) * ((long long)TEMP + 1500))) >> 1);
-    }
   }
+	else
+		if (TEMP < 2000) {
+			T2 = ((dT * dT) >> 31);
+			OFF2 = 5 * ((TEMP - 2000) * (TEMP - 2000)) >> 1;
+			SENS2 = 5 * ((TEMP - 2000) * (TEMP - 2000)) >> 2;
+			if (TEMP < -1500 ) {
+			  OFF2 = OFF2 + 7 * ((TEMP + 1500) * (TEMP + 1500));
+			  SENS2 = SENS2 + ((11 *((TEMP + 1500) * (TEMP + 1500))) >> 1);
+			}
+		}
 
   TEMP = TEMP - T2;
   OFF = OFF - OFF2;
   SENS = SENS - SENS2;
 
-  this->pressure = (unsigned long) (((((D1 * SENS) >> 21) - OFF)) >> 15);
-  this->temperature = (long)TEMP;
+  this->pressure = ((((D1 * SENS) >> 21) - OFF)) >> 15;
+  this->temperature = TEMP;
 
 }
 

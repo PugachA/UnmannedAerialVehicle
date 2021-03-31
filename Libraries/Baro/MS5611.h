@@ -37,16 +37,16 @@ class MS5611
     double temp_decimation;
     double pres_decimation;
 	
-    long temperature;
-    long pressure;
+    int32_t temperature;
+    int32_t pressure;
     double rawAltitude;
     double filterAltitude;
 
     double dt; //period between timer interrupts for integrals
 	
     short readProm(unsigned char); //read one of calibration coeffecients 
-    unsigned long readBaro(void); //read raw pressure
-    unsigned long readTemp(void); //read raw temperature
+    uint32_t readBaro(void); //read raw pressure
+    uint32_t readTemp(void); //read raw temperature
     void convertRaw(void); //convert pressure and temp from raw
 
 	void lpAltFilter(); //low pass filter for raw altitude
