@@ -50,7 +50,7 @@
 #define RADIO_DEBUG 3
 #define BETA_DEBUG 4
 
-//#define DEBUG_MODE GYRO_DEBUG //раскоментить для отладки. присвоить одно из значений выше
+#define DEBUG_MODE BARO_DEBUG//раскоментить для отладки. присвоить одно из значений выше
 
 /* USER CODE END PD */
 
@@ -112,6 +112,7 @@ enum Logs
 	OMEGA_Y_ZAD,
 	OMEGA_Z_ZAD,
 	VY_ZAD,
+	ALT_FILTERED,
 	LOG_ARRAY_SIZE,
 };
 
@@ -1295,7 +1296,7 @@ void loggerUpdateTask(void *argument)
 					switch_rc.getPulseWidth());
 		#else
 			#if DEBUG_MODE == BARO_DEBUG
-				sprintf(str, "%d, %d\n", (int)(data_input[BARO]*100), (int)(100*data_input[BAROVY]));
+				sprintf(str, "%d %d %d\n", (int)(data_input[BARO]*100), (int)(logger_data[ALT_FILTERED]*100), (int)(100*data_input[BAROVY]));
 			#elif DEBUG_MODE == GYRO_DEBUG
 				//sprintf(str, "omega_x=%d, omega_y=%d, omega_z=%d\n", (int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10));
 				sprintf(str, "%d %d\n", (int)(data_input[GYROZ]*10), (int)(logger_data[OMEGA_Z_ZAD]*10));
@@ -1352,6 +1353,7 @@ void baroUpdateTask(void *argument)
 		//ms5611.calcVerticalSpeed();
 		ms5611.calcAltitude();
 		data_input[BARO] = ms5611.getRawAltitude();
+		logger_data[ALT_FILTERED] = ms5611.getFilterAltitude();
 
 		ms5611.calcVerticalSpeed();
 		data_input[BAROVY] = ms5611.getVerticalSpeed();

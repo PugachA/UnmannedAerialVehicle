@@ -91,9 +91,9 @@ unsigned long MS5611::readTemp(void)
 void MS5611::convertRaw(void) 
 {
 
-  unsigned long D1, D2;
-  long dT, TEMP;
-  long long OFF, SENS, OFF2, SENS2, T2;
+  uint32_t D1, D2;
+  int32_t dT, TEMP;
+  int64_t OFF, SENS, OFF2, SENS2, T2;
 	
   // Read pressure data
   D1 = readBaro();
@@ -103,8 +103,8 @@ void MS5611::convertRaw(void)
   D2 = readTemp();
 
   dT = D2 - (ms5611_C5 << 8);
-  TEMP = 2000 + (((long long)dT * (long long)ms5611_C6) >> 23);
-  OFF = ((long long)ms5611_C2 << 16) + (((long long)ms5611_C4 * (long long)dT) >> 7);
+  TEMP = 2000 + ((dT * ms5611_C6) >> 23);
+  OFF = (ms5611_C2 << 16) + ((ms5611_C4 * dT) >> 7);
   SENS = ((long long)ms5611_C1 << 15 ) + (((long long)ms5611_C3 * (long long)dT ) >> 8);
 
   if (TEMP >= 2000) {
