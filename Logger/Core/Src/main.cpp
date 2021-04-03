@@ -96,7 +96,7 @@ void IcHandlerTim2(TIM_HandleTypeDef *htim)
 	}
 }
 
-uint8_t uartBuffer[200] = {0,};
+uint8_t uartBuffer[150] = {0,};
 bool isDataRecieved = false;
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
@@ -192,7 +192,7 @@ int main(void)
 	{
 		isDataRecieved = false;
 		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
-		sprintf(loggerBuffer, "%s;ers=%d", uartBuffer, ersFlag);
+		sprintf(loggerBuffer, "%s;%d", uartBuffer, ersFlag);
 
 		if(enableLogging)
 			planeLogger.Info((char*)loggerBuffer);
@@ -211,7 +211,7 @@ int main(void)
 		{
 			beeper.beep(1000); // задержка 1 секунды плюс пищалка
 			ersServo.setPosition(ers_open_position); //открытие капсылы парашюта
-			HAL_Delay(500);
+			HAL_Delay(700);
 		}
 
 		ersServo.setPosition(ers_push_position); //выпуск вытяжного парашюта
