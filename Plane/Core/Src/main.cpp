@@ -51,7 +51,7 @@
 #define RADIO_DEBUG 3
 #define BETA_DEBUG 4
 
-#define DEBUG_MODE AIR_DEBUG//раскоментить для отладки. присвоить одно из значений выше
+//#define DEBUG_MODE AIR_DEBUG//раскоментить для отладки. присвоить одно из значений выше
 
 /* USER CODE END PD */
 
