@@ -1360,7 +1360,7 @@ void sensorsUpdateTask(void *argument)
 		data_input[TETA] = euler.z;
 		data_input[GAMMA] = euler.x;
 		data_input[PSI] = euler.y;
-		data_input[NZ] = accel.y;
+		data_input[NZ] = accel.z;
 		data_input[AIR] = ms4525do.getAirSpeed();
 		//data_input[BETA] = p3002.getAngle();
 		osDelay(10);//ещё 5 мС внутри либы airspeed
