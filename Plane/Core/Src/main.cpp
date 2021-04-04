@@ -27,7 +27,8 @@
 #include "Servo/Servo.h"
 #include "Beeper/Beeper.h"
 #include "Baro/MS5611.h"
-#include "AirSpeed/MPXV7002.h"
+//#include "AirSpeed/MPXV7002.h"
+#include "AirSpeed/MS4525DO.h"
 #include "Gyro/bno055.h"
 #include "PIReg/PIReg.h"
 #include "Beta/P3002.h"
@@ -50,7 +51,7 @@
 #define RADIO_DEBUG 3
 #define BETA_DEBUG 4
 
-//#define DEBUG_MODE GYRO_DEBUG //раскоментить для отладки. присвоить одно из значений выше
+#define DEBUG_MODE AIR_DEBUG//раскоментить для отладки. присвоить одно из значений выше
 
 /* USER CODE END PD */
 
@@ -63,10 +64,12 @@ ADC_HandleTypeDef hadc1;
 ADC_HandleTypeDef hadc2;
 
 I2C_HandleTypeDef hi2c1;
+I2C_HandleTypeDef hi2c2;
 I2C_HandleTypeDef hi2c3;
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim5;
 TIM_HandleTypeDef htim6;
 
@@ -112,6 +115,7 @@ enum Logs
 	OMEGA_Y_ZAD,
 	OMEGA_Z_ZAD,
 	VY_ZAD,
+	ALT_FILTERED,
 	LOG_ARRAY_SIZE,
 };
 
@@ -162,8 +166,8 @@ double k_int_Vy = 0.0;
 
 PWMCapturer thr_rc(&htim2, 1, 989, 1500, 2012, 5),
 			elev_rc(&htim2, 2, 989, 1500, 2012, 5),
-			ail_rc(&htim2, 3, 989, 1500, 2012, 5),
-			rud_rc(&htim2, 4, 989, 1500, 2012, 5),
+			ail_rc(&htim4, 1, 989, 1500, 2012, 5),
+			rud_rc(&htim4, 2, 989, 1500, 2012, 5),
 			switch_rc(&htim5, 1, 989, 2012, 5),
 			slider_rc(&htim5, 2, 989, 1500, 2012, 5);
 
@@ -181,11 +185,11 @@ void IcHandlerTim2(TIM_HandleTypeDef *htim)
 		} break;
 		case HAL_TIM_ACTIVE_CHANNEL_3:
 		{
-			ail_rc.calculatePulseWidth();
+
 		} break;
 		case HAL_TIM_ACTIVE_CHANNEL_4:
 		{
-			rud_rc.calculatePulseWidth();
+
 		} break;
 	}
 }
@@ -201,6 +205,29 @@ void IcHandlerTim5(TIM_HandleTypeDef *htim)
 		case HAL_TIM_ACTIVE_CHANNEL_2:
 		{
 			slider_rc.calculatePulseWidth();
+		} break;
+		case HAL_TIM_ACTIVE_CHANNEL_3:
+		{
+
+		} break;
+		case HAL_TIM_ACTIVE_CHANNEL_4:
+		{
+
+		} break;
+	}
+}
+
+void IcHandlerTim4(TIM_HandleTypeDef *htim)
+{
+	switch ( (uint8_t) htim->Channel )
+	{
+		case HAL_TIM_ACTIVE_CHANNEL_1:
+		{
+			ail_rc.calculatePulseWidth();
+		} break;
+		case HAL_TIM_ACTIVE_CHANNEL_2:
+		{
+			rud_rc.calculatePulseWidth();
 		} break;
 		case HAL_TIM_ACTIVE_CHANNEL_3:
 		{
@@ -251,6 +278,8 @@ static void MX_I2C1_Init(void);
 static void MX_ADC2_Init(void);
 static void MX_I2C3_Init(void);
 static void MX_TIM6_Init(void);
+static void MX_TIM4_Init(void);
+static void MX_I2C2_Init(void);
 void StartDefaultTask(void *argument);
 void sensorsUpdateTask(void *argument);
 void modeUpdateTask(void *argument);
@@ -540,15 +569,18 @@ int main(void)
   MX_ADC2_Init();
   MX_I2C3_Init();
   MX_TIM6_Init();
+  MX_TIM4_Init();
+  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
 
   	//-------------------Radio PWM IC INIT--------------------------
 	HAL_TIM_RegisterCallback(&htim2, HAL_TIM_IC_CAPTURE_CB_ID, IcHandlerTim2);
+	HAL_TIM_RegisterCallback(&htim4, HAL_TIM_IC_CAPTURE_CB_ID, IcHandlerTim4);
 	HAL_TIM_RegisterCallback(&htim5, HAL_TIM_IC_CAPTURE_CB_ID, IcHandlerTim5);
 	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);//PA5 thr input
 	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);//PB3 elev input
-	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_3);//PB10 ail input
-	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_4);//PB11 rud input
+	HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_1);//PD12 ail input
+	HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_2);//PB7 rud input
 	HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_1);//PA0 switch input
 	HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_2);//PA1 slider input
 
@@ -809,6 +841,40 @@ static void MX_I2C1_Init(void)
 }
 
 /**
+  * @brief I2C2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C2_Init(void)
+{
+
+  /* USER CODE BEGIN I2C2_Init 0 */
+
+  /* USER CODE END I2C2_Init 0 */
+
+  /* USER CODE BEGIN I2C2_Init 1 */
+
+  /* USER CODE END I2C2_Init 1 */
+  hi2c2.Instance = I2C2;
+  hi2c2.Init.ClockSpeed = 100000;
+  hi2c2.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c2.Init.OwnAddress1 = 108;
+  hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c2.Init.OwnAddress2 = 0;
+  hi2c2.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C2_Init 2 */
+
+  /* USER CODE END I2C2_Init 2 */
+
+}
+
+/**
   * @brief I2C3 Initialization Function
   * @param None
   * @retval None
@@ -898,14 +964,6 @@ static void MX_TIM2_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_4) != HAL_OK)
-  {
-    Error_Handler();
-  }
   /* USER CODE BEGIN TIM2_Init 2 */
 
   /* USER CODE END TIM2_Init 2 */
@@ -980,6 +1038,68 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 2 */
   HAL_TIM_MspPostInit(&htim3);
+
+}
+
+/**
+  * @brief TIM4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM4_Init(void)
+{
+
+  /* USER CODE BEGIN TIM4_Init 0 */
+
+  /* USER CODE END TIM4_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_IC_InitTypeDef sConfigIC = {0};
+
+  /* USER CODE BEGIN TIM4_Init 1 */
+
+  /* USER CODE END TIM4_Init 1 */
+  htim4.Instance = TIM4;
+  htim4.Init.Prescaler = 83;
+  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim4.Init.Period = 65535;
+  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_IC_Init(&htim4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+  sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+  sConfigIC.ICFilter = 0;
+  if (HAL_TIM_IC_ConfigChannel(&htim4, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_IC_ConfigChannel(&htim4, &sConfigIC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM4_Init 2 */
+
+  /* USER CODE END TIM4_Init 2 */
 
 }
 
@@ -1214,8 +1334,7 @@ void sensorsUpdateTask(void *argument)
 	bno055.setOperationModeNDOF();
 	bno055_vector_t v;
 
-	P3002 p3002(&hadc2);
-
+	MS4525DO ms4525do(&hi2c2, 0.01);
   /* Infinite loop */
 	for(;;)
 	{
@@ -1223,8 +1342,9 @@ void sensorsUpdateTask(void *argument)
 		data_input[GYROX] = v.x;
 		data_input[GYROY] = v.y;
 		data_input[GYROZ] = v.z;
+		data_input[AIR] = ms4525do.getAirSpeed();
 		//data_input[BETA] = p3002.getAngle();
-		osDelay(10);
+		osDelay(10);//ещё 5 мС внутри либы airspeed
 	}
   /* USER CODE END sensorsUpdateTask */
 }
@@ -1295,12 +1415,12 @@ void loggerUpdateTask(void *argument)
 					switch_rc.getPulseWidth());
 		#else
 			#if DEBUG_MODE == BARO_DEBUG
-				sprintf(str, "%d, %d\n", (int)(data_input[BARO]*100), (int)(100*data_input[BAROVY]));
+				sprintf(str, "%d %d %d\n", (int)(data_input[BARO]*100), (int)(logger_data[ALT_FILTERED]*100), (int)(100*data_input[BAROVY]));
 			#elif DEBUG_MODE == GYRO_DEBUG
 				//sprintf(str, "omega_x=%d, omega_y=%d, omega_z=%d\n", (int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10));
 				sprintf(str, "%d %d\n", (int)(data_input[GYROZ]*10), (int)(logger_data[OMEGA_Z_ZAD]*10));
 			#elif DEBUG_MODE == AIR_DEBUG
-				sprintf(str, "%d %d\n", (int)(100*mpxv7002.getAirSpeed()), (int)(100*mpxv7002.getPressure()));
+				sprintf(str, "%d\n", (int)(1000*data_input[AIR]));
 			#elif DEBUG_MODE == RADIO_DEBUG
 				sprintf(str, "thr=%d, elev=%d, ail1=%d, ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[SLIDER]);
 			#elif DEBUG_MODE == BETA_DEBUG
@@ -1352,6 +1472,7 @@ void baroUpdateTask(void *argument)
 		//ms5611.calcVerticalSpeed();
 		ms5611.calcAltitude();
 		data_input[BARO] = ms5611.getRawAltitude();
+		logger_data[ALT_FILTERED] = ms5611.getFilterAltitude();
 
 		ms5611.calcVerticalSpeed();
 		data_input[BAROVY] = ms5611.getVerticalSpeed();
