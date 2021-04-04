@@ -385,7 +385,7 @@ void stabOmegaUpdate(uint8_t tune_mode)
 		omega_z_PI_reg.integralReset();
 		integral_reset_flag = 0;
 	}
-	omega_zad_x = (0.234375*rc_input[AIL2] - 351.5625);
+	omega_zad_x = -(0.234375*rc_input[AIL2] - 351.5625);
 	omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
 	omega_zad_z = (0.234375*rc_input[ELEV] - 350.0625);
 	logger_data[OMEGA_Z_ZAD] = omega_zad_z;
@@ -395,8 +395,8 @@ void stabOmegaUpdate(uint8_t tune_mode)
 
 	output[THR] = rc_input[THR];
 	output[ELEV] = (int)(1500+0.4*omega_z_PI_reg.getOutput());
-	output[AIL1] = (int)(1500-0.4*omega_x_PI_reg.getOutput());
-	output[AIL2] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
+	output[AIL1] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
+	output[AIL2] = (int)(1500-0.4*omega_x_PI_reg.getOutput());
 	output[RUD] = (int)(1500+0.4*omega_y_PI_reg.getOutput());
 
 	omega_x_PI_reg.setError(omega_zad_x - data_input[GYROX]);
