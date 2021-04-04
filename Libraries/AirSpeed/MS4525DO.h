@@ -18,13 +18,14 @@ class MS4525DO
 		uint16_t timeout;
 		float dt;
 		
-		float k_lp_alt;
+		float k_lp;
 		float offset;
 		float air_speed_offset;
 		
 		float raw_pressure_pa = 0;
 		float filter_pressure_pa = 0;
-		float air_speed = 0;
+		float raw_air_speed = 0;
+		float filter_air_speed = 0;
 		float lpFilterOutput = 0;
 		
 		uint16_t getSensorData();
