@@ -12,7 +12,7 @@ MS4525DO::MS4525DO(I2C_HandleTypeDef *hi2c, float dt) //constructor
 	this->air_speed_offset = 2;
 	
 	this->lpFilterOutput = 0;
-	this->k_lp = 11;// 1/k = T - time constant for lpFilter, cut-off frequency = 20 rad/s ~ 3 Hz
+	this->k_lp_alt = 11;// 1/k = T - time constant for lpFilter, cut-off frequency = 20 rad/s ~ 3 Hz
 
 	//------------------------MS4525DO Initialising---------------------------
 
@@ -68,33 +68,32 @@ float MS4525DO::getAirSpeed()
 	calcPressure();
 	if(this->raw_pressure_pa < 0)
 	{
-		return this->filter_air_speed;
+		return this->air_speed;
 	}
-	//lpfilter();
-	calcAirSpeed();
 	lpfilter();
+	calcAirSpeed();
 
-	return this->filter_air_speed;
+	return this->air_speed;
 }
 
 void MS4525DO::lpfilter()
 {
   	float error = 0;
 
-  	error = k_lp*(this->raw_air_speed - this->lpFilterOutput);
+  	error = k_lp_alt*(this->raw_pressure_pa - this->lpFilterOutput);
   	this->lpFilterOutput += error*dt;
-  	this->filter_air_speed = this->lpFilterOutput;
+  	this->filter_pressure_pa = this->lpFilterOutput;
 }
 
 void MS4525DO::calcAirSpeed()
 {
-	if((this->raw_pressure_pa - this->offset - this->air_speed_offset) >= 0)
+	if((this->filter_pressure_pa - this->offset - this->air_speed_offset) >= 0)
 	{
-		this->raw_air_speed = sqrt(2*(this->raw_pressure_pa - this->offset)/this->rho) - this->air_speed_offset;
+		this->air_speed = sqrt(2*(this->filter_pressure_pa - this->offset)/this->rho) - this->air_speed_offset;
 	}
 	else
 	{
-		this->raw_air_speed = 0;
+		this->air_speed = 0;
 	}
 }
 
