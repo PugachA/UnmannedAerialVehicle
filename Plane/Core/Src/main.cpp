@@ -369,12 +369,12 @@ void stabOmegaUpdate(uint8_t tune_mode)
 		if(tune_mode == TUNE_K_P)
 		{
 			k_pr_omega_x = ((double)rc_input[SLIDER] - 979.0)/100.0;
-			omega_x_PI_reg.setGainParams(k_int_omega_x, k_int_omega_x);
+			omega_x_PI_reg.setGainParams(k_pr_omega_x, k_int_omega_x);
 		}
 		if(tune_mode == TUNE_K_I)
 		{
 			k_int_omega_x = ((double)rc_input[SLIDER] - 979.0)/100.0;;
-			omega_x_PI_reg.setGainParams(k_int_omega_x, k_int_omega_x);
+			omega_x_PI_reg.setGainParams(k_pr_omega_x, k_int_omega_x);
 		}
 	}
 
@@ -1428,7 +1428,7 @@ void loggerUpdateTask(void *argument)
 					HAL_GetTick(), (int)(10*logger_data[OMEGA_X_ZAD]), (int)(data_input[GYROX]*10),\
 					(int)(10*logger_data[OMEGA_Y_ZAD]), (int)(data_input[GYROY]*10), (int)(10*logger_data[OMEGA_Z_ZAD]),\
 					(int)(data_input[GYROZ]*10), (int)(data_input[BARO]*100), (int)(100*logger_data[VY_ZAD]),\
-					(int)(100*data_input[BAROVY]), (int)(100*data_input[AIR]),	(int)(k_int_omega_x*10),\
+					(int)(100*data_input[BAROVY]), (int)(100*data_input[AIR]),	(int)(k_int_omega_x*100),\
 					(int)(10*k_int_omega_x), (int)(10*k_pr_omega_y), (int)(100*k_int_omega_y),\
 					(int)(10*k_pr_omega_z), (int)(100*k_int_omega_z), (int)(10*k_pr_Vy),\
 					(int)(data_input[TETA]*10), (int)(data_input[GAMMA]*10), (int)(data_input[PSI]*10),\
