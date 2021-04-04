@@ -51,7 +51,7 @@
 #define RADIO_DEBUG 3
 #define BETA_DEBUG 4
 
-#define DEBUG_MODE AIR_DEBUG//раскоментить для отладки. присвоить одно из значений выше
+//#define DEBUG_MODE AIR_DEBUG//раскоментить для отладки. присвоить одно из значений выше
 
 /* USER CODE END PD */
 
@@ -95,7 +95,10 @@ enum Sensors
 	GYROY,
 	GYROZ,
 	BAROVY,
-	BETA,
+	NZ,
+	TETA,
+	GAMMA,
+	PSI,
 	SENSOR_ARRAY_SIZE, //этот элемент всегда должен быть последним в енуме
 };
 enum Modes
@@ -1332,16 +1335,25 @@ void sensorsUpdateTask(void *argument)
 	bno055.setup();
 	osDelay(700);
 	bno055.setOperationModeNDOF();
-	bno055_vector_t v;
+	bno055_vector_t omega;
+	bno055_vector_t euler;
+	bno055_vector_t accel;
 
 	MS4525DO ms4525do(&hi2c2, 0.01);
   /* Infinite loop */
 	for(;;)
 	{
-		v = bno055.getVectorGyroscopeRemap();
-		data_input[GYROX] = v.x;
-		data_input[GYROY] = v.y;
-		data_input[GYROZ] = v.z;
+		omega = bno055.getVectorGyroscopeRemap();
+		euler = bno055.getVectorEulerRemap();
+		accel = bno055.getVectorLinearAccel();
+
+		data_input[GYROX] = omega.x;
+		data_input[GYROY] = omega.y;
+		data_input[GYROZ] = omega.z;
+		data_input[TETA] = euler.z;
+		data_input[GAMMA] = euler.x;
+		data_input[PSI] = euler.y;
+		data_input[NZ] = accel.z;
 		data_input[AIR] = ms4525do.getAirSpeed();
 		//data_input[BETA] = p3002.getAngle();
 		osDelay(10);//ещё 5 мС внутри либы airspeed
@@ -1405,14 +1417,15 @@ void loggerUpdateTask(void *argument)
 	{
 		memset(str, '\0', sizeof(str));
 		#ifndef DEBUG_MODE
-			sprintf(str, "%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d",\
+			sprintf(str, "%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d",\
 					HAL_GetTick(), (int)(10*logger_data[OMEGA_X_ZAD]), (int)(data_input[GYROX]*10),\
 					(int)(10*logger_data[OMEGA_Y_ZAD]), (int)(data_input[GYROY]*10), (int)(10*logger_data[OMEGA_Z_ZAD]),\
 					(int)(data_input[GYROZ]*10), (int)(data_input[BARO]*100), (int)(100*logger_data[VY_ZAD]),\
-					(int)(100*data_input[BAROVY]), (int)(data_input[BETA]),	0,\
+					(int)(100*data_input[BAROVY]), (int)(100*data_input[AIR]),	0,\
 					0, 0, 0,\
 					(int)(10*k_pr_omega_z), (int)(100*k_int_omega_z), (int)(10*k_pr_Vy),\
-					switch_rc.getPulseWidth());
+					(int)(data_input[TETA]*10), (int)(data_input[GAMMA]*10), (int)(data_input[PSI]*10),\
+					(int)(data_input[NZ]*1000), switch_rc.getPulseWidth());
 		#else
 			#if DEBUG_MODE == BARO_DEBUG
 				sprintf(str, "%d %d %d\n", (int)(data_input[BARO]*100), (int)(logger_data[ALT_FILTERED]*100), (int)(100*data_input[BAROVY]));
