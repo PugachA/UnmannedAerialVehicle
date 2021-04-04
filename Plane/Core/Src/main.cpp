@@ -27,7 +27,8 @@
 #include "Servo/Servo.h"
 #include "Beeper/Beeper.h"
 #include "Baro/MS5611.h"
-#include "AirSpeed/MPXV7002.h"
+//#include "AirSpeed/MPXV7002.h"
+#include "AirSpeed/MS4525DO.h"
 #include "Gyro/bno055.h"
 #include "PIReg/PIReg.h"
 #include "Beta/P3002.h"
@@ -50,7 +51,7 @@
 #define RADIO_DEBUG 3
 #define BETA_DEBUG 4
 
-#define DEBUG_MODE BARO_DEBUG//раскоментить для отладки. присвоить одно из значений выше
+#define DEBUG_MODE AIR_DEBUG//раскоментить для отладки. присвоить одно из значений выше
 
 /* USER CODE END PD */
 
@@ -1333,8 +1334,7 @@ void sensorsUpdateTask(void *argument)
 	bno055.setOperationModeNDOF();
 	bno055_vector_t v;
 
-	P3002 p3002(&hadc2);
-
+	MS4525DO ms4525do(&hi2c2, 0.01);
   /* Infinite loop */
 	for(;;)
 	{
@@ -1342,8 +1342,9 @@ void sensorsUpdateTask(void *argument)
 		data_input[GYROX] = v.x;
 		data_input[GYROY] = v.y;
 		data_input[GYROZ] = v.z;
+		data_input[AIR] = ms4525do.getAirSpeed();
 		//data_input[BETA] = p3002.getAngle();
-		osDelay(10);
+		osDelay(5);//ещё 5 мС внутри либы airspeed
 	}
   /* USER CODE END sensorsUpdateTask */
 }
@@ -1419,7 +1420,7 @@ void loggerUpdateTask(void *argument)
 				//sprintf(str, "omega_x=%d, omega_y=%d, omega_z=%d\n", (int)(data_input[GYROX]*10), (int)(data_input[GYROY]*10), (int)(data_input[GYROZ]*10));
 				sprintf(str, "%d %d\n", (int)(data_input[GYROZ]*10), (int)(logger_data[OMEGA_Z_ZAD]*10));
 			#elif DEBUG_MODE == AIR_DEBUG
-				sprintf(str, "%d %d\n", (int)(100*mpxv7002.getAirSpeed()), (int)(100*mpxv7002.getPressure()));
+				sprintf(str, "%d\n", (int)(1000*data_input[AIR]));
 			#elif DEBUG_MODE == RADIO_DEBUG
 				sprintf(str, "thr=%d, elev=%d, ail1=%d, ail2=%d, rud=%d, switchA=%d, arm=%d\n", rc_input[THR], rc_input[ELEV], rc_input[AIL1], rc_input[AIL2], rc_input[RUD], rc_input[SWITCHA], rc_input[SLIDER]);
 			#elif DEBUG_MODE == BETA_DEBUG
