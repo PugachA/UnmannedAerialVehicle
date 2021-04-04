@@ -159,8 +159,13 @@ const uint8_t TUNE_OFF = 0;
 
 uint8_t g_activate_flaps = 0;
 
-double k_pr_omega_z = 5.5;
-double k_int_omega_z = 2.5;
+double k_pr_omega_x = 7.6;
+double k_int_omega_x = 5.3;
+double k_pr_omega_z = 7.6;
+double k_int_omega_z = 5.3;
+double k_pr_omega_y = 7.6;
+double k_int_omega_y = 5.3;
+
 
 double k_pr_Vy = 3.0;
 double k_int_Vy = 0.0;
@@ -353,49 +358,51 @@ void directUpdate()
 void stabOmegaUpdate(uint8_t tune_mode)
 {
 	//------------------Regulators INIT------------------------
-	double int_lim_omega_z = 1000;
+	double int_lim_omega_z = 1000, int_lim_omega_x = 1000, int_lim_omega_y = 1000;
 	double omega_zad_x = 0, omega_zad_y = 0, omega_zad_z = 0;
-	//static PIReg omega_x_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x);
-	//static PIReg omega_y_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x);
+	static PIReg omega_x_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x);
+	static PIReg omega_y_PI_reg(k_pr_omega_y, k_int_omega_y, 0.01, int_lim_omega_y);
 	static PIReg omega_z_PI_reg(k_pr_omega_z, k_int_omega_z, 0.01, int_lim_omega_z);
 	//---------------------------------------------------------
 	if(tune_mode != TUNE_OFF)
 	{
 		if(tune_mode == TUNE_K_P)
 		{
-			k_pr_omega_z = ((double)rc_input[SLIDER] - 979.0)/100.0;
-			omega_z_PI_reg.setGainParams(k_pr_omega_z, k_int_omega_z);
+			k_pr_omega_x = ((double)rc_input[SLIDER] - 979.0)/100.0;
+			omega_x_PI_reg.setGainParams(k_int_omega_x, k_int_omega_x);
 		}
 		if(tune_mode == TUNE_K_I)
 		{
-			k_int_omega_z = ((double)rc_input[SLIDER] - 979.0)/100.0;;
-			omega_z_PI_reg.setGainParams(k_pr_omega_z, k_int_omega_z);
+			k_int_omega_x = ((double)rc_input[SLIDER] - 979.0)/100.0;;
+			omega_x_PI_reg.setGainParams(k_int_omega_x, k_int_omega_x);
 		}
 	}
 
 	if(integral_reset_flag)
 	{
-		//omega_x_PI_reg.integralReset();
-		//omega_y_PI_reg.integralReset();
+		omega_x_PI_reg.integralReset();
+		omega_y_PI_reg.integralReset();
 		omega_z_PI_reg.integralReset();
 		integral_reset_flag = 0;
 	}
-	//omega_zad_x = (0.234375*rc_input[AIL2] - 351.5625);
-	//omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
+	omega_zad_x = (0.234375*rc_input[AIL2] - 351.5625);
+	omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
 	omega_zad_z = (0.234375*rc_input[ELEV] - 350.0625);
 	logger_data[OMEGA_Z_ZAD] = omega_zad_z;
+	logger_data[OMEGA_X_ZAD] = omega_zad_x;
+	logger_data[OMEGA_Y_ZAD] = omega_zad_y;
 
 
 	output[THR] = rc_input[THR];
 	output[ELEV] = (int)(1500+0.4*omega_z_PI_reg.getOutput());
-	output[AIL1] = rc_input[AIL1];
-	output[AIL2] = rc_input[AIL2];
-	output[RUD] = rc_input[RUD];
+	output[AIL1] = (int)(1500-0.4*omega_x_PI_reg.getOutput());
+	output[AIL2] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
+	output[RUD] = (int)(1500+0.4*omega_y_PI_reg.getOutput());
 
-	//omega_x_PI_reg.setError(omega_zad_x - data_input[GYROX]);
-	//omega_x_PI_reg.calcOutput();
-	//omega_y_PI_reg.setError(omega_zad_y - data_input[GYROY]);
-	//omega_y_PI_reg.calcOutput();
+	omega_x_PI_reg.setError(omega_zad_x - data_input[GYROX]);
+	omega_x_PI_reg.calcOutput();
+	omega_y_PI_reg.setError(omega_zad_y - data_input[GYROY]);
+	omega_y_PI_reg.calcOutput();
 	omega_z_PI_reg.setError(omega_zad_z - data_input[GYROZ]);
 	omega_z_PI_reg.calcOutput();
 
@@ -1421,8 +1428,8 @@ void loggerUpdateTask(void *argument)
 					HAL_GetTick(), (int)(10*logger_data[OMEGA_X_ZAD]), (int)(data_input[GYROX]*10),\
 					(int)(10*logger_data[OMEGA_Y_ZAD]), (int)(data_input[GYROY]*10), (int)(10*logger_data[OMEGA_Z_ZAD]),\
 					(int)(data_input[GYROZ]*10), (int)(data_input[BARO]*100), (int)(100*logger_data[VY_ZAD]),\
-					(int)(100*data_input[BAROVY]), (int)(100*data_input[AIR]),	0,\
-					0, 0, 0,\
+					(int)(100*data_input[BAROVY]), (int)(100*data_input[AIR]),	(int)(k_int_omega_x*10),\
+					(int)(10*k_int_omega_x), (int)(10*k_pr_omega_y), (int)(100*k_int_omega_y),\
 					(int)(10*k_pr_omega_z), (int)(100*k_int_omega_z), (int)(10*k_pr_Vy),\
 					(int)(data_input[TETA]*10), (int)(data_input[GAMMA]*10), (int)(data_input[PSI]*10),\
 					(int)(data_input[NZ]*1000), switch_rc.getPulseWidth());
