@@ -49,6 +49,12 @@ MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef *hi2c, int number_of_point
   //-----------------------------------------------------------------------
 	
   updateQFE(); //remembering QFE pressure when creating object
+
+  //----------------------Integrals Initialising---------------------------
+  this->first_filter_output = 0.0;
+  this->second_filter_output = 0.0;
+  this->third_filter_output = 0.0;
+  this->fourth_filter_output = 0.0;
 	
 }
 
