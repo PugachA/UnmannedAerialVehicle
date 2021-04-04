@@ -95,7 +95,9 @@ enum Sensors
 	GYROY,
 	GYROZ,
 	BAROVY,
-	BETA,
+	NZ,
+	TETA,
+	GAMMA,
 	SENSOR_ARRAY_SIZE, //этот элемент всегда должен быть последним в енуме
 };
 enum Modes
@@ -1332,16 +1334,21 @@ void sensorsUpdateTask(void *argument)
 	bno055.setup();
 	osDelay(700);
 	bno055.setOperationModeNDOF();
-	bno055_vector_t v;
+	bno055_vector_t omega;
+	bno055_vector_t euler;
 
 	MS4525DO ms4525do(&hi2c2, 0.01);
   /* Infinite loop */
 	for(;;)
 	{
-		v = bno055.getVectorGyroscopeRemap();
-		data_input[GYROX] = v.x;
-		data_input[GYROY] = v.y;
-		data_input[GYROZ] = v.z;
+		omega = bno055.getVectorGyroscopeRemap();
+		euler = bno055.getVectorEulerRemap();
+
+		data_input[GYROX] = omega.x;
+		data_input[GYROY] = omega.y;
+		data_input[GYROZ] = omega.z;
+		data_input[TETA] = euler.z;
+		data_input[GAMMA] = euler.x;
 		data_input[AIR] = ms4525do.getAirSpeed();
 		//data_input[BETA] = p3002.getAngle();
 		osDelay(10);//ещё 5 мС внутри либы airspeed
