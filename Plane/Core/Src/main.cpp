@@ -594,17 +594,10 @@ int main(void)
 	HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_1);//PA0 switch input
 	HAL_TIM_IC_Start_IT(&htim5, TIM_CHANNEL_2);//PA1 slider input
 
-	//-------------------Servo PWM INIT--------------------------
-	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);//PA6 thr output
-	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);//PA7 elev servo output
-	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);//PB0 ail servo 1 output
-	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);//PB1 ail servo 2 output
-	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_4);//PA3 rud servo 2 output
-	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_3);//PA2 ers servo 2 output
+
 
 	//-------------------Sensors INIT--------------------------
 	//Beeper beeper(GPIOD, GPIO_PIN_13);
-	HAL_Delay(1000);
 	//---------------------------------------------------------
 
   /* USER CODE END 2 */
@@ -1464,12 +1457,21 @@ void loggerUpdateTask(void *argument)
 void actuatorsUpdateTask(void *argument)
 {
   /* USER CODE BEGIN actuatorsUpdateTask */
+	osDelay(5000);
+	//-------------------Servo PWM INIT--------------------------
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);//PA6 thr output
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);//PA7 elev servo output
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);//PB0 ail servo 1 output
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);//PB1 ail servo 2 output
+	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_4);//PA3 rud servo 2 output
+	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_3);//PA2 ers servo 2 output
+
   /* Infinite loop */
-  for(;;)
-  {
-	  updateActuators();
-	  osDelay(50);
-  }
+	for(;;)
+	{
+		updateActuators();
+		osDelay(50);
+	}
   /* USER CODE END actuatorsUpdateTask */
 }
 
