@@ -330,5 +330,6 @@ class BNO055
     int8_t bno055_getTemp(void);
     bno055_vector_t getVectorEulerRemap(void);
     bno055_vector_t getVectorGyroscopeRemap(void);
+    bno055_vector_t getVectorAccelerometerRemap(void);
 };
 #endif

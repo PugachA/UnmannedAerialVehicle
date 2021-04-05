@@ -449,3 +449,15 @@ bno055_vector_t BNO055::getVectorGyroscopeRemap(void)
 
     return output;
 }
+
+bno055_vector_t BNO055::getVectorAccelerometerRemap(void)
+{
+	bno055_vector_t buf;
+	bno055_vector_t output;
+	buf = bno055_getVector(BNO055_VECTOR_LINEARACCEL);
+	output.x = -buf.y;
+	output.y = buf.z;
+	output.z = -buf.x;
+
+	return output;
+}

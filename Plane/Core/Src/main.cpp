@@ -1352,7 +1352,7 @@ void sensorsUpdateTask(void *argument)
 	{
 		omega = bno055.getVectorGyroscopeRemap();
 		euler = bno055.getVectorEulerRemap();
-		accel = bno055.getVectorLinearAccel();
+		accel = bno055.getVectorAccelerometerRemap();
 
 		data_input[GYROX] = omega.x;
 		data_input[GYROY] = omega.y;
