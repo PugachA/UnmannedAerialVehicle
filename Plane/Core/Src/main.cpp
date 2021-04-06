@@ -153,6 +153,8 @@ extern osThreadId_t baroUpdateHandle;
 extern const osThreadAttr_t baroUpdate_attributes;
 
 //-------------------My Global VARs--------------------------
+const uint16_t WHAIT_FOR_RADIO_MS = 5000;
+
 const uint8_t TUNE_K_P = 1;
 const uint8_t TUNE_K_I = 2;
 const uint8_t TUNE_OFF = 0;
@@ -1465,6 +1467,7 @@ void actuatorsUpdateTask(void *argument)
 {
   /* USER CODE BEGIN actuatorsUpdateTask */
   /* Infinite loop */
+	osDelay(WHAIT_FOR_RADIO_MS);
   for(;;)
   {
 	  updateActuators();
