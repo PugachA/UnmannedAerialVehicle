@@ -26,7 +26,6 @@ uint16_t MS4525DO::getSensorData()
 	  uint8_t check = 0;
 
 	  HAL_I2C_Master_Transmit(this->hi2c, MS4525DO_addr << 1, &data_read_cmd, 1, timeout);
-	  //osDelay(5);
 	  HAL_I2C_Master_Receive(this->hi2c, MS4525DO_addr << 1, data, data_size, timeout);
 
 	  check |= (data[0] >> 6);
