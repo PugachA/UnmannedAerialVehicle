@@ -544,6 +544,14 @@ void commandModeUpdate()
 	omega_x_turn_tgt = omega_turn_tgt*sin(data_input[TETA]*deg2rad);
 	omega_tgt[X] = omega_x_roll_tgt + omega_x_turn_tgt; //deg/s
 
+	omega_y_turn_tgt = omega_turn_tgt*cos(data_input[TETA]*deg2rad)*cos(data_input[GAMMA]*deg2rad);
+	omega_tgt[Y] = omega_y_turn_tgt; //deg/s
+
+	omega_z_turn_tgt = omega_turn_tgt*cos(data_input[TETA]*deg2rad)*sin(-1*(data_input[GAMMA]*deg2rad));
+	omega_z_vy_tgt = vy_PI_reg.getOutput();
+	omega_tgt[Z] = omega_z_vy_tgt + omega_z_turn_tgt; //deg/s
+	//---------------------------------------------------------
+
 
 
 }
