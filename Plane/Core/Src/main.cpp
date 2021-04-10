@@ -124,9 +124,9 @@ enum Logs
 
 enum Omega_targets
 {
-	OMEGA_X,
-	OMEGA_Y,
-	OMEGA_Z,
+	X,
+	Y,
+	Z,
 	OMEGA_ARRAY_SIZE,
 };
 
@@ -396,9 +396,9 @@ void stabOmegaUpdate(uint8_t tune_mode)
 		omega_z_PI_reg.integralReset();
 		integral_reset_flag = 0;
 	}
-	omega_zad_x = -(0.234375*rc_input[AIL2] - 351.5625);
-	omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
-	omega_zad_z = (0.234375*rc_input[ELEV] - 350.0625);
+	//omega_zad_x = -(0.234375*rc_input[AIL2] - 351.5625);
+	//omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
+	//omega_zad_z = (0.234375*rc_input[ELEV] - 350.0625);
 	logger_data[OMEGA_Z_ZAD] = omega_zad_z;
 	logger_data[OMEGA_X_ZAD] = omega_zad_x;
 	logger_data[OMEGA_Y_ZAD] = omega_zad_y;
@@ -410,11 +410,11 @@ void stabOmegaUpdate(uint8_t tune_mode)
 	output[AIL2] = (int)(1500-0.4*omega_x_PI_reg.getOutput());
 	output[RUD] = (int)(1500+0.4*omega_y_PI_reg.getOutput());
 
-	omega_x_PI_reg.setError(omega_zad_x - data_input[GYROX]);
+	omega_x_PI_reg.setError(omega_target[X] - data_input[GYROX]);
 	omega_x_PI_reg.calcOutput();
-	omega_y_PI_reg.setError(omega_zad_y - data_input[GYROY]);
+	omega_y_PI_reg.setError(omega_target[Y] - data_input[GYROY]);
 	omega_y_PI_reg.calcOutput();
-	omega_z_PI_reg.setError(omega_zad_z - data_input[GYROZ]);
+	omega_z_PI_reg.setError(omega_target[Z] - data_input[GYROZ]);
 	omega_z_PI_reg.calcOutput();
 
 }
