@@ -122,6 +122,14 @@ enum Logs
 	LOG_ARRAY_SIZE,
 };
 
+enum Omega_targets
+{
+	OMEGA_X,
+	OMEGA_Y,
+	OMEGA_Z,
+	OMEGA_ARRAY_SIZE,
+};
+
 //--------------------Threads-----------------------
 
 /* Definitions for defaultTask */
@@ -266,6 +274,7 @@ uint32_t output[5] = {0};
 uint32_t rc_input[CHANNELS_ARRAY_SIZE] = {1500};
 double data_input[SENSOR_ARRAY_SIZE] = {0.0};
 double logger_data[LOG_ARRAY_SIZE] = {0.0};
+double omega_target[OMEGA_ARRAY_SIZE] = {0.0};
 
 uint32_t timeNowMs = 0;
 
