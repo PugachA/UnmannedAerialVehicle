@@ -23,6 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "math.h"
 #include <stdio.h>
 #include "Servo/Servo.h"
 #include "Beeper/Beeper.h"
@@ -483,6 +484,53 @@ void stabVyUpdate(uint8_t tune_mode)
 	output[AIL1] = rc_input[AIL1];
 	output[AIL2] = rc_input[AIL2];
 	output[RUD] = rc_input[RUD];
+
+}
+
+void commandModeUpdate()
+{
+	//------------------Local vars INIT------------------------
+
+	double omega_turn_tgt = 0.0;
+	double rad2deg = 57.2958;
+	double deg2rad = 1/rad2deg;
+	double g = 9.81;
+	double gamma_tgt = 0.0;
+	double int_lim_Vy = 1000;
+	double vy_tgt = 0.0;
+	double omega_z_vy_tgt = 0.0; // component of omega_z target from vertical speed stab
+
+	//------------------Regulators INIT------------------------
+	static PIReg vy_PI_reg(k_pr_Vy, k_int_Vy, 0.01, int_lim_Vy);
+
+	//---------------------------------------------------------
+
+	//---------------Vertical speed stab-----------------------
+	vy_tgt = (0.01953125*rc_input[ELEV] - 29.3164062); // minus 10 to 10 m/s
+	if (abs(vy_tgt) < 0.2) //to set zero when the stick is in neutral
+	{
+		vy_tgt = 0;
+	}
+
+	logger_data[VY_ZAD] = vy_tgt;
+
+	vy_PI_reg.setError(vy_tgt - data_input[BAROVY]);
+	vy_PI_reg.calcOutput();
+	//---------------------------------------------------------
+
+	//--------------------Roll target calc---------------------
+
+	omega_turn_tgt = (-0.1173*rc_input[AIL1] + 176.0097); // minus 60 to 60 deg/s
+	if (abs(omega_turn_tgt) < 1.0) //to set zero when the stick is in neutral
+	{
+		omega_turn_tgt = 0;
+	}
+
+	gamma_tgt = atan((data_input[AIR]*omega_turn_tgt*deg2rad)/g);
+	gamma_tgt = gamma_tgt*rad2deg;
+	//---------------------------------------------------------
+
+
 
 }
 
