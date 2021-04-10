@@ -490,14 +490,23 @@ void stabVyUpdate(uint8_t tune_mode)
 void commandModeUpdate()
 {
 	//------------------Local vars INIT------------------------
-
-	double omega_turn_tgt = 0.0;
 	double rad2deg = 57.2958;
 	double deg2rad = 1/rad2deg;
 	double g = 9.81;
+
+	double omega_turn_tgt = 0.0;
 	double gamma_tgt = 0.0;
+	double k_pr_gamma = 0.1;
+
 	double int_lim_Vy = 1000;
 	double vy_tgt = 0.0;
+
+	double omega_x_roll_tgt = 0.0; // component of omega_x target from target roll angle
+	double omega_x_turn_tgt = 0.0; // component of omega_x target from coordinated turn
+
+	double omega_y_turn_tgt = 0.0; // component of omega_y target from coordinated turn
+
+	double omega_z_turn_tgt = 0.0; // component of omega_z target from coordinated turn
 	double omega_z_vy_tgt = 0.0; // component of omega_z target from vertical speed stab
 
 	//------------------Regulators INIT------------------------
@@ -518,7 +527,7 @@ void commandModeUpdate()
 	vy_PI_reg.calcOutput();
 	//---------------------------------------------------------
 
-	//--------------------Roll target calc---------------------
+	//--------------Omega and Roll target calc-----------------
 
 	omega_turn_tgt = (-0.1173*rc_input[AIL1] + 176.0097); // minus 60 to 60 deg/s
 	if (abs(omega_turn_tgt) < 1.0) //to set zero when the stick is in neutral
@@ -529,6 +538,11 @@ void commandModeUpdate()
 	gamma_tgt = atan((data_input[AIR]*omega_turn_tgt*deg2rad)/g);
 	gamma_tgt = gamma_tgt*rad2deg;
 	//---------------------------------------------------------
+
+	//---------------Omega coord turn calc---------------------
+	omega_x_roll_tgt = k_pr_gamma*(gamma_tgt - data_input[GAMMA]);
+	omega_x_turn_tgt = omega_turn_tgt*sin(data_input[TETA]*deg2rad);
+	omega_tgt[X] = omega_x_roll_tgt + omega_x_turn_tgt; //deg/s
 
 
 
