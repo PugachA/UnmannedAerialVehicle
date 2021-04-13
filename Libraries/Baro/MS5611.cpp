@@ -142,19 +142,19 @@ void MS5611::convertRaw(void)
 double MS5611::getPressure(void)
 {
   convertRaw();
-  return ((double)(this->pressure))/pres_decimation;
+  return ((float)(this->pressure))/pres_decimation;
 }
 
 double MS5611::getTemperature(void)
 {
   convertRaw();
-  return ((double)(this->temperature))/temp_decimation;
+  return ((float)(this->temperature))/temp_decimation;
 }
 
 void MS5611::calcAltitude(void)
 {
   convertRaw();
-  this->rawAltitude = R*(T0+((double)temperature)/temp_decimation)*log((((double)pressure)/pres_decimation)/this->pressure_QFE)/(-M*g);
+  this->rawAltitude = R*(T0+((float)temperature)/temp_decimation)*log((((float)pressure)/pres_decimation)/this->pressure_QFE)/(-M*g);
 }
 
 double MS5611::getRawAltitude(void)
