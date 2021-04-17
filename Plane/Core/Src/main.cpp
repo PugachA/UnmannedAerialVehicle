@@ -180,6 +180,8 @@ double k_int_omega_y = 5.3;
 
 double k_pr_Vy = 3.0;
 double k_int_Vy = 0.0;
+
+double omega_x_gains[2] = {0.0};
 //------------------------RC---------------------------------
 //extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
 
@@ -556,33 +558,41 @@ void commandModeUpdate()
 
 }
 
-double setProportOmegaXGain(double speed)
+void setOmegaXGain(double speed)
 {
 	static const uint8_t num_of_points = 4;
 	uint8_t i = 0;
-	static double k_pr = 0;;
+	static double k_pr = 0;
+	static double k_int = 0;
 	static double speed_ref_points[num_of_points] = {5.0, 10.0, 15.0, 20.0};
 	static double k_pr_points[num_of_points] = {8.0, 6.0, 5.0, 4.0};
+	static double k_int_points[num_of_points] = {7.5, 7.0, 5.5, 4.5};
 
 	if (speed <= speed_ref_points[0]) //minimum
 	{
 		k_pr = k_pr_points[0];
+		k_int = k_int_points[0];
 	}
 	else
 		if (speed >= speed_ref_points[num_of_points-1]) //maximum
 		{
 			k_pr = k_pr_points[num_of_points-1];
+			k_int = k_int_points[num_of_points-1];
 		}
 		else
 			while (i < num_of_points-1) //linear interpolation
 			{
 				if ((speed >= speed_ref_points[i]) && (speed <= speed_ref_points[i+1]))
+				{
 					k_pr = k_pr_points[i]+(k_pr_points[i+1]-k_pr_points[i])/(speed_ref_points[i+1]-speed_ref_points[i])*(speed-speed_ref_points[i]);
+					k_int = k_int_points[i]+(k_int_points[i+1]-k_int_points[i])/(speed_ref_points[i+1]-speed_ref_points[i])*(speed-speed_ref_points[i]);
 
 				i++;
+				}
 			}
 
-	return k_pr;
+	omega_x_gains[0] = k_pr;
+	omega_x_gains[1] = k_int;
 }
 void setMode()
 {
