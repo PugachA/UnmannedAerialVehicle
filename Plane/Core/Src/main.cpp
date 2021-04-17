@@ -556,6 +556,34 @@ void commandModeUpdate()
 
 }
 
+double setProportOmegaXGain(double speed)
+{
+	static const uint8_t num_of_points = 4;
+	uint8_t i = 0;
+	static double k_pr = 0;;
+	static double speed_ref_points[num_of_points] = {5.0, 10.0, 15.0, 20.0};
+	static double k_pr_points[num_of_points] = {8.0, 6.0, 5.0, 4.0};
+
+	if (speed <= speed_ref_points[0]) //minimum
+	{
+		k_pr = k_pr_points[0];
+	}
+	else
+		if (speed >= speed_ref_points[num_of_points-1]) //maximum
+		{
+			k_pr = k_pr_points[num_of_points-1];
+		}
+		else
+			while (i < num_of_points-1) //linear interpolation
+			{
+				if ((speed >= speed_ref_points[i]) && (speed <= speed_ref_points[i+1]))
+					k_pr = k_pr_points[i]+(k_pr_points[i+1]-k_pr_points[i])/(speed_ref_points[i+1]-speed_ref_points[i])*(speed-speed_ref_points[i]);
+
+				i++;
+			}
+
+	return k_pr;
+}
 void setMode()
 {
 	static uint8_t prev_mode = 0;
