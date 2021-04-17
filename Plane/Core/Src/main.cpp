@@ -269,7 +269,7 @@ Servo 	thr_servo(&htim3, 1),
 
 int g_flaperon_delta = 0;
 
-//-------------------Sensors INIT--------------------------
+//----------------------INIT-------------------------------
 
 uint32_t output[5] = {0};
 uint32_t rc_input[CHANNELS_ARRAY_SIZE] = {1500};
@@ -371,7 +371,7 @@ void stabOmegaUpdate(uint8_t tune_mode)
 {
 	//------------------Regulators INIT------------------------
 	double int_lim_omega_z = 1000, int_lim_omega_x = 1000, int_lim_omega_y = 1000;
-	double omega_zad_x = 0, omega_zad_y = 0, omega_zad_z = 0;
+	//double omega_zad_x = 0, omega_zad_y = 0, omega_zad_z = 0;
 	static PIReg omega_x_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x);
 	static PIReg omega_y_PI_reg(k_pr_omega_y, k_int_omega_y, 0.01, int_lim_omega_y);
 	static PIReg omega_z_PI_reg(k_pr_omega_z, k_int_omega_z, 0.01, int_lim_omega_z);
@@ -400,9 +400,9 @@ void stabOmegaUpdate(uint8_t tune_mode)
 	//omega_zad_x = -(0.234375*rc_input[AIL2] - 351.5625);
 	//omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
 	//omega_zad_z = (0.234375*rc_input[ELEV] - 350.0625);
-	logger_data[OMEGA_Z_ZAD] = omega_zad_z;
-	logger_data[OMEGA_X_ZAD] = omega_zad_x;
-	logger_data[OMEGA_Y_ZAD] = omega_zad_y;
+	logger_data[OMEGA_X_ZAD] = omega_target[X];
+	logger_data[OMEGA_Y_ZAD] = omega_target[Y];
+	logger_data[OMEGA_Z_ZAD] = omega_target[Z];
 
 
 	output[THR] = rc_input[THR];
@@ -542,14 +542,14 @@ void commandModeUpdate()
 	//---------------Omega coord turn calc---------------------
 	omega_x_roll_tgt = k_pr_gamma*(gamma_tgt - data_input[GAMMA]);
 	omega_x_turn_tgt = omega_turn_tgt*sin(data_input[TETA]*deg2rad);
-	omega_tgt[X] = omega_x_roll_tgt + omega_x_turn_tgt; //deg/s
+	omega_target[X] = omega_x_roll_tgt + omega_x_turn_tgt; //deg/s
 
 	omega_y_turn_tgt = omega_turn_tgt*cos(data_input[TETA]*deg2rad)*cos(data_input[GAMMA]*deg2rad);
-	omega_tgt[Y] = omega_y_turn_tgt; //deg/s
+	omega_target[Y] = omega_y_turn_tgt; //deg/s
 
 	omega_z_turn_tgt = omega_turn_tgt*cos(data_input[TETA]*deg2rad)*sin(-1*(data_input[GAMMA]*deg2rad));
 	omega_z_vy_tgt = vy_PI_reg.getOutput();
-	omega_tgt[Z] = omega_z_vy_tgt + omega_z_turn_tgt; //deg/s
+	omega_target[Z] = omega_z_vy_tgt + omega_z_turn_tgt; //deg/s
 	//---------------------------------------------------------
 
 
