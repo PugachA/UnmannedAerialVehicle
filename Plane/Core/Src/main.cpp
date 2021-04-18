@@ -176,8 +176,8 @@ double k_pr_omega_x = 7.6;
 double k_int_omega_x = 5.3;
 double k_pr_omega_z = 7.6;
 double k_int_omega_z = 5.3;
-double k_pr_omega_y = 7.6;
-double k_int_omega_y = 5.3;
+double k_pr_omega_y = 10.0;
+double k_int_omega_y = 8.0;
 
 
 double k_pr_Vy = 3.0;
