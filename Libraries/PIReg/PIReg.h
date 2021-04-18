@@ -11,6 +11,7 @@ private:
 	double integral;
 	double output;
 	double integral_lim;
+	double airSpeed;
 
 public:
 	PIReg(double k_pr, double k_int, double dt, double integral_lim); //constructor
@@ -19,6 +20,7 @@ public:
 	double getOutput(void);
 	void integralReset(void);
 	void setGainParams(double k_pr, double k_int);
+	void setAirSpeed(double airSpeed);
 
 };
 #endif
