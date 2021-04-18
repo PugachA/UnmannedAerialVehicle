@@ -13,7 +13,7 @@ private:
 	double integral;
 	double output;
 	double integral_lim;
-	double airSpeed;
+	double air_speed;
 	double *speed_ref_points;
 	double *k_pr_points;
 	double *k_int_points;
