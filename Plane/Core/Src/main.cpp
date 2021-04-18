@@ -374,6 +374,14 @@ void directUpdate()
 	output[AIL2] = rc_input[AIL2]+g_flaperon_delta;;
 	output[RUD] = rc_input[RUD];
 }
+
+void stabOmegaTgtCalc(void)
+{
+	omega_target[X] = -(0.234375*rc_input[AIL2] - 351.5625);
+	omega_target[Y] = (0.234375*rc_input[RUD] - 351.5625);
+	omega_target[Z] = (0.234375*rc_input[ELEV] - 350.0625);
+}
+
 void stabOmegaUpdate(uint8_t tune_mode)
 {
 	//------------------Regulators INIT------------------------
@@ -422,8 +430,7 @@ void stabOmegaUpdate(uint8_t tune_mode)
 	output[RUD] = (int)(1500+0.4*omega_y_PI_reg.getOutput());
 
 
-	omega_x_PI_reg.setAirSpeed(data_input[AIR]);
-	omega_x_PI_reg.calcGainParams();
+	omega_x_PI_reg.calcGainParams(data_input[AIR]);
 	omega_x_PI_reg.setError(omega_target[X] - data_input[GYROX]);
 	omega_x_PI_reg.calcOutput();
 
@@ -558,14 +565,14 @@ void commandModeUpdate()
 	//---------------------------------------------------------
 
 	//---------------Omega coord turn calc---------------------
-	omega_x_roll_tgt = k_pr_gamma*(gamma_tgt - data_input[GAMMA]);
+	omega_x_roll_tgt = -1*k_pr_gamma*(gamma_tgt - data_input[GAMMA]);
 	omega_x_turn_tgt = omega_turn_tgt*sin(data_input[TETA]*deg2rad);
 	omega_target[X] = omega_x_roll_tgt + omega_x_turn_tgt; //deg/s
 
 	omega_y_turn_tgt = omega_turn_tgt*cos(data_input[TETA]*deg2rad)*cos(data_input[GAMMA]*deg2rad);
 	omega_target[Y] = omega_y_turn_tgt; //deg/s
 
-	omega_z_turn_tgt = omega_turn_tgt*cos(data_input[TETA]*deg2rad)*sin(-1*(data_input[GAMMA]*deg2rad));
+	omega_z_turn_tgt = omega_turn_tgt*cos(data_input[TETA]*deg2rad)*sin((-data_input[GAMMA]*deg2rad));
 	omega_z_vy_tgt = vy_PI_reg.getOutput();
 	omega_target[Z] = omega_z_vy_tgt + omega_z_turn_tgt; //deg/s
 	//---------------------------------------------------------
@@ -595,18 +602,18 @@ void setMode()
 		{
 			if(switch_rc.isInRange(1100, 1300) || switch_rc.isInRange(1400, 1500))
 				current_mode = OMEGA_STAB;
-			else
+			/*else
 			{
 				if(switch_rc.isInRange(1300, 1400))
 					current_mode = OMEGA_STAB_K_TUNE;
 				if(switch_rc.isInRange(1500, 1700))
 					current_mode = OMEGA_STAB_I_TUNE;
-			}
+			}*/
 			if(switch_rc.isInRange(1700, 1800))
 				current_mode = VY_STAB;
-			else
+			/*else
 				if(switch_rc.isInRange(1800, 1900))
-					current_mode = VY_STAB_K_TUNE;
+					current_mode = VY_STAB_K_TUNE;*/
 			if(switch_rc.isInRange(1900, 1950))
 				current_mode = DIRECT_FLAPS;
 		}
@@ -618,15 +625,21 @@ void updateModeState()
 	{
 		case PREFLIGHTCHECK: preFlightCheckUpdate(); break;
 		case DIRECT: directUpdate(); break;
-		case OMEGA_STAB: stabOmegaUpdate(TUNE_OFF); break;
-		case VY_STAB: stabVyUpdate(TUNE_OFF); break;
+		case OMEGA_STAB: {
+				stabOmegaTgtCalc();
+				stabOmegaUpdate(TUNE_OFF);
+			}break;
+		case VY_STAB: {
+				commandModeUpdate();
+				stabOmegaUpdate(TUNE_OFF);
+			}break;
 		case DIRECT_FLAPS: {
 				g_activate_flaps = true;
 				directUpdate();
 			}break;
-		case OMEGA_STAB_K_TUNE: stabOmegaUpdate(TUNE_K_P); break;
-		case OMEGA_STAB_I_TUNE:	stabOmegaUpdate(TUNE_K_I); break;
-		case VY_STAB_K_TUNE: stabVyUpdate(TUNE_K_P); break;
+		//case OMEGA_STAB_K_TUNE: stabOmegaUpdate(TUNE_K_P); break;
+		//case OMEGA_STAB_I_TUNE:	stabOmegaUpdate(TUNE_K_I); break;
+		//case VY_STAB_K_TUNE: stabVyUpdate(TUNE_K_P); break;
 	}
 }
 

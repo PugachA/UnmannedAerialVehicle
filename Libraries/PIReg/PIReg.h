@@ -13,7 +13,6 @@ private:
 	double integral;
 	double output;
 	double integral_lim;
-	double air_speed;
 	double *speed_ref_points;
 	double *k_pr_points;
 	double *k_int_points;
@@ -28,8 +27,7 @@ public:
 	double getOutput(void);
 	void integralReset(void);
 	void setGainParams(double k_pr, double k_int);
-	void setAirSpeed(double airSpeed);
-	void calcGainParams(void);
+	void calcGainParams(double);
 	double getProportGain(void);
 	double getIntGain(void);
 
