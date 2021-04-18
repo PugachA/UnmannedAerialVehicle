@@ -107,3 +107,13 @@ void PIReg::calcGainParams(void)
 
 	setGainParams(k_pr_buf,k_int_buf);
 }
+
+double PIReg::getProportGain(void)
+{
+	return this->k_pr;
+}
+
+double PIReg::getIntGain(void)
+{
+	return this->k_int;
+}

@@ -118,6 +118,8 @@ enum Logs
 	OMEGA_X_ZAD,
 	OMEGA_Y_ZAD,
 	OMEGA_Z_ZAD,
+	K_PR_OMEGA_X,
+	K_INT_OMEGA_X,
 	VY_ZAD,
 	ALT_FILTERED,
 	LOG_ARRAY_SIZE,
@@ -431,6 +433,9 @@ void stabOmegaUpdate(uint8_t tune_mode)
 	omega_z_PI_reg.setError(omega_target[Z] - data_input[GYROZ]);
 	omega_z_PI_reg.calcOutput();
 
+	logger_data[K_PR_OMEGA_X] = omega_x_PI_reg.getProportGain();
+	logger_data[K_INT_OMEGA_X] = omega_x_PI_reg.getIntGain();
+
 }
 
 void stabVyUpdate(uint8_t tune_mode)
@@ -564,9 +569,6 @@ void commandModeUpdate()
 	omega_z_vy_tgt = vy_PI_reg.getOutput();
 	omega_target[Z] = omega_z_vy_tgt + omega_z_turn_tgt; //deg/s
 	//---------------------------------------------------------
-
-
-
 }
 
 void setMode()
@@ -1522,8 +1524,8 @@ void loggerUpdateTask(void *argument)
 					HAL_GetTick(), (int)(10*logger_data[OMEGA_X_ZAD]), (int)(data_input[GYROX]*10),\
 					(int)(10*logger_data[OMEGA_Y_ZAD]), (int)(data_input[GYROY]*10), (int)(10*logger_data[OMEGA_Z_ZAD]),\
 					(int)(data_input[GYROZ]*10), (int)(data_input[BARO]*100), (int)(100*logger_data[VY_ZAD]),\
-					(int)(100*data_input[BAROVY]), (int)(100*data_input[AIR]),	(int)(k_pr_omega_x*10),\
-					(int)(100*k_int_omega_x), (int)(10*k_pr_omega_y), (int)(100*k_int_omega_y),\
+					(int)(100*data_input[BAROVY]), (int)(100*data_input[AIR]),	(int)(10*logger_data[K_PR_OMEGA_X]),\
+					(int)(100*logger_data[K_INT_OMEGA_X]), (int)(10*k_pr_omega_y), (int)(100*k_int_omega_y),\
 					(int)(10*k_pr_omega_z), (int)(100*k_int_omega_z), (int)(10*k_pr_Vy),\
 					(int)(data_input[TETA]*10), (int)(data_input[GAMMA]*10), (int)(data_input[PSI]*10),\
 					(int)(data_input[NZ]*1000), switch_rc.getPulseWidth());

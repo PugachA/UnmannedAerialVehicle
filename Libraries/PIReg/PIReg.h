@@ -30,6 +30,8 @@ public:
 	void setGainParams(double k_pr, double k_int);
 	void setAirSpeed(double airSpeed);
 	void calcGainParams(void);
+	double getProportGain(void);
+	double getIntGain(void);
 
 };
 #endif
