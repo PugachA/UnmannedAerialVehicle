@@ -22,6 +22,7 @@ private:
 
 public:
 	PIReg(double k_pr, double k_int, double dt, double integral_lim, double*, double*, double*, uint8_t); //constructor
+	PIReg(double k_pr, double k_int, double dt, double integral_lim); //constructor with no coeff changing
 	void setError(double error);
 	void calcOutput(void);
 	double getOutput(void);

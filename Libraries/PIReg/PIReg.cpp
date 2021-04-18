@@ -18,6 +18,19 @@ PIReg::PIReg(double k_pr, double k_int, double dt, double integral_lim, double *
 	this->num_of_ref_points = num_of_ref_points;
 }
 
+PIReg::PIReg(double k_pr, double k_int, double dt, double integral_lim)
+{
+	this->k_pr = k_pr;
+	this->k_int = k_int;
+	this->dt = dt;
+
+	this->integral = 0;
+	this->error = 0;
+	this->output = 0;
+
+	this->integral_lim = integral_lim;
+}
+
 void PIReg::setError(double error)
 {
 	this->error = error;
