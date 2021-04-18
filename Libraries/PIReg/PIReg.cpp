@@ -1,6 +1,6 @@
 #include "PIReg.h"
 
-PIReg::PIReg(double k_pr, double k_int, double dt, double integral_lim)
+PIReg::PIReg(double k_pr, double k_int, double dt, double integral_lim, double *speed_ref_points, double *k_pr_points, double *k_int_points, uint8_t num_of_ref_points)
 {
 	this->k_pr = k_pr;
 	this->k_int = k_int;
@@ -11,6 +11,11 @@ PIReg::PIReg(double k_pr, double k_int, double dt, double integral_lim)
 	this->output = 0;
 
 	this->integral_lim = integral_lim;
+
+	this->speed_ref_points = speed_ref_points;
+	this->k_pr_points = k_pr_points;
+	this->k_int_points = k_int_points;
+	this->num_of_ref_points = num_of_ref_points;
 }
 
 void PIReg::setError(double error)
@@ -52,4 +57,9 @@ void PIReg::setGainParams(double k_pr, double k_int)
 void PIReg::setAirSpeed(double airSpeed)
 {
 	this->airSpeed = airSpeed;
+}
+
+void PIReg::calcGainParams(void)
+{
+	uint8_t i = 0;
 }
