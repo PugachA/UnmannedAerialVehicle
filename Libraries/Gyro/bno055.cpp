@@ -431,9 +431,9 @@ bno055_vector_t BNO055::getVectorEulerRemap(void)
 	bno055_vector_t buf;
 	bno055_vector_t output;
 	buf = bno055_getVector(BNO055_VECTOR_EULER);
-    output.x = buf.y;
+    output.z = -buf.y;
     output.y = buf.x;
-    output.z = buf.z;
+    output.x = buf.z;
 
     return output;
 }
