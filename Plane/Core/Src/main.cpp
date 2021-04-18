@@ -181,7 +181,10 @@ double k_int_omega_y = 5.3;
 double k_pr_Vy = 3.0;
 double k_int_Vy = 0.0;
 
-double omega_x_gains[2] = {0.0};
+const uint8_t num_of_coeff_ref_points = 4;
+double speed_ref_points[num_of_coeff_ref_points] = {5.0, 10.0, 15.0, 20.0};
+double k_pr_omega_x_points[num_of_coeff_ref_points] = {8.0, 6.0, 5.0, 4.0};
+double k_int_omega_x_points[num_of_coeff_ref_points] = {7.5, 7.0, 5.5, 4.5};
 //------------------------RC---------------------------------
 //extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
 
@@ -374,11 +377,13 @@ void stabOmegaUpdate(uint8_t tune_mode)
 	//------------------Regulators INIT------------------------
 	double int_lim_omega_z = 1000, int_lim_omega_x = 1000, int_lim_omega_y = 1000;
 	//double omega_zad_x = 0, omega_zad_y = 0, omega_zad_z = 0;
-	static PIReg omega_x_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x);
+	static PIReg omega_x_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x, speed_ref_points, k_pr_omega_x_points, k_int_omega_x_points, num_of_coeff_ref_points);
 	static PIReg omega_y_PI_reg(k_pr_omega_y, k_int_omega_y, 0.01, int_lim_omega_y);
 	static PIReg omega_z_PI_reg(k_pr_omega_z, k_int_omega_z, 0.01, int_lim_omega_z);
 	//---------------------------------------------------------
-	if(tune_mode != TUNE_OFF)
+
+	//----------------------Coeff Tune-------------------------
+	/*if(tune_mode != TUNE_OFF)
 	{
 		if(tune_mode == TUNE_K_P)
 		{
@@ -390,7 +395,8 @@ void stabOmegaUpdate(uint8_t tune_mode)
 			k_int_omega_x = ((double)rc_input[SLIDER] - 979.0)/100.0;;
 			omega_x_PI_reg.setGainParams(k_pr_omega_x, k_int_omega_x);
 		}
-	}
+	}*/
+	//---------------------------------------------------------
 
 	if(integral_reset_flag)
 	{
@@ -413,10 +419,15 @@ void stabOmegaUpdate(uint8_t tune_mode)
 	output[AIL2] = (int)(1500-0.4*omega_x_PI_reg.getOutput());
 	output[RUD] = (int)(1500+0.4*omega_y_PI_reg.getOutput());
 
+
+	omega_x_PI_reg.setAirSpeed(data_input[AIR]);
+	omega_x_PI_reg.calcGainParams();
 	omega_x_PI_reg.setError(omega_target[X] - data_input[GYROX]);
 	omega_x_PI_reg.calcOutput();
+
 	omega_y_PI_reg.setError(omega_target[Y] - data_input[GYROY]);
 	omega_y_PI_reg.calcOutput();
+
 	omega_z_PI_reg.setError(omega_target[Z] - data_input[GYROZ]);
 	omega_z_PI_reg.calcOutput();
 
@@ -558,42 +569,6 @@ void commandModeUpdate()
 
 }
 
-void setOmegaXGain(double speed)
-{
-	static const uint8_t num_of_points = 4;
-	uint8_t i = 0;
-	static double k_pr = 0;
-	static double k_int = 0;
-	static double speed_ref_points[num_of_points] = {5.0, 10.0, 15.0, 20.0};
-	static double k_pr_points[num_of_points] = {8.0, 6.0, 5.0, 4.0};
-	static double k_int_points[num_of_points] = {7.5, 7.0, 5.5, 4.5};
-
-	if (speed <= speed_ref_points[0]) //minimum
-	{
-		k_pr = k_pr_points[0];
-		k_int = k_int_points[0];
-	}
-	else
-		if (speed >= speed_ref_points[num_of_points-1]) //maximum
-		{
-			k_pr = k_pr_points[num_of_points-1];
-			k_int = k_int_points[num_of_points-1];
-		}
-		else
-			while (i < num_of_points-1) //linear interpolation
-			{
-				if ((speed >= speed_ref_points[i]) && (speed <= speed_ref_points[i+1]))
-				{
-					k_pr = k_pr_points[i]+(k_pr_points[i+1]-k_pr_points[i])/(speed_ref_points[i+1]-speed_ref_points[i])*(speed-speed_ref_points[i]);
-					k_int = k_int_points[i]+(k_int_points[i+1]-k_int_points[i])/(speed_ref_points[i+1]-speed_ref_points[i])*(speed-speed_ref_points[i]);
-
-				i++;
-				}
-			}
-
-	omega_x_gains[0] = k_pr;
-	omega_x_gains[1] = k_int;
-}
 void setMode()
 {
 	static uint8_t prev_mode = 0;
