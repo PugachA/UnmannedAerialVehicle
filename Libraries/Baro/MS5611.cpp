@@ -48,7 +48,6 @@ MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef *hi2c, int number_of_point
   ms5611_C6 = readProm(0xAC);
   //-----------------------------------------------------------------------
 	
-  updateQFE(); //remembering QFE pressure when creating object
 
   //----------------------Integrals Initialising---------------------------
   this->lpFilterOutput = 0.0;
@@ -98,9 +97,9 @@ uint32_t MS5611::readTemp(void)
 void MS5611::convertRaw(void) 
 {
 
-  uint32_t D1, D2;
-  int32_t dT, TEMP;
-  int64_t OFF, SENS, OFF2, SENS2, T2;
+  uint32_t D1 = 0, D2 = 0;
+  int32_t dT = 0, TEMP = 0;
+  int64_t OFF = 0, SENS = 0, OFF2 = 0, SENS2 = 0, T2 = 0;
 	
   // Read pressure data
   D1 = readBaro();
@@ -109,10 +108,10 @@ void MS5611::convertRaw(void)
   // Read Temperature data
   D2 = readTemp();
 
-  dT = D2 - (ms5611_C5 << 8);
-  TEMP = 2000 + ((dT * ms5611_C6) >> 23);
-  OFF = (ms5611_C2 << 16) + ((ms5611_C4 * dT) >> 7);
-  SENS = (ms5611_C1 << 15 ) + ((ms5611_C3 * dT ) >> 8);
+  dT = D2 - ((int32_t)ms5611_C5 << 8);
+  TEMP = 2000 + ((dT * (int32_t)ms5611_C6) >> 23);
+  OFF = ((int64_t)ms5611_C2 << 16) + (((int64_t)ms5611_C4 * dT) >> 7);
+  SENS = ((int64_t)ms5611_C1 << 15 ) + (((int64_t)ms5611_C3 * dT ) >> 8);
 
   if (TEMP >= 2000) {
     T2 = 0;
@@ -171,6 +170,7 @@ void MS5611::updateQFE(void)
   for(i = 0; i < points_to_average; i++) {
     pressure = getPressure();
     sum = sum + pressure;
+    osDelay(5);
   }
 	
   this->pressure_QFE = sum / points_to_average;

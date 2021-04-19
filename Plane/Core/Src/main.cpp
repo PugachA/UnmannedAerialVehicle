@@ -1488,6 +1488,7 @@ void baroUpdateTask(void *argument)
   /* USER CODE BEGIN baroUpdateTask */
   /* Infinite loop */
 	MS5611 ms5611(0x77, &hi2c1, 100, 0.02);
+	ms5611.updateQFE(); //remembering QFE pressure when creating object
 
 	for(;;)
 	{

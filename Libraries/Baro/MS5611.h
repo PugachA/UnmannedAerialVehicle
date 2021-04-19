@@ -25,7 +25,7 @@ class MS5611
     uint16_t comandSize;
 	  
     //calibration coefficients
-    unsigned short ms5611_C1, ms5611_C2, ms5611_C3, ms5611_C4, ms5611_C5, ms5611_C6;
+    uint16_t ms5611_C1, ms5611_C2, ms5611_C3, ms5611_C4, ms5611_C5, ms5611_C6;
 	
     //physical constants for altitude computing
     double R; //gas constatnt
