@@ -13,7 +13,10 @@ class MS5611
     double pressure_QFE; //used in getAltitude to calc altitude AGL
 	
     int points_to_average; //used in updateQFE to calc average pressure
-	  
+
+	int32_t MIN_ALT_PICK_VALUE = -1000;
+	int32_t MAX_ALT_PICK_VALUE = +1000;
+
     //constants for raw data reading
     uint8_t D1_OSR;
     uint8_t D2_OSR;
@@ -37,9 +40,9 @@ class MS5611
     double temp_decimation;
     double pres_decimation;
 	
-    int32_t temperature;
-    int32_t pressure;
-    double rawAltitude;
+    int32_t temperature = 0;
+    int32_t pressure = 0;
+    double rawAltitude = 0;
     double filterAltitude;
 
     double dt; //period between timer interrupts for integrals

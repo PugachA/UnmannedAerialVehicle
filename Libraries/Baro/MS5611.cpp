@@ -152,8 +152,10 @@ double MS5611::getTemperature(void)
 
 void MS5611::calcAltitude(void)
 {
-  convertRaw();
-  this->rawAltitude = R*(T0+((double)temperature)/temp_decimation)*log((((double)pressure)/pres_decimation)/this->pressure_QFE)/(-M*g);
+	convertRaw();
+	double alt = R*(T0+((double)temperature)/temp_decimation)*log((((double)pressure)/pres_decimation)/this->pressure_QFE)/(-M*g);
+	if(alt < MAX_ALT_PICK_VALUE && alt > MIN_ALT_PICK_VALUE)
+		this->rawAltitude = alt;
 }
 
 double MS5611::getRawAltitude(void)
