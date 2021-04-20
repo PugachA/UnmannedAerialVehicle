@@ -120,12 +120,12 @@ void MS5611::convertRaw(void)
   }
 	else
 		if (TEMP < 2000) {
-			T2 = ((dT * dT) >> 31);
-			OFF2 = 5 * ((TEMP - 2000) * (TEMP - 2000)) >> 1;
-			SENS2 = 5 * ((TEMP - 2000) * (TEMP - 2000)) >> 2;
+			T2 = (((int64_t)dT * (int64_t)dT) >> 31);
+			OFF2 = 5 * (((int64_t)TEMP - 2000) * ((int64_t)TEMP - 2000)) >> 1;
+			SENS2 = 5 * (((int64_t)TEMP - 2000) * ((int64_t)TEMP - 2000)) >> 2;
 			if (TEMP < -1500 ) {
-			  OFF2 = OFF2 + 7 * ((TEMP + 1500) * (TEMP + 1500));
-			  SENS2 = SENS2 + ((11 *((TEMP + 1500) * (TEMP + 1500))) >> 1);
+			  OFF2 = OFF2 + 7 * (((int64_t)TEMP + 1500) * ((int64_t)TEMP + 1500));
+			  SENS2 = SENS2 + ((11 *(((int64_t)TEMP + 1500) * ((int64_t)TEMP + 1500))) >> 1);
 			}
 		}
 
@@ -133,7 +133,7 @@ void MS5611::convertRaw(void)
   OFF = OFF - OFF2;
   SENS = SENS - SENS2;
 
-  this->pressure = ((((D1 * SENS) >> 21) - OFF)) >> 15;
+  this->pressure = (((((int64_t)D1 * SENS) >> 21) - OFF)) >> 15;
   this->temperature = TEMP;
 
 }
