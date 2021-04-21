@@ -14,8 +14,8 @@ class MS5611
 	
     int points_to_average; //used in updateQFE to calc average pressure
 
-	int32_t MIN_ALT_PICK_VALUE = -1000;
-	int32_t MAX_ALT_PICK_VALUE = +1000;
+	int32_t MIN_ALT_PEAK_VALUE = -1000;
+	int32_t MAX_ALT_PEAK_VALUE = +1000;
 
     //constants for raw data reading
     uint8_t D1_OSR;
