@@ -1487,15 +1487,14 @@ void baroUpdateTask(void *argument)
 {
   /* USER CODE BEGIN baroUpdateTask */
   /* Infinite loop */
+
 	MS5611 ms5611(0x77, &hi2c1, 100, 0.02);
+	ms5611.updateQFE(); //remembering QFE pressure when creating object
 
 	for(;;)
 	{
-		timeNowMs = HAL_GetTick();
-		//ms5611.calcVerticalSpeed();
 		ms5611.calcAltitude();
 		data_input[BARO] = ms5611.getRawAltitude();
-		logger_data[ALT_FILTERED] = ms5611.getFilterAltitude();
 
 		ms5611.calcVerticalSpeed();
 		data_input[BAROVY] = ms5611.getVerticalSpeed();

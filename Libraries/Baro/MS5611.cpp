@@ -48,7 +48,6 @@ MS5611::MS5611(uint8_t ms5611_addr, I2C_HandleTypeDef *hi2c, int number_of_point
   ms5611_C6 = readProm(0xAC);
   //-----------------------------------------------------------------------
 	
-  updateQFE(); //remembering QFE pressure when creating object
 
   //----------------------Integrals Initialising---------------------------
   this->lpFilterOutput = 0.0;
@@ -98,9 +97,9 @@ uint32_t MS5611::readTemp(void)
 void MS5611::convertRaw(void) 
 {
 
-  uint32_t D1, D2;
-  int32_t dT, TEMP;
-  int64_t OFF, SENS, OFF2, SENS2, T2;
+  uint32_t D1 = 0, D2 = 0;
+  int32_t dT = 0, TEMP = 0;
+  int64_t OFF = 0, SENS = 0, OFF2 = 0, SENS2 = 0, T2 = 0;
 	
   // Read pressure data
   D1 = readBaro();
@@ -109,10 +108,10 @@ void MS5611::convertRaw(void)
   // Read Temperature data
   D2 = readTemp();
 
-  dT = D2 - (ms5611_C5 << 8);
-  TEMP = 2000 + ((dT * ms5611_C6) >> 23);
-  OFF = (ms5611_C2 << 16) + ((ms5611_C4 * dT) >> 7);
-  SENS = (ms5611_C1 << 15 ) + ((ms5611_C3 * dT ) >> 8);
+  dT = D2 - ((int32_t)ms5611_C5 << 8);
+  TEMP = 2000 + ((dT * (int32_t)ms5611_C6) >> 23);
+  OFF = ((int64_t)ms5611_C2 << 16) + (((int64_t)ms5611_C4 * dT) >> 7);
+  SENS = ((int64_t)ms5611_C1 << 15 ) + (((int64_t)ms5611_C3 * dT ) >> 8);
 
   if (TEMP >= 2000) {
     T2 = 0;
@@ -121,12 +120,12 @@ void MS5611::convertRaw(void)
   }
 	else
 		if (TEMP < 2000) {
-			T2 = ((dT * dT) >> 31);
-			OFF2 = 5 * ((TEMP - 2000) * (TEMP - 2000)) >> 1;
-			SENS2 = 5 * ((TEMP - 2000) * (TEMP - 2000)) >> 2;
+			T2 = (((int64_t)dT * (int64_t)dT) >> 31);
+			OFF2 = 5 * (((int64_t)TEMP - 2000) * ((int64_t)TEMP - 2000)) >> 1;
+			SENS2 = 5 * (((int64_t)TEMP - 2000) * ((int64_t)TEMP - 2000)) >> 2;
 			if (TEMP < -1500 ) {
-			  OFF2 = OFF2 + 7 * ((TEMP + 1500) * (TEMP + 1500));
-			  SENS2 = SENS2 + ((11 *((TEMP + 1500) * (TEMP + 1500))) >> 1);
+			  OFF2 = OFF2 + 7 * (((int64_t)TEMP + 1500) * ((int64_t)TEMP + 1500));
+			  SENS2 = SENS2 + ((11 *(((int64_t)TEMP + 1500) * ((int64_t)TEMP + 1500))) >> 1);
 			}
 		}
 
@@ -134,7 +133,7 @@ void MS5611::convertRaw(void)
   OFF = OFF - OFF2;
   SENS = SENS - SENS2;
 
-  this->pressure = ((((D1 * SENS) >> 21) - OFF)) >> 15;
+  this->pressure = (((((int64_t)D1 * SENS) >> 21) - OFF)) >> 15;
   this->temperature = TEMP;
 
 }
@@ -153,8 +152,10 @@ double MS5611::getTemperature(void)
 
 void MS5611::calcAltitude(void)
 {
-  convertRaw();
-  this->rawAltitude = R*(T0+((double)temperature)/temp_decimation)*log((((double)pressure)/pres_decimation)/this->pressure_QFE)/(-M*g);
+	convertRaw();
+	double alt = R*(T0+((double)temperature)/temp_decimation)*log((((double)pressure)/pres_decimation)/this->pressure_QFE)/(-M*g);
+	if(alt < MAX_ALT_PEAK_VALUE && alt > MIN_ALT_PEAK_VALUE)
+		this->rawAltitude = alt;
 }
 
 double MS5611::getRawAltitude(void)
@@ -171,6 +172,7 @@ void MS5611::updateQFE(void)
   for(i = 0; i < points_to_average; i++) {
     pressure = getPressure();
     sum = sum + pressure;
+    osDelay(5);
   }
 	
   this->pressure_QFE = sum / points_to_average;
