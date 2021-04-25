@@ -1562,8 +1562,8 @@ void loggerUpdateTask(void *argument)
 					(int)(10*logger_data[OMEGA_Y_ZAD]), (int)(data_input[GYROY]*10), (int)(10*logger_data[OMEGA_Z_ZAD]),\
 					(int)(data_input[GYROZ]*10), (int)(data_input[BARO]*100), (int)(100*logger_data[VY_ZAD]),\
 					(int)(100*data_input[BAROVY]), (int)(100*data_input[AIR]),	(int)(10*logger_data[K_PR_OMEGA_X]),\
-					(int)(100*logger_data[K_INT_OMEGA_X]), (int)(10*k_pr_omega_y), (int)(100*k_int_omega_y),\
-					(int)(10*k_pr_omega_z), (int)(100*k_int_omega_z), (int)(10*k_pr_Vy),\
+					(int)(100*logger_data[K_INT_OMEGA_X]), (int)(10*logger_data[K_PR_OMEGA_Y]), (int)(100*logger_data[K_INT_OMEGA_Y]),\
+					(int)(10*logger_data[K_PR_OMEGA_Z]), (int)(100*logger_data[K_INT_OMEGA_Y]), (int)(10*k_pr_Vy),\
 					(int)(data_input[TETA]*10), (int)(data_input[GAMMA]*10), (int)(data_input[PSI]*10),\
 					(int)(data_input[NZ]*1000), (int)(logger_data[OMEGA_TURN_ZAD]*10), (int)(logger_data[GAMMA_ZAD]*10), switch_rc.getPulseWidth());
 		#else
