@@ -354,7 +354,7 @@ void updateRcInput()
 {
 	rc_input[THR] = thr_rc.getPulseWidth();
 	rc_input[ELEV] = elev_rc.getPulseWidthDif();//dif
-	rc_input[AIL1] = ail_rc.getPulseWidthDif();//dif
+	rc_input[AIL1] = ail_rc.getPulseWidth();//dif
 	rc_input[AIL2] = ail_rc.getPulseWidth();//dif
 	rc_input[RUD] = rud_rc.getPulseWidth();
 	rc_input[SWITCHA] = switch_rc.getPulseWidth();
@@ -435,7 +435,7 @@ void stabOmegaUpdate(uint8_t tune_mode)
 
 	output[THR] = rc_input[THR];
 	output[ELEV] = (int)(1500+0.4*omega_z_PI_reg.getOutput());
-	output[AIL1] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
+	output[AIL1] = (int)(1500-0.4*omega_x_PI_reg.getOutput());
 	output[AIL2] = (int)(1500-0.4*omega_x_PI_reg.getOutput());
 	output[RUD] = (int)(1500+0.4*omega_y_PI_reg.getOutput());
 
