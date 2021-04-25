@@ -176,17 +176,25 @@ double k_pr_omega_x = 7.6;
 double k_int_omega_x = 5.3;
 double k_pr_omega_z = 7.6;
 double k_int_omega_z = 5.3;
-double k_pr_omega_y = 10.0;
-double k_int_omega_y = 8.0;
+double k_pr_omega_y = 8.0;
+double k_int_omega_y = 6.0;
 
 
 double k_pr_Vy = 3.0;
 double k_int_Vy = 0.0;
 
 const uint8_t num_of_coeff_ref_points = 4;
+
 double speed_ref_points[num_of_coeff_ref_points] = {5.0, 10.0, 15.0, 20.0};
+
 double k_pr_omega_x_points[num_of_coeff_ref_points] = {8.0, 6.0, 5.0, 4.0};
 double k_int_omega_x_points[num_of_coeff_ref_points] = {7.5, 7.0, 5.5, 4.5};
+
+double k_pr_omega_z_points[num_of_coeff_ref_points] = {8.5, 6.0, 5.0, 4.5};
+double k_int_omega_z_points[num_of_coeff_ref_points] = {7.5, 7.0, 5.5, 4.5};
+
+double k_pr_omega_y_points[num_of_coeff_ref_points] = {9.5, 7.0, 5.5, 4.5};
+double k_int_omega_y_points[num_of_coeff_ref_points] = {7.5, 6.0, 5.5, 4.5};
 //------------------------RC---------------------------------
 //extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
 
@@ -388,8 +396,8 @@ void stabOmegaUpdate(uint8_t tune_mode)
 	double int_lim_omega_z = 1000, int_lim_omega_x = 1000, int_lim_omega_y = 1000;
 	//double omega_zad_x = 0, omega_zad_y = 0, omega_zad_z = 0;
 	static PIReg omega_x_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x, speed_ref_points, k_pr_omega_x_points, k_int_omega_x_points, num_of_coeff_ref_points);
-	static PIReg omega_y_PI_reg(k_pr_omega_y, k_int_omega_y, 0.01, int_lim_omega_y);
-	static PIReg omega_z_PI_reg(k_pr_omega_z, k_int_omega_z, 0.01, int_lim_omega_z);
+	static PIReg omega_y_PI_reg(k_pr_omega_y, k_int_omega_y, 0.01, int_lim_omega_y, speed_ref_points, k_pr_omega_y_points, k_int_omega_y_points, num_of_coeff_ref_points);
+	static PIReg omega_z_PI_reg(k_pr_omega_z, k_int_omega_z, 0.01, int_lim_omega_z, speed_ref_points, k_pr_omega_z_points, k_int_omega_z_points, num_of_coeff_ref_points);
 	//---------------------------------------------------------
 
 	//----------------------Coeff Tune-------------------------
