@@ -122,6 +122,7 @@ enum Logs
 	K_INT_OMEGA_X,
 	VY_ZAD,
 	ALT_FILTERED,
+	OMEGA_TURN_ZAD,
 	LOG_ARRAY_SIZE,
 };
 
@@ -567,6 +568,7 @@ void commandModeUpdate()
 	{
 		omega_turn_tgt = 0;
 	}
+	logger_data[OMEGA_TURN_ZAD] = omega_turn_tgt;
 
 	gamma_tgt = -atan((data_input[AIR]*omega_turn_tgt*deg2rad)/g);
 	gamma_tgt = gamma_tgt*rad2deg;
@@ -1549,7 +1551,7 @@ void loggerUpdateTask(void *argument)
 					(int)(100*logger_data[K_INT_OMEGA_X]), (int)(10*k_pr_omega_y), (int)(100*k_int_omega_y),\
 					(int)(10*k_pr_omega_z), (int)(100*k_int_omega_z), (int)(10*k_pr_Vy),\
 					(int)(data_input[TETA]*10), (int)(data_input[GAMMA]*10), (int)(data_input[PSI]*10),\
-					(int)(data_input[NZ]*1000), switch_rc.getPulseWidth());
+					(int)(data_input[NZ]*1000), (int)(logger_data[OMEGA_TURN_ZAD]*10), switch_rc.getPulseWidth());
 		#else
 			#if DEBUG_MODE == BARO_DEBUG
 				sprintf(str, "%d %d %d\n", (int)(data_input[BARO]*100), (int)(logger_data[ALT_FILTERED]*100), (int)(100*data_input[BAROVY]));
