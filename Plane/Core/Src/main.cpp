@@ -543,7 +543,7 @@ void commandModeUpdate()
 
 	double omega_turn_tgt = 0.0;
 	double gamma_tgt = 0.0;
-	double k_pr_gamma = 1;
+	double k_pr_gamma = 1.5;
 
 	double int_lim_Vy = 1000;
 	double vy_tgt = 0.0;
