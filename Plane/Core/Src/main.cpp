@@ -560,12 +560,12 @@ void commandModeUpdate()
 		omega_turn_tgt = 0;
 	}
 
-	gamma_tgt = atan((data_input[AIR]*omega_turn_tgt*deg2rad)/g);
+	gamma_tgt = -atan((data_input[AIR]*omega_turn_tgt*deg2rad)/g);
 	gamma_tgt = gamma_tgt*rad2deg;
 	//---------------------------------------------------------
 
 	//---------------Omega coord turn calc---------------------
-	omega_x_roll_tgt = -1*k_pr_gamma*(gamma_tgt - data_input[GAMMA]);
+	omega_x_roll_tgt = k_pr_gamma*(gamma_tgt - data_input[GAMMA]);
 	omega_x_turn_tgt = omega_turn_tgt*sin(data_input[TETA]*deg2rad);
 	omega_target[X] = omega_x_roll_tgt + omega_x_turn_tgt; //deg/s
 
