@@ -123,6 +123,7 @@ enum Logs
 	VY_ZAD,
 	ALT_FILTERED,
 	OMEGA_TURN_ZAD,
+	GAMMA_ZAD,
 	LOG_ARRAY_SIZE,
 };
 
@@ -572,6 +573,7 @@ void commandModeUpdate()
 
 	gamma_tgt = -atan((data_input[AIR]*omega_turn_tgt*deg2rad)/g);
 	gamma_tgt = gamma_tgt*rad2deg;
+	logger_data[GAMMA_ZAD] = gamma_tgt;
 	//---------------------------------------------------------
 
 	//---------------Omega coord turn calc---------------------
@@ -1543,7 +1545,7 @@ void loggerUpdateTask(void *argument)
 	{
 		memset(str, '\0', sizeof(str));
 		#ifndef DEBUG_MODE
-			sprintf(str, "%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d",\
+			sprintf(str, "%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d",\
 					HAL_GetTick(), (int)(10*logger_data[OMEGA_X_ZAD]), (int)(data_input[GYROX]*10),\
 					(int)(10*logger_data[OMEGA_Y_ZAD]), (int)(data_input[GYROY]*10), (int)(10*logger_data[OMEGA_Z_ZAD]),\
 					(int)(data_input[GYROZ]*10), (int)(data_input[BARO]*100), (int)(100*logger_data[VY_ZAD]),\
@@ -1551,7 +1553,7 @@ void loggerUpdateTask(void *argument)
 					(int)(100*logger_data[K_INT_OMEGA_X]), (int)(10*k_pr_omega_y), (int)(100*k_int_omega_y),\
 					(int)(10*k_pr_omega_z), (int)(100*k_int_omega_z), (int)(10*k_pr_Vy),\
 					(int)(data_input[TETA]*10), (int)(data_input[GAMMA]*10), (int)(data_input[PSI]*10),\
-					(int)(data_input[NZ]*1000), (int)(logger_data[OMEGA_TURN_ZAD]*10), switch_rc.getPulseWidth());
+					(int)(data_input[NZ]*1000), (int)(logger_data[OMEGA_TURN_ZAD]*10), (int)(logger_data[GAMMA_ZAD]*10), switch_rc.getPulseWidth());
 		#else
 			#if DEBUG_MODE == BARO_DEBUG
 				sprintf(str, "%d %d %d\n", (int)(data_input[BARO]*100), (int)(logger_data[ALT_FILTERED]*100), (int)(100*data_input[BAROVY]));
