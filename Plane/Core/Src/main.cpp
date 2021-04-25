@@ -120,6 +120,10 @@ enum Logs
 	OMEGA_Z_ZAD,
 	K_PR_OMEGA_X,
 	K_INT_OMEGA_X,
+	K_PR_OMEGA_Y,
+	K_INT_OMEGA_Y,
+	K_PR_OMEGA_Z,
+	K_INT_OMEGA_Z,
 	VY_ZAD,
 	ALT_FILTERED,
 	OMEGA_TURN_ZAD,
@@ -444,14 +448,22 @@ void stabOmegaUpdate(uint8_t tune_mode)
 	omega_x_PI_reg.setError(omega_target[X] - data_input[GYROX]);
 	omega_x_PI_reg.calcOutput();
 
+	omega_y_PI_reg.calcGainParams(data_input[AIR]);
 	omega_y_PI_reg.setError(omega_target[Y] - data_input[GYROY]);
 	omega_y_PI_reg.calcOutput();
 
+	omega_z_PI_reg.calcGainParams(data_input[AIR]);
 	omega_z_PI_reg.setError(omega_target[Z] - data_input[GYROZ]);
 	omega_z_PI_reg.calcOutput();
 
 	logger_data[K_PR_OMEGA_X] = omega_x_PI_reg.getProportGain();
 	logger_data[K_INT_OMEGA_X] = omega_x_PI_reg.getIntGain();
+
+	logger_data[K_PR_OMEGA_Y] = omega_y_PI_reg.getProportGain();
+	logger_data[K_INT_OMEGA_Y] = omega_y_PI_reg.getIntGain();
+
+	logger_data[K_PR_OMEGA_Z] = omega_z_PI_reg.getProportGain();
+	logger_data[K_INT_OMEGA_Z] = omega_z_PI_reg.getIntGain();
 
 }
 
