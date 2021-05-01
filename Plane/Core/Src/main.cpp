@@ -189,18 +189,18 @@ double k_int_omega_y = 6.0;
 double k_pr_Vy = 3.0;
 double k_int_Vy = 0.0;
 
-const uint8_t num_of_coeff_ref_points = 4;
+const uint8_t num_of_coeff_ref_points = 5;
 
-double speed_ref_points[num_of_coeff_ref_points] = {5.0, 10.0, 15.0, 20.0};
+double speed_ref_points[num_of_coeff_ref_points] = {5.0, 10.0, 15.0, 20.0, 30.0};
 
-double k_pr_omega_x_points[num_of_coeff_ref_points] = {8.0, 6.0, 5.0, 4.0};
-double k_int_omega_x_points[num_of_coeff_ref_points] = {7.5, 7.0, 5.5, 4.5};
+double k_pr_omega_x_points[num_of_coeff_ref_points] = {8.0, 6.0, 5.0, 4.0, 1.5};
+double k_int_omega_x_points[num_of_coeff_ref_points] = {7.5, 7.0, 5.5, 4.5, 2.0};
 
-double k_pr_omega_z_points[num_of_coeff_ref_points] = {8.5, 6.0, 5.0, 4.5};
-double k_int_omega_z_points[num_of_coeff_ref_points] = {7.5, 7.0, 5.5, 4.5};
+double k_pr_omega_z_points[num_of_coeff_ref_points] = {8.5, 6.0, 5.0, 4.5, 2.0};
+double k_int_omega_z_points[num_of_coeff_ref_points] = {7.5, 7.0, 5.5, 4.5, 2.0};
 
-double k_pr_omega_y_points[num_of_coeff_ref_points] = {9.5, 7.0, 5.5, 4.5};
-double k_int_omega_y_points[num_of_coeff_ref_points] = {7.5, 6.0, 5.5, 4.5};
+double k_pr_omega_y_points[num_of_coeff_ref_points] = {9.5, 7.0, 5.5, 4.5, 2.0};
+double k_int_omega_y_points[num_of_coeff_ref_points] = {7.5, 6.0, 5.5, 4.5, 1.5};
 //------------------------RC---------------------------------
 //extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
 
