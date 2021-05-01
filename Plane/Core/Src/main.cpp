@@ -193,7 +193,7 @@ double k_pr_omega_y = 8.0;
 double k_int_omega_y = 6.0;
 
 
-double k_pr_Vy = 3.0;
+double k_pr_Vy = 8.5;
 double k_int_Vy = 0.0;
 
 const uint8_t num_of_coeff_ref_points = 5;
@@ -461,15 +461,15 @@ void stabOmegaUpdate(uint8_t tune_mode)
 	output[RUD] = (int)(1500-0.4*omega_y_PI_reg.getOutput());
 
 
-	omega_x_PI_reg.calcGainParams(12.0); //airspeed hardcoded due to sensor fault
+	omega_x_PI_reg.calcGainParams(data_input[AIR]); //airspeed hardcoded due to sensor fault
 	omega_x_PI_reg.setError(omega_target[X] - data_input[GYROX]);
 	omega_x_PI_reg.calcOutput();
 
-	omega_y_PI_reg.calcGainParams(12.0); //airspeed hardcoded due to sensor fault
+	omega_y_PI_reg.calcGainParams(data_input[AIR]); //airspeed hardcoded due to sensor fault
 	omega_y_PI_reg.setError(omega_target[Y] - data_input[GYROY]);
 	omega_y_PI_reg.calcOutput();
 
-	omega_z_PI_reg.calcGainParams(12.0); //airspeed hardcoded due to sensor fault
+	omega_z_PI_reg.calcGainParams(data_input[AIR]); //airspeed hardcoded due to sensor fault
 	omega_z_PI_reg.setError(omega_target[Z] - data_input[GYROZ]);
 	omega_z_PI_reg.calcOutput();
 
