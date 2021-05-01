@@ -99,9 +99,9 @@ void MS4525DO::calcAirSpeed()
 float MS4525DO::calcOffseet()
 {
 	float offset = 0;
-	uint8_t offset_counter = 0;
+	uint8_t offset_counter = 1;
 
-	while(offset_counter < 20)
+	for(int i = 0; i < 30; i++)
 	{
 		calcPressure();
 		if(this->raw_pressure_pa < 0)

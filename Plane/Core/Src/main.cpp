@@ -358,9 +358,9 @@ void updateRcInput()
 {
 	rc_input[THR] = thr_rc.getPulseWidth();
 	rc_input[ELEV] = elev_rc.getPulseWidthDif();//dif
-	rc_input[AIL1] = ail_rc.getPulseWidth();//dif
+	rc_input[AIL1] = ail_rc.getPulseWidth();
 	rc_input[AIL2] = ail_rc.getPulseWidth();//dif
-	rc_input[RUD] = rud_rc.getPulseWidth();
+	rc_input[RUD] = rud_rc.getPulseWidthDif();
 	rc_input[SWITCHA] = switch_rc.getPulseWidth();
 	rc_input[SLIDER] = slider_rc.getPulseWidth();
 }
@@ -392,7 +392,7 @@ void directUpdate()
 void stabOmegaTgtCalc(void)
 {
 	omega_target[X] = -(0.234375*rc_input[AIL2] - 351.5625);
-	omega_target[Y] = (0.234375*rc_input[RUD] - 351.5625);
+	omega_target[Y] = -(0.234375*rc_input[RUD] - 351.5625);
 	omega_target[Z] = (0.234375*rc_input[ELEV] - 350.0625);
 }
 
@@ -441,7 +441,7 @@ void stabOmegaUpdate(uint8_t tune_mode)
 	output[ELEV] = (int)(1500+0.4*omega_z_PI_reg.getOutput());
 	output[AIL1] = (int)(1500-0.4*omega_x_PI_reg.getOutput());
 	output[AIL2] = (int)(1500-0.4*omega_x_PI_reg.getOutput());
-	output[RUD] = (int)(1500+0.4*omega_y_PI_reg.getOutput());
+	output[RUD] = (int)(1500-0.4*omega_y_PI_reg.getOutput());
 
 
 	omega_x_PI_reg.calcGainParams(data_input[AIR]);
