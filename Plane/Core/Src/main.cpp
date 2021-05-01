@@ -165,8 +165,8 @@ double k_pr_omega_x = 7.6;
 double k_int_omega_x = 5.3;
 double k_pr_omega_z = 7.6;
 double k_int_omega_z = 5.3;
-double k_pr_omega_y = 7.6;
-double k_int_omega_y = 5.3;
+double k_pr_omega_y = 8.0;
+double k_int_omega_y = 6.0;
 
 
 double k_pr_Vy = 3.0;
@@ -327,9 +327,9 @@ void updateRcInput()
 {
 	rc_input[THR] = thr_rc.getPulseWidth();
 	rc_input[ELEV] = elev_rc.getPulseWidthDif();//dif
-	rc_input[AIL1] = ail_rc.getPulseWidthDif();//dif
+	rc_input[AIL1] = ail_rc.getPulseWidth();
 	rc_input[AIL2] = ail_rc.getPulseWidth();//dif
-	rc_input[RUD] = rud_rc.getPulseWidth();
+	rc_input[RUD] = rud_rc.getPulseWidthDif();
 	rc_input[SWITCHA] = switch_rc.getPulseWidth();
 	rc_input[SLIDER] = slider_rc.getPulseWidth();
 }
@@ -388,7 +388,7 @@ void stabOmegaUpdate(uint8_t tune_mode)
 		integral_reset_flag = 0;
 	}
 	omega_zad_x = -(0.234375*rc_input[AIL2] - 351.5625);
-	omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
+	omega_zad_y = -(0.234375*rc_input[RUD] - 351.5625);
 	omega_zad_z = (0.234375*rc_input[ELEV] - 350.0625);
 	logger_data[OMEGA_Z_ZAD] = omega_zad_z;
 	logger_data[OMEGA_X_ZAD] = omega_zad_x;
@@ -397,9 +397,9 @@ void stabOmegaUpdate(uint8_t tune_mode)
 
 	output[THR] = rc_input[THR];
 	output[ELEV] = (int)(1500+0.4*omega_z_PI_reg.getOutput());
-	output[AIL1] = (int)(1500+0.4*omega_x_PI_reg.getOutput());
+	output[AIL1] = (int)(1500-0.4*omega_x_PI_reg.getOutput());
 	output[AIL2] = (int)(1500-0.4*omega_x_PI_reg.getOutput());
-	output[RUD] = (int)(1500+0.4*omega_y_PI_reg.getOutput());
+	output[RUD] = (int)(1500-0.4*omega_y_PI_reg.getOutput());
 
 	omega_x_PI_reg.setError(omega_zad_x - data_input[GYROX]);
 	omega_x_PI_reg.calcOutput();
@@ -1348,7 +1348,7 @@ void sensorsUpdateTask(void *argument)
 	bno055_vector_t euler;
 	bno055_vector_t accel;
 
-	MS4525DO ms4525do(&hi2c2, 0.01);
+	//MS4525DO ms4525do(&hi2c2, 0.01);
   /* Infinite loop */
 	for(;;)
 	{
@@ -1363,7 +1363,7 @@ void sensorsUpdateTask(void *argument)
 		data_input[GAMMA] = euler.x;
 		data_input[PSI] = euler.y;
 		data_input[NZ] = accel.z;
-		data_input[AIR] = ms4525do.getAirSpeed();
+		//data_input[AIR] = ms4525do.getAirSpeed();
 		//data_input[BETA] = p3002.getAngle();
 		osDelay(10);//ещё 5 мС внутри либы airspeed
 	}
