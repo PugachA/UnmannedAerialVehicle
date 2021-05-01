@@ -401,7 +401,7 @@ void directUpdate()
 {
 	output[THR] = rc_input[THR];
 	output[ELEV] = rc_input[ELEV];
-	output[AIL1] = rc_input[AIL1]+g_flaperon_delta;
+	output[AIL1] = rc_input[AIL1]-g_flaperon_delta;
 	output[AIL2] = rc_input[AIL2]+g_flaperon_delta;;
 	output[RUD] = rc_input[RUD];
 }
@@ -593,7 +593,7 @@ void commandModeUpdate()
 
 	//--------------Omega and Roll target calc-----------------
 
-	omega_turn_tgt = (-0.1173*rc_input[AIL1] + 176.0097); // minus 60 to 60 deg/s
+	omega_turn_tgt = -(-0.1173*rc_input[AIL1] + 176.0097); // minus 60 to 60 deg/s
 	if (abs(omega_turn_tgt) < 1.0) //to set zero when the stick is in neutral
 	{
 		omega_turn_tgt = 0;
@@ -1556,6 +1556,8 @@ void sensorsUpdateTask(void *argument)
 		data_input[COURSE] = (double) minmea_tofloat(&gps.gpsData.course);
 		data_input[GPS_VALID] = (double) gps.gpsData.valid;
 
+		data_input[AIR] = 12;
+
 		osDelay(10);//ещё 5 мС внутри либы airspeed
 	}
   /* USER CODE END sensorsUpdateTask */
@@ -1617,15 +1619,15 @@ void loggerUpdateTask(void *argument)
 	{
 		memset(str, '\0', sizeof(str));
 		#ifndef DEBUG_MODE
-			sprintf(str, "%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d",\
+			sprintf(str, "%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d",\
 					(int)HAL_GetTick(), (int)(10*logger_data[OMEGA_X_ZAD]), (int)(data_input[GYROX]*10),\
 					(int)(10*logger_data[OMEGA_Y_ZAD]), (int)(data_input[GYROY]*10), (int)(10*logger_data[OMEGA_Z_ZAD]),\
 					(int)(data_input[GYROZ]*10), (int)(data_input[BARO]*100), (int)(100*logger_data[VY_ZAD]),\
-					(int)(100*data_input[BAROVY]), (int)(100*data_input[AIR]),	(int)(k_pr_omega_x*10),\
-					(int)(100*k_int_omega_x), (int)(10*k_pr_omega_y), (int)(100*k_int_omega_y),\
-					(int)(10*k_pr_omega_z), (int)(100*k_int_omega_z), (int)(10*k_pr_Vy),\
+					(int)(100*data_input[BAROVY]), (int)(100*data_input[AIR]),	(int)(logger_data[K_PR_OMEGA_X]*10),\
+					(int)(100*logger_data[K_INT_OMEGA_X]), (int)(10*logger_data[K_PR_OMEGA_Y]), (int)(100*logger_data[K_INT_OMEGA_Y]),\
+					(int)(10*logger_data[K_PR_OMEGA_Z]), (int)(100*logger_data[K_INT_OMEGA_Z]), (int)(10*k_pr_Vy),\
 					(int)(data_input[TETA]*10), (int)(data_input[GAMMA]*10), (int)(data_input[PSI]*10),\
-					(int)(data_input[NZ]*1000), (int)(data_input[LONGITUDE]*1000000), (int)(data_input[LATITUDE]*1000000),\
+					(int)(data_input[NZ]*1000), (int)(10*logger_data[OMEGA_TURN_ZAD]), (int)(10*logger_data[GAMMA_ZAD]), (int)(data_input[LONGITUDE]*1000000), (int)(data_input[LATITUDE]*1000000),\
 					(int)(data_input[GPS_SPEED]*100), (int)(data_input[COURSE]*10), (int)(data_input[GPS_VALID]), (int)switch_rc.getPulseWidth());
 		#else
 			#if DEBUG_MODE == BARO_DEBUG
