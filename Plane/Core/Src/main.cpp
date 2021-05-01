@@ -34,6 +34,7 @@
 #include "PIReg/PIReg.h"
 #include "Beta/P3002.h"
 #include "PWMCapturer/PWMCapturer.h"
+#include "Gps/Gps.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -75,6 +76,7 @@ TIM_HandleTypeDef htim5;
 TIM_HandleTypeDef htim6;
 
 UART_HandleTypeDef huart2;
+UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
 enum Channels
@@ -100,6 +102,11 @@ enum Sensors
 	TETA,
 	GAMMA,
 	PSI,
+	LATITUDE,
+	LONGITUDE,
+	GPS_SPEED,
+	COURSE,
+	GPS_VALID,
 	SENSOR_ARRAY_SIZE, //этот элемент всегда должен быть последним в енуме
 };
 enum Modes
@@ -279,6 +286,15 @@ void IcHandlerTim4(TIM_HandleTypeDef *htim)
 		} break;
 	}
 }
+
+//GPS-----------------------------------------------------------
+Gps gps = Gps(&huart3, GPIOE, GPIO_PIN_7);
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if(huart == &huart3)
+		gps.UartCallback();
+}
 //-----------------------------------------------------------
 
 Servo 	thr_servo(&htim3, 1),
@@ -321,6 +337,7 @@ static void MX_I2C3_Init(void);
 static void MX_TIM6_Init(void);
 static void MX_TIM4_Init(void);
 static void MX_I2C2_Init(void);
+static void MX_USART3_UART_Init(void);
 void StartDefaultTask(void *argument);
 void sensorsUpdateTask(void *argument);
 void modeUpdateTask(void *argument);
@@ -714,6 +731,7 @@ int main(void)
   MX_TIM6_Init();
   MX_TIM4_Init();
   MX_I2C2_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
   	//-------------------Radio PWM IC INIT--------------------------
@@ -1398,6 +1416,39 @@ static void MX_USART2_UART_Init(void)
 }
 
 /**
+  * @brief USART3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART3_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART3_Init 0 */
+
+  /* USER CODE END USART3_Init 0 */
+
+  /* USER CODE BEGIN USART3_Init 1 */
+
+  /* USER CODE END USART3_Init 1 */
+  huart3.Instance = USART3;
+  huart3.Init.BaudRate = 38400;
+  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+  huart3.Init.StopBits = UART_STOPBITS_1;
+  huart3.Init.Parity = UART_PARITY_NONE;
+  huart3.Init.Mode = UART_MODE_TX_RX;
+  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART3_Init 2 */
+
+  /* USER CODE END USART3_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -1479,7 +1530,9 @@ void sensorsUpdateTask(void *argument)
 	bno055_vector_t euler;
 	bno055_vector_t accel;
 
-	MS4525DO ms4525do(&hi2c2, 0.01);
+	gps.Start();
+
+	//MS4525DO ms4525do(&hi2c2, 0.01);
   /* Infinite loop */
 	for(;;)
 	{
@@ -1494,8 +1547,15 @@ void sensorsUpdateTask(void *argument)
 		data_input[GAMMA] = euler.x;
 		data_input[PSI] = euler.y;
 		data_input[NZ] = accel.z;
-		data_input[AIR] = ms4525do.getAirSpeed();
+		//data_input[AIR] = ms4525do.getAirSpeed();
 		//data_input[BETA] = p3002.getAngle();
+
+		data_input[LATITUDE] = (double) minmea_tocoord(&gps.gpsData.latitude);
+		data_input[LONGITUDE] = (double) minmea_tocoord(&gps.gpsData.longitude);
+		data_input[GPS_SPEED] = (double) minmea_tofloat(&gps.gpsData.speed) * 0.51; //перевод в м/с из узлов
+		data_input[COURSE] = (double) minmea_tofloat(&gps.gpsData.course);
+		data_input[GPS_VALID] = (double) gps.gpsData.valid;
+
 		osDelay(10);//ещё 5 мС внутри либы airspeed
 	}
   /* USER CODE END sensorsUpdateTask */
@@ -1557,15 +1617,16 @@ void loggerUpdateTask(void *argument)
 	{
 		memset(str, '\0', sizeof(str));
 		#ifndef DEBUG_MODE
-			sprintf(str, "%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d",\
-					HAL_GetTick(), (int)(10*logger_data[OMEGA_X_ZAD]), (int)(data_input[GYROX]*10),\
+			sprintf(str, "%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d",\
+					(int)HAL_GetTick(), (int)(10*logger_data[OMEGA_X_ZAD]), (int)(data_input[GYROX]*10),\
 					(int)(10*logger_data[OMEGA_Y_ZAD]), (int)(data_input[GYROY]*10), (int)(10*logger_data[OMEGA_Z_ZAD]),\
 					(int)(data_input[GYROZ]*10), (int)(data_input[BARO]*100), (int)(100*logger_data[VY_ZAD]),\
-					(int)(100*data_input[BAROVY]), (int)(100*data_input[AIR]),	(int)(10*logger_data[K_PR_OMEGA_X]),\
-					(int)(100*logger_data[K_INT_OMEGA_X]), (int)(10*logger_data[K_PR_OMEGA_Y]), (int)(100*logger_data[K_INT_OMEGA_Y]),\
-					(int)(10*logger_data[K_PR_OMEGA_Z]), (int)(100*logger_data[K_INT_OMEGA_Y]), (int)(10*k_pr_Vy),\
+					(int)(100*data_input[BAROVY]), (int)(100*data_input[AIR]),	(int)(k_pr_omega_x*10),\
+					(int)(100*k_int_omega_x), (int)(10*k_pr_omega_y), (int)(100*k_int_omega_y),\
+					(int)(10*k_pr_omega_z), (int)(100*k_int_omega_z), (int)(10*k_pr_Vy),\
 					(int)(data_input[TETA]*10), (int)(data_input[GAMMA]*10), (int)(data_input[PSI]*10),\
-					(int)(data_input[NZ]*1000), (int)(logger_data[OMEGA_TURN_ZAD]*10), (int)(logger_data[GAMMA_ZAD]*10), switch_rc.getPulseWidth());
+					(int)(data_input[NZ]*1000), (int)(data_input[LONGITUDE]*1000000), (int)(data_input[LATITUDE]*1000000),\
+					(int)(data_input[GPS_SPEED]*100), (int)(data_input[COURSE]*10), (int)(data_input[GPS_VALID]), (int)switch_rc.getPulseWidth());
 		#else
 			#if DEBUG_MODE == BARO_DEBUG
 				sprintf(str, "%d %d %d\n", (int)(data_input[BARO]*100), (int)(logger_data[ALT_FILTERED]*100), (int)(100*data_input[BAROVY]));
