@@ -1556,7 +1556,7 @@ void sensorsUpdateTask(void *argument)
 		data_input[COURSE] = (double) minmea_tofloat(&gps.gpsData.course);
 		data_input[GPS_VALID] = (double) gps.gpsData.valid;
 
-		data_input[AIR] = 12;
+		data_input[AIR] = data_input[GPS_SPEED];
 
 		osDelay(10);//ещё 5 мС внутри либы airspeed
 	}
