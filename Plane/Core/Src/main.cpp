@@ -23,6 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "math.h"
 #include <stdio.h>
 #include "Servo/Servo.h"
 #include "Beeper/Beeper.h"
@@ -124,9 +125,25 @@ enum Logs
 	OMEGA_X_ZAD,
 	OMEGA_Y_ZAD,
 	OMEGA_Z_ZAD,
+	K_PR_OMEGA_X,
+	K_INT_OMEGA_X,
+	K_PR_OMEGA_Y,
+	K_INT_OMEGA_Y,
+	K_PR_OMEGA_Z,
+	K_INT_OMEGA_Z,
 	VY_ZAD,
 	ALT_FILTERED,
+	OMEGA_TURN_ZAD,
+	GAMMA_ZAD,
 	LOG_ARRAY_SIZE,
+};
+
+enum Omega_targets
+{
+	X,
+	Y,
+	Z,
+	OMEGA_ARRAY_SIZE,
 };
 
 //--------------------Threads-----------------------
@@ -176,8 +193,21 @@ double k_pr_omega_y = 8.0;
 double k_int_omega_y = 6.0;
 
 
-double k_pr_Vy = 3.0;
+double k_pr_Vy = 8.5;
 double k_int_Vy = 0.0;
+
+const uint8_t num_of_coeff_ref_points = 5;
+
+double speed_ref_points[num_of_coeff_ref_points] = {5.0, 10.0, 15.0, 20.0, 30.0};
+
+double k_pr_omega_x_points[num_of_coeff_ref_points] = {8.0, 6.0, 5.0, 4.0, 1.5};
+double k_int_omega_x_points[num_of_coeff_ref_points] = {7.5, 7.0, 5.5, 4.5, 2.0};
+
+double k_pr_omega_z_points[num_of_coeff_ref_points] = {8.5, 6.0, 5.0, 4.5, 2.0};
+double k_int_omega_z_points[num_of_coeff_ref_points] = {7.5, 7.0, 5.5, 4.5, 2.0};
+
+double k_pr_omega_y_points[num_of_coeff_ref_points] = {9.5, 7.0, 5.5, 4.5, 2.0};
+double k_int_omega_y_points[num_of_coeff_ref_points] = {7.5, 6.0, 5.5, 4.5, 1.5};
 //------------------------RC---------------------------------
 //extern RcChannel thr_rc, elev_rc, ail_rc, rud_rc, switch_rc, slider_rc;
 
@@ -276,12 +306,13 @@ Servo 	thr_servo(&htim3, 1),
 
 int g_flaperon_delta = 0;
 
-//-------------------Sensors INIT--------------------------
+//----------------------INIT-------------------------------
 
 uint32_t output[5] = {0};
 uint32_t rc_input[CHANNELS_ARRAY_SIZE] = {1500};
 double data_input[SENSOR_ARRAY_SIZE] = {0.0};
 double logger_data[LOG_ARRAY_SIZE] = {0.0};
+double omega_target[OMEGA_ARRAY_SIZE] = {0.0};
 
 uint32_t timeNowMs = 0;
 
@@ -370,20 +401,30 @@ void directUpdate()
 {
 	output[THR] = rc_input[THR];
 	output[ELEV] = rc_input[ELEV];
-	output[AIL1] = rc_input[AIL1]+g_flaperon_delta;
+	output[AIL1] = rc_input[AIL1]-g_flaperon_delta;
 	output[AIL2] = rc_input[AIL2]+g_flaperon_delta;;
 	output[RUD] = rc_input[RUD];
 }
+
+void stabOmegaTgtCalc(void)
+{
+	omega_target[X] = -(0.234375*rc_input[AIL2] - 351.5625);
+	omega_target[Y] = -(0.234375*rc_input[RUD] - 351.5625);
+	omega_target[Z] = (0.234375*rc_input[ELEV] - 350.0625);
+}
+
 void stabOmegaUpdate(uint8_t tune_mode)
 {
 	//------------------Regulators INIT------------------------
 	double int_lim_omega_z = 1000, int_lim_omega_x = 1000, int_lim_omega_y = 1000;
-	double omega_zad_x = 0, omega_zad_y = 0, omega_zad_z = 0;
-	static PIReg omega_x_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x);
-	static PIReg omega_y_PI_reg(k_pr_omega_y, k_int_omega_y, 0.01, int_lim_omega_y);
-	static PIReg omega_z_PI_reg(k_pr_omega_z, k_int_omega_z, 0.01, int_lim_omega_z);
+	//double omega_zad_x = 0, omega_zad_y = 0, omega_zad_z = 0;
+	static PIReg omega_x_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x, speed_ref_points, k_pr_omega_x_points, k_int_omega_x_points, num_of_coeff_ref_points);
+	static PIReg omega_y_PI_reg(k_pr_omega_y, k_int_omega_y, 0.01, int_lim_omega_y, speed_ref_points, k_pr_omega_y_points, k_int_omega_y_points, num_of_coeff_ref_points);
+	static PIReg omega_z_PI_reg(k_pr_omega_z, k_int_omega_z, 0.01, int_lim_omega_z, speed_ref_points, k_pr_omega_z_points, k_int_omega_z_points, num_of_coeff_ref_points);
 	//---------------------------------------------------------
-	if(tune_mode != TUNE_OFF)
+
+	//----------------------Coeff Tune-------------------------
+	/*if(tune_mode != TUNE_OFF)
 	{
 		if(tune_mode == TUNE_K_P)
 		{
@@ -395,7 +436,8 @@ void stabOmegaUpdate(uint8_t tune_mode)
 			k_int_omega_x = ((double)rc_input[SLIDER] - 979.0)/100.0;;
 			omega_x_PI_reg.setGainParams(k_pr_omega_x, k_int_omega_x);
 		}
-	}
+	}*/
+	//---------------------------------------------------------
 
 	if(integral_reset_flag)
 	{
@@ -404,12 +446,12 @@ void stabOmegaUpdate(uint8_t tune_mode)
 		omega_z_PI_reg.integralReset();
 		integral_reset_flag = 0;
 	}
-	omega_zad_x = -(0.234375*rc_input[AIL2] - 351.5625);
-	omega_zad_y = -(0.234375*rc_input[RUD] - 351.5625);
-	omega_zad_z = (0.234375*rc_input[ELEV] - 350.0625);
-	logger_data[OMEGA_Z_ZAD] = omega_zad_z;
-	logger_data[OMEGA_X_ZAD] = omega_zad_x;
-	logger_data[OMEGA_Y_ZAD] = omega_zad_y;
+	//omega_zad_x = -(0.234375*rc_input[AIL2] - 351.5625);
+	//omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
+	//omega_zad_z = (0.234375*rc_input[ELEV] - 350.0625);
+	logger_data[OMEGA_X_ZAD] = omega_target[X];
+	logger_data[OMEGA_Y_ZAD] = omega_target[Y];
+	logger_data[OMEGA_Z_ZAD] = omega_target[Z];
 
 
 	output[THR] = rc_input[THR];
@@ -418,12 +460,27 @@ void stabOmegaUpdate(uint8_t tune_mode)
 	output[AIL2] = (int)(1500-0.4*omega_x_PI_reg.getOutput());
 	output[RUD] = (int)(1500-0.4*omega_y_PI_reg.getOutput());
 
-	omega_x_PI_reg.setError(omega_zad_x - data_input[GYROX]);
+
+	omega_x_PI_reg.calcGainParams(data_input[AIR]); //airspeed hardcoded due to sensor fault
+	omega_x_PI_reg.setError(omega_target[X] - data_input[GYROX]);
 	omega_x_PI_reg.calcOutput();
-	omega_y_PI_reg.setError(omega_zad_y - data_input[GYROY]);
+
+	omega_y_PI_reg.calcGainParams(data_input[AIR]); //airspeed hardcoded due to sensor fault
+	omega_y_PI_reg.setError(omega_target[Y] - data_input[GYROY]);
 	omega_y_PI_reg.calcOutput();
-	omega_z_PI_reg.setError(omega_zad_z - data_input[GYROZ]);
+
+	omega_z_PI_reg.calcGainParams(data_input[AIR]); //airspeed hardcoded due to sensor fault
+	omega_z_PI_reg.setError(omega_target[Z] - data_input[GYROZ]);
 	omega_z_PI_reg.calcOutput();
+
+	logger_data[K_PR_OMEGA_X] = omega_x_PI_reg.getProportGain();
+	logger_data[K_INT_OMEGA_X] = omega_x_PI_reg.getIntGain();
+
+	logger_data[K_PR_OMEGA_Y] = omega_y_PI_reg.getProportGain();
+	logger_data[K_INT_OMEGA_Y] = omega_y_PI_reg.getIntGain();
+
+	logger_data[K_PR_OMEGA_Z] = omega_z_PI_reg.getProportGain();
+	logger_data[K_INT_OMEGA_Z] = omega_z_PI_reg.getIntGain();
 
 }
 
@@ -494,6 +551,74 @@ void stabVyUpdate(uint8_t tune_mode)
 
 }
 
+void commandModeUpdate()
+{
+	//------------------Local vars INIT------------------------
+	double rad2deg = 57.2958;
+	double deg2rad = 1/rad2deg;
+	double g = 9.81;
+
+	double omega_turn_tgt = 0.0;
+	double gamma_tgt = 0.0;
+	double k_pr_gamma = 1.5;
+
+	double int_lim_Vy = 1000;
+	double vy_tgt = 0.0;
+
+	double omega_x_roll_tgt = 0.0; // component of omega_x target from target roll angle
+	double omega_x_turn_tgt = 0.0; // component of omega_x target from coordinated turn
+
+	double omega_y_turn_tgt = 0.0; // component of omega_y target from coordinated turn
+
+	double omega_z_turn_tgt = 0.0; // component of omega_z target from coordinated turn
+	double omega_z_vy_tgt = 0.0; // component of omega_z target from vertical speed stab
+
+	//------------------Regulators INIT------------------------
+	static PIReg vy_PI_reg(k_pr_Vy, k_int_Vy, 0.01, int_lim_Vy);
+
+	//---------------------------------------------------------
+
+	//---------------Vertical speed stab-----------------------
+	vy_tgt = (0.01953125*rc_input[ELEV] - 29.3164062); // minus 10 to 10 m/s
+	if (abs(vy_tgt) < 0.2) //to set zero when the stick is in neutral
+	{
+		vy_tgt = 0;
+	}
+
+	logger_data[VY_ZAD] = vy_tgt;
+
+	vy_PI_reg.setError(vy_tgt - data_input[BAROVY]);
+	vy_PI_reg.calcOutput();
+	//---------------------------------------------------------
+
+	//--------------Omega and Roll target calc-----------------
+
+	omega_turn_tgt = -(-0.1173*rc_input[AIL1] + 176.0097); // minus 60 to 60 deg/s
+	if (abs(omega_turn_tgt) < 1.0) //to set zero when the stick is in neutral
+	{
+		omega_turn_tgt = 0;
+	}
+	logger_data[OMEGA_TURN_ZAD] = omega_turn_tgt;
+
+	gamma_tgt = -atan((data_input[AIR]*omega_turn_tgt*deg2rad)/g);
+	gamma_tgt = gamma_tgt*rad2deg;
+	logger_data[GAMMA_ZAD] = gamma_tgt;
+	//---------------------------------------------------------
+
+	//---------------Omega coord turn calc---------------------
+	omega_x_roll_tgt = k_pr_gamma*(gamma_tgt - data_input[GAMMA]);
+	omega_x_turn_tgt = omega_turn_tgt*sin(data_input[TETA]*deg2rad);
+	omega_target[X] = omega_x_roll_tgt + omega_x_turn_tgt; //deg/s
+
+	omega_y_turn_tgt = omega_turn_tgt*cos(data_input[TETA]*deg2rad)*cos(data_input[GAMMA]*deg2rad);
+	omega_target[Y] = omega_y_turn_tgt; //deg/s
+
+	omega_z_turn_tgt = omega_turn_tgt*cos(data_input[TETA]*deg2rad)*sin((-data_input[GAMMA]*deg2rad));
+	omega_z_vy_tgt = vy_PI_reg.getOutput();
+	omega_target[Z] = omega_z_vy_tgt + omega_z_turn_tgt; //deg/s
+	//---------------------------------------------------------
+}
+
 void setMode()
 {
 	static uint8_t prev_mode = 0;
@@ -518,18 +643,18 @@ void setMode()
 		{
 			if(switch_rc.isInRange(1100, 1300) || switch_rc.isInRange(1400, 1500))
 				current_mode = OMEGA_STAB;
-			else
+			/*else
 			{
 				if(switch_rc.isInRange(1300, 1400))
 					current_mode = OMEGA_STAB_K_TUNE;
 				if(switch_rc.isInRange(1500, 1700))
 					current_mode = OMEGA_STAB_I_TUNE;
-			}
+			}*/
 			if(switch_rc.isInRange(1700, 1800))
 				current_mode = VY_STAB;
-			else
+			/*else
 				if(switch_rc.isInRange(1800, 1900))
-					current_mode = VY_STAB_K_TUNE;
+					current_mode = VY_STAB_K_TUNE;*/
 			if(switch_rc.isInRange(1900, 1950))
 				current_mode = DIRECT_FLAPS;
 		}
@@ -541,15 +666,21 @@ void updateModeState()
 	{
 		case PREFLIGHTCHECK: preFlightCheckUpdate(); break;
 		case DIRECT: directUpdate(); break;
-		case OMEGA_STAB: stabOmegaUpdate(TUNE_OFF); break;
-		case VY_STAB: stabVyUpdate(TUNE_OFF); break;
+		case OMEGA_STAB: {
+				stabOmegaTgtCalc();
+				stabOmegaUpdate(TUNE_OFF);
+			}break;
+		case VY_STAB: {
+				commandModeUpdate();
+				stabOmegaUpdate(TUNE_OFF);
+			}break;
 		case DIRECT_FLAPS: {
 				g_activate_flaps = true;
 				directUpdate();
 			}break;
-		case OMEGA_STAB_K_TUNE: stabOmegaUpdate(TUNE_K_P); break;
-		case OMEGA_STAB_I_TUNE:	stabOmegaUpdate(TUNE_K_I); break;
-		case VY_STAB_K_TUNE: stabVyUpdate(TUNE_K_P); break;
+		//case OMEGA_STAB_K_TUNE: stabOmegaUpdate(TUNE_K_P); break;
+		//case OMEGA_STAB_I_TUNE:	stabOmegaUpdate(TUNE_K_I); break;
+		//case VY_STAB_K_TUNE: stabVyUpdate(TUNE_K_P); break;
 	}
 }
 
@@ -1425,6 +1556,8 @@ void sensorsUpdateTask(void *argument)
 		data_input[COURSE] = (double) minmea_tofloat(&gps.gpsData.course);
 		data_input[GPS_VALID] = (double) gps.gpsData.valid;
 
+		data_input[AIR] = data_input[GPS_SPEED];
+
 		osDelay(10);//ещё 5 мС внутри либы airspeed
 	}
   /* USER CODE END sensorsUpdateTask */
@@ -1486,15 +1619,15 @@ void loggerUpdateTask(void *argument)
 	{
 		memset(str, '\0', sizeof(str));
 		#ifndef DEBUG_MODE
-			sprintf(str, "%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d",\
+			sprintf(str, "%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d",\
 					(int)HAL_GetTick(), (int)(10*logger_data[OMEGA_X_ZAD]), (int)(data_input[GYROX]*10),\
 					(int)(10*logger_data[OMEGA_Y_ZAD]), (int)(data_input[GYROY]*10), (int)(10*logger_data[OMEGA_Z_ZAD]),\
 					(int)(data_input[GYROZ]*10), (int)(data_input[BARO]*100), (int)(100*logger_data[VY_ZAD]),\
-					(int)(100*data_input[BAROVY]), (int)(100*data_input[AIR]),	(int)(k_pr_omega_x*10),\
-					(int)(100*k_int_omega_x), (int)(10*k_pr_omega_y), (int)(100*k_int_omega_y),\
-					(int)(10*k_pr_omega_z), (int)(100*k_int_omega_z), (int)(10*k_pr_Vy),\
+					(int)(100*data_input[BAROVY]), (int)(100*data_input[AIR]),	(int)(logger_data[K_PR_OMEGA_X]*10),\
+					(int)(100*logger_data[K_INT_OMEGA_X]), (int)(10*logger_data[K_PR_OMEGA_Y]), (int)(100*logger_data[K_INT_OMEGA_Y]),\
+					(int)(10*logger_data[K_PR_OMEGA_Z]), (int)(100*logger_data[K_INT_OMEGA_Z]), (int)(10*k_pr_Vy),\
 					(int)(data_input[TETA]*10), (int)(data_input[GAMMA]*10), (int)(data_input[PSI]*10),\
-					(int)(data_input[NZ]*1000), (int)(data_input[LONGITUDE]*1000000), (int)(data_input[LATITUDE]*1000000),\
+					(int)(data_input[NZ]*1000), (int)(10*logger_data[OMEGA_TURN_ZAD]), (int)(10*logger_data[GAMMA_ZAD]), (int)(data_input[LONGITUDE]*1000000), (int)(data_input[LATITUDE]*1000000),\
 					(int)(data_input[GPS_SPEED]*100), (int)(data_input[COURSE]*10), (int)(data_input[GPS_VALID]), (int)switch_rc.getPulseWidth());
 		#else
 			#if DEBUG_MODE == BARO_DEBUG
