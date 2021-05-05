@@ -28,13 +28,13 @@
 #include "Servo/Servo.h"
 #include "Beeper/Beeper.h"
 #include "Baro/MS5611.h"
-//#include "AirSpeed/MPXV7002.h"
 #include "AirSpeed/MS4525DO.h"
 #include "Gyro/bno055.h"
 #include "PIReg/PIReg.h"
 #include "Beta/P3002.h"
 #include "PWMCapturer/PWMCapturer.h"
 #include "Gps/Gps.h"
+#include "Modes/Nav/Nav.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
