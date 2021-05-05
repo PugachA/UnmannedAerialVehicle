@@ -114,11 +114,12 @@ enum Modes
 	PREFLIGHTCHECK,
 	DIRECT,
 	OMEGA_STAB,
-	VY_STAB,
+	COMMAND,
 	DIRECT_FLAPS,
 	OMEGA_STAB_K_TUNE,
 	OMEGA_STAB_I_TUNE,
 	VY_STAB_K_TUNE,
+	NAV,
 };
 enum Logs
 {
@@ -549,19 +550,19 @@ void stabVyUpdate(uint8_t tune_mode)
 
 }
 
-void commandModeUpdate()
+void commandModeUpdate(double omega_turn_tgt, double vy_tgt)
 {
 	//------------------Local vars INIT------------------------
 	double rad2deg = 57.2958;
 	double deg2rad = 1/rad2deg;
 	double g = 9.81;
 
-	double omega_turn_tgt = 0.0;
+	//double omega_turn_tgt = 0.0;
 	double gamma_tgt = 0.0;
 	double k_pr_gamma = 1.5;
 
 	double int_lim_Vy = 1000;
-	double vy_tgt = 0.0;
+	//double vy_tgt = 0.0;
 
 	double omega_x_roll_tgt = 0.0; // component of omega_x target from target roll angle
 	double omega_x_turn_tgt = 0.0; // component of omega_x target from coordinated turn
@@ -577,7 +578,7 @@ void commandModeUpdate()
 	//---------------------------------------------------------
 
 	//---------------Vertical speed stab-----------------------
-	vy_tgt = (0.01953125*rc_input[ELEV] - 29.3164062); // minus 10 to 10 m/s
+	//vy_tgt = (0.01953125*rc_input[ELEV] - 29.3164062); // minus 10 to 10 m/s
 	if (abs(vy_tgt) < 0.2) //to set zero when the stick is in neutral
 	{
 		vy_tgt = 0;
@@ -591,7 +592,7 @@ void commandModeUpdate()
 
 	//--------------Omega and Roll target calc-----------------
 
-	omega_turn_tgt = -(-0.1173*rc_input[AIL1] + 176.0097); // minus 60 to 60 deg/s
+	//omega_turn_tgt = -(-0.1173*rc_input[AIL1] + 176.0097); // minus 60 to 60 deg/s
 	if (abs(omega_turn_tgt) < 1.0) //to set zero when the stick is in neutral
 	{
 		omega_turn_tgt = 0;
@@ -639,20 +640,12 @@ void setMode()
 		}
 		else
 		{
-			if(switch_rc.isInRange(1100, 1300) || switch_rc.isInRange(1400, 1500))
+			if(switch_rc.isInRange(1100, 1300))
 				current_mode = OMEGA_STAB;
-			/*else
-			{
-				if(switch_rc.isInRange(1300, 1400))
-					current_mode = OMEGA_STAB_K_TUNE;
-				if(switch_rc.isInRange(1500, 1700))
-					current_mode = OMEGA_STAB_I_TUNE;
-			}*/
+			if(switch_rc.isInRange(1400, 1500))
+				current_mode = COMMAND;
 			if(switch_rc.isInRange(1700, 1800))
-				current_mode = VY_STAB;
-			/*else
-				if(switch_rc.isInRange(1800, 1900))
-					current_mode = VY_STAB_K_TUNE;*/
+				current_mode = NAV;
 			if(switch_rc.isInRange(1900, 1950))
 				current_mode = DIRECT_FLAPS;
 		}
@@ -668,14 +661,18 @@ void updateModeState()
 				stabOmegaTgtCalc();
 				stabOmegaUpdate(TUNE_OFF);
 			}break;
-		case VY_STAB: {
-				commandModeUpdate();
+		case COMMAND: {
+				commandModeUpdate( (-(-0.1173*rc_input[AIL1] + 176.0097)), (0.01953125*rc_input[ELEV] - 29.3164062) );
 				stabOmegaUpdate(TUNE_OFF);
 			}break;
 		case DIRECT_FLAPS: {
 				g_activate_flaps = true;
 				directUpdate();
 			}break;
+		case NAV: {
+				//some code
+			}break;
+		}
 		//case OMEGA_STAB_K_TUNE: stabOmegaUpdate(TUNE_K_P); break;
 		//case OMEGA_STAB_I_TUNE:	stabOmegaUpdate(TUNE_K_I); break;
 		//case VY_STAB_K_TUNE: stabVyUpdate(TUNE_K_P); break;
