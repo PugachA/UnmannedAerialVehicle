@@ -495,7 +495,6 @@ void commandModeUpdate(double omega_turn_tgt, double vy_tgt)
 	//---------------------------------------------------------
 
 	//---------------Vertical speed stab-----------------------
-	//vy_tgt = (0.01953125*rc_input[ELEV] - 29.3164062); // minus 10 to 10 m/s
 	if (abs(vy_tgt) < 0.2) //to set zero when the stick is in neutral
 	{
 		vy_tgt = 0;
@@ -509,7 +508,6 @@ void commandModeUpdate(double omega_turn_tgt, double vy_tgt)
 
 	//--------------Omega and Roll target calc-----------------
 
-	//omega_turn_tgt = -(-0.1173*rc_input[AIL1] + 176.0097); // minus 60 to 60 deg/s
 	if (abs(omega_turn_tgt) < 1.0) //to set zero when the stick is in neutral
 	{
 		omega_turn_tgt = 0;
