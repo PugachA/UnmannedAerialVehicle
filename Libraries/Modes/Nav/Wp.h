@@ -12,8 +12,8 @@ class Wp
 	double wp_lon; //deg
 	double wp_alt; //meters
 
-	double wp_x; //meters
-	double wp_y; //meters
+	double wp_x = 0; //meters
+	double wp_y = 0; //meters
 
 	uint8_t wp_is_active = 0;
 	uint8_t wp_is_home = 0;
@@ -26,6 +26,7 @@ class Wp
     void setWpCoord(double lat, double lon, double alt);
     double getWpLat();
     double getWpLon();
+
     void setWpXCoord(double X);
     double getWpXCoord();
     void setWpYCoord(double Y);
