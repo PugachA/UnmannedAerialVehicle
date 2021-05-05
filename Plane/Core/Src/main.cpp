@@ -467,73 +467,6 @@ void stabOmegaUpdate()
 
 }
 
-void stabVyUpdate(uint8_t tune_mode)
-{
-	//------------------Regulators INIT------------------------
-
-	double int_lim_Vy = 1000;
-	double vert_speed_zad = 0;
-
-	static PIReg vert_speed_PI_reg(k_pr_Vy, k_int_Vy, 0.01, int_lim_Vy);
-
-	//double k_int_omega_x = 2.5;
-	//double k_pr_omega_x = 5.5;
-
-	//double k_int_omega_y = 2.5;
-	//double k_pr_omega_y = 5.5;
-
-	double int_lim_omega = 1000;
-	double omega_zad_x = 0, omega_zad_y = 0, omega_zad_z = 0;
-
-	//static PIReg omega_x_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega);
-	//static PIReg omega_y_PI_reg(k_pr_omega_y, k_int_omega_y, 0.01, int_lim_omega);
-	static PIReg omega_z_PI_reg(k_pr_omega_z, k_int_omega_z, 0.01, int_lim_omega);
-	//---------------------------------------------------------
-	if(tune_mode != TUNE_OFF)
-	{
-		if(tune_mode == TUNE_K_P)
-		{
-			k_pr_Vy = ((double)rc_input[SLIDER] - 979.0)/100.0;
-			vert_speed_PI_reg.setGainParams(k_pr_Vy, k_int_Vy);
-			omega_z_PI_reg.setGainParams(k_pr_omega_z, k_int_omega_z);
-		}
-	}
-
-	if(integral_reset_flag)
-	{
-		//omega_x_PI_reg.integralReset();
-		//omega_y_PI_reg.integralReset();
-		omega_z_PI_reg.integralReset();
-		vert_speed_PI_reg.integralReset();
-		integral_reset_flag = 0;
-	}
-
-	vert_speed_zad = (0.01953125*rc_input[ELEV] - 29.3164062); // minus 10 to 10 m/s
-	logger_data[VY_ZAD] = vert_speed_zad;
-
-	vert_speed_PI_reg.setError(vert_speed_zad - data_input[BAROVY]);
-	vert_speed_PI_reg.calcOutput();
-
-	//omega_zad_x = (0.234375*rc_input[AIL2] - 351.5625);
-	//omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
-	omega_zad_z = vert_speed_PI_reg.getOutput();
-	logger_data[OMEGA_Z_ZAD] = omega_zad_z;
-
-	//omega_x_PI_reg.setError(omega_zad_x - data_input[GYROX]);
-	//omega_x_PI_reg.calcOutput();
-	//omega_y_PI_reg.setError(omega_zad_y - data_input[GYROY]);
-	//omega_y_PI_reg.calcOutput();
-	omega_z_PI_reg.setError(omega_zad_z - data_input[GYROZ]);
-	omega_z_PI_reg.calcOutput();
-
-	output[THR] = rc_input[THR];
-	output[ELEV] = (int)(1500+0.4*omega_z_PI_reg.getOutput());
-	output[AIL1] = rc_input[AIL1];
-	output[AIL2] = rc_input[AIL2];
-	output[RUD] = rc_input[RUD];
-
-}
-
 void commandModeUpdate(double omega_turn_tgt, double vy_tgt)
 {
 	//------------------Local vars INIT------------------------
@@ -647,7 +580,7 @@ void updateModeState()
 			}break;
 		case COMMAND: {
 				commandModeUpdate( (-(-0.1173*rc_input[AIL1] + 176.0097)), (0.01953125*rc_input[ELEV] - 29.3164062) );
-				stabOmegaUpdate(TUNE_OFF);
+				stabOmegaUpdate();
 			}break;
 		case DIRECT_FLAPS: {
 				g_activate_flaps = true;
@@ -656,12 +589,9 @@ void updateModeState()
 		case NAV: {
 				//some code
 			}break;
-		}
-		//case OMEGA_STAB_K_TUNE: stabOmegaUpdate(TUNE_K_P); break;
-		//case OMEGA_STAB_I_TUNE:	stabOmegaUpdate(TUNE_K_I); break;
-		//case VY_STAB_K_TUNE: stabVyUpdate(TUNE_K_P); break;
 	}
 }
+
 
 
 /* USER CODE END PFP */
