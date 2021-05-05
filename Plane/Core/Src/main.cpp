@@ -105,7 +105,7 @@ enum Sensors
 	LATITUDE,
 	LONGITUDE,
 	GPS_SPEED,
-	COURSE,
+	TRACK,
 	GPS_VALID,
 	SENSOR_ARRAY_SIZE, //этот элемент всегда должен быть последним в енуме
 };
@@ -549,7 +549,7 @@ void navModeUpdate()// для апдейт нава надо будет сдел
 {
 	static uint8_t wp_num = 0; // надо обязательно где-то это обнулить иначе можно будет только 1 раз по маршруту полететь
 
-	navigator.updatePlanePos(data_input[LATITUDE], data_input[LONGITUDE], data_input[BARO], data_input[COURSE]);
+	navigator.updatePlanePos(data_input[LATITUDE], data_input[LONGITUDE], data_input[BARO], data_input[TRACK]);
 	navigator.updateActiveWp(way_point[wp_num]);
 
 	omega_target[OMEGA_TURN_FROM_NAV] = navigator.getOmegaTurnToWp();
@@ -1488,7 +1488,7 @@ void sensorsUpdateTask(void *argument)
 		data_input[LATITUDE] = (double) minmea_tocoord(&gps.gpsData.latitude);
 		data_input[LONGITUDE] = (double) minmea_tocoord(&gps.gpsData.longitude);
 		data_input[GPS_SPEED] = (double) minmea_tofloat(&gps.gpsData.speed) * 0.51; //перевод в м/с из узлов
-		data_input[COURSE] = (double) minmea_tofloat(&gps.gpsData.course);
+		data_input[TRACK] = (double) minmea_tofloat(&gps.gpsData.course);
 		data_input[GPS_VALID] = (double) gps.gpsData.valid;
 
 		data_input[AIR] = data_input[GPS_SPEED];
@@ -1563,7 +1563,7 @@ void loggerUpdateTask(void *argument)
 					(int)(10*logger_data[K_PR_OMEGA_Z]), (int)(100*logger_data[K_INT_OMEGA_Z]), (int)(10*k_pr_Vy),\
 					(int)(data_input[TETA]*10), (int)(data_input[GAMMA]*10), (int)(data_input[PSI]*10),\
 					(int)(data_input[NZ]*1000), (int)(10*logger_data[OMEGA_TURN_ZAD]), (int)(10*logger_data[GAMMA_ZAD]), (int)(data_input[LONGITUDE]*1000000), (int)(data_input[LATITUDE]*1000000),\
-					(int)(data_input[GPS_SPEED]*100), (int)(data_input[COURSE]*10), (int)(data_input[GPS_VALID]), (int)switch_rc.getPulseWidth());
+					(int)(data_input[GPS_SPEED]*100), (int)(data_input[TRACK]*10), (int)(data_input[GPS_VALID]), (int)switch_rc.getPulseWidth());
 		#else
 			#if DEBUG_MODE == BARO_DEBUG
 				sprintf(str, "%d %d %d\n", (int)(data_input[BARO]*100), (int)(logger_data[ALT_FILTERED]*100), (int)(100*data_input[BAROVY]));
