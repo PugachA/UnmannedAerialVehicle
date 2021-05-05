@@ -2,14 +2,16 @@
 
 Nav::Nav() //constructor
 {
-	plane_position.setWpXCoord(0.0);
-	plane_position.setWpYCoord(0.0);
-}
-float Nav::getWpDistance()
-{
 
 }
-float Nav::getWpCourse()
+float Nav::getDistanceToActiveWp()
+{
+	float difX = active_wp.getWpXCoord()-plane_position.getWpXCoord();
+	float difY = active_wp.getWpYCoord()-plane_position.getWpYCoord();
+
+	return sqrt( difX*difX + difY*difY );
+}
+float Nav::getCourseToWp()//переменная текущего курса есть в классе
 {
 
 }

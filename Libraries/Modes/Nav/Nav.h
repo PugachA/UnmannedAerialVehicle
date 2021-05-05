@@ -16,8 +16,8 @@ class Nav
 	Wp plane_position;
 	double plane_course;
 
-	float getWpDistance();
-	float getWpCourse();
+	float getDistanceToActiveWp();
+	float getCourseToWp();
 	void calcXYcoordForWp();
 	
   public:
