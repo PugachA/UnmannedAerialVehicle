@@ -1,10 +1,42 @@
 #include "Wp.h"
 
-Wp::Wp() //constructor
+Wp::Wp(double lat, double lon, double alt) //constructor
 {
-  	
+  	this->wp_lat = lat;
+  	this->wp_lon = lon;
+  	this->wp_alt = alt;
 }
-
-void Wp::func(void)
+void Wp::setWpCoord(double lat, double lon, double alt) //constructor
 {
+  	this->wp_lat = lat;
+  	this->wp_lon = lon;
+  	this->wp_alt = alt;
+}
+void Wp::setWpXCoord(double X)
+{
+	this->wp_x = X;
+}
+double Wp::getWpXCoord()
+{
+	return this->wp_x;
+}
+void Wp::setWpYCoord(double Y)
+{
+	this->wp_y = Y;
+}
+double Wp::getWpYCoord()
+{
+	return this->wp_y;
+}
+void Wp::setWpAsActive()
+{
+
+}
+void Wp::setWpAsHome()
+{
+
+}
+void Wp::setWpAsLast()
+{
+
 }

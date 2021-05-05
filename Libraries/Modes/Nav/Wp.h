@@ -7,11 +7,30 @@
 
 class Wp
 {
-  private:	
+  private:
+	double wp_lat; //deg
+	double wp_lon; //deg
+	double wp_alt; //meters
+
+	double wp_x; //meters
+	double wp_y; //meters
+
+	uint8_t wp_is_active = 0;
+	uint8_t wp_is_home = 0;
+	uint8_t wp_is_last = 0;
 	
   public:
-    Wp(); //constructor
-    void func();
-			
+	Wp(void);
+    Wp(double lat, double lon, double alt); //constructor
+
+    void setWpCoord(double lat, double lon, double alt);
+    void setWpXCoord(double X);
+    double getWpXCoord();
+    void setWpYCoord(double Y);
+    double getWpYCoord();
+
+    void setWpAsActive();
+    void setWpAsHome();
+    void setWpAsLast();
 };
 #endif
