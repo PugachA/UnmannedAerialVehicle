@@ -15,6 +15,39 @@ float Nav::getDistanceToActiveWp()
 //координаты точки отсюда active_wp.getWpXCoord() active_wp.getWpYCoord()
 float Nav::getCourseToWp()
 {
+	double speed_x = 0.0;
+	double speed_y = 0.0;
+	double vect_prod = 0.0;
+	double scalar_prod = 0.0;
+
+	// координаты вектора текущей скорости в ортодромической СК
+	if (this->plane_track <= PI/2)
+	{
+		speed_x = this->plane_abs_speed * sin(this->plane_track);
+		speed_y = this->plane_abs_speed * cos(this->plane_track);
+	}
+	else if ((this->plane_track > PI/2) && (this->plane_track <= PI))
+	{
+		speed_x = this->plane_abs_speed * sin(PI - this->plane_track);
+		speed_y = -this->plane_abs_speed * cos(PI - this->plane_track);
+	}
+	else if ((this->plane_track > PI) && (this->plane_track <= 3*PI/2))
+	{
+		speed_x = -this->plane_abs_speed * sin(this->plane_track - PI);
+		speed_y = -this->plane_abs_speed * cos(this->plane_track - PI);
+	}
+	else if ((this->plane_track > 3*PI/2) && (this->plane_track <= 2*PI))
+	{
+		speed_x = -this->plane_abs_speed * sin(2*PI - this->plane_track);
+		speed_y = this->plane_abs_speed * cos(2*PI - this->plane_track);
+	}
+
+	vect_prod = speed_x * active_wp.getWpYCoord() - speed_y * active_wp.getWpXCoord(); //вертикальная компонента векторного произведения вектора на цель и скорости
+	scalar_prod = speed_x * active_wp.getWpXCoord() + speed_y * active_wp.getWpYCoord(); // скалярное произведение векторов в плоскости местного горизонта
+
+	//расчет угла на цель через модуль векторного произведения, для однозначного определения координатной четверти исп sin и cos (векторное и скалярное пр)
+
+
 	return 0.0;
 }
 void Nav::updateXYcoordForWp()
