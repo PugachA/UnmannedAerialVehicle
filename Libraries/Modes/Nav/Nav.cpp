@@ -27,7 +27,7 @@ void Nav::updateXYcoordForWp()
 }
 void Nav::updateActiveWp(Wp &wp)
 {
-	if(this->active_wp.getWpLat() != wp.getWpLat() && this->active_wp.getWpLon() != wp.getWpLon() )
+	if(this->active_wp != wp)
 		this->active_wp = wp;
 	updateXYcoordForWp();
 }
