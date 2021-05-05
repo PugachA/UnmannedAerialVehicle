@@ -412,7 +412,7 @@ void stabOmegaTgtCalc(void)
 	omega_target[Z] = (0.234375*rc_input[ELEV] - 350.0625);
 }
 
-void stabOmegaUpdate(uint8_t tune_mode)
+void stabOmegaUpdate()
 {
 	//------------------Regulators INIT------------------------
 	double int_lim_omega_z = 1000, int_lim_omega_x = 1000, int_lim_omega_y = 1000;
@@ -420,22 +420,6 @@ void stabOmegaUpdate(uint8_t tune_mode)
 	static PIReg omega_x_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega_x, speed_ref_points, k_pr_omega_x_points, k_int_omega_x_points, num_of_coeff_ref_points);
 	static PIReg omega_y_PI_reg(k_pr_omega_y, k_int_omega_y, 0.01, int_lim_omega_y, speed_ref_points, k_pr_omega_y_points, k_int_omega_y_points, num_of_coeff_ref_points);
 	static PIReg omega_z_PI_reg(k_pr_omega_z, k_int_omega_z, 0.01, int_lim_omega_z, speed_ref_points, k_pr_omega_z_points, k_int_omega_z_points, num_of_coeff_ref_points);
-	//---------------------------------------------------------
-
-	//----------------------Coeff Tune-------------------------
-	/*if(tune_mode != TUNE_OFF)
-	{
-		if(tune_mode == TUNE_K_P)
-		{
-			k_pr_omega_x = ((double)rc_input[SLIDER] - 979.0)/100.0;
-			omega_x_PI_reg.setGainParams(k_pr_omega_x, k_int_omega_x);
-		}
-		if(tune_mode == TUNE_K_I)
-		{
-			k_int_omega_x = ((double)rc_input[SLIDER] - 979.0)/100.0;;
-			omega_x_PI_reg.setGainParams(k_pr_omega_x, k_int_omega_x);
-		}
-	}*/
 	//---------------------------------------------------------
 
 	if(integral_reset_flag)
@@ -659,7 +643,7 @@ void updateModeState()
 		case DIRECT: directUpdate(); break;
 		case OMEGA_STAB: {
 				stabOmegaTgtCalc();
-				stabOmegaUpdate(TUNE_OFF);
+				stabOmegaUpdate();
 			}break;
 		case COMMAND: {
 				commandModeUpdate( (-(-0.1173*rc_input[AIL1] + 176.0097)), (0.01953125*rc_input[ELEV] - 29.3164062) );
