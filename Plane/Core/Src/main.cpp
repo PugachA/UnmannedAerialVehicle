@@ -547,7 +547,7 @@ void commandModeUpdate(double omega_turn_tgt, double vy_tgt)
 
 void navModeUpdate()// для апдейт нава надо будет сделать свой поток сделаю позже
 {
-	static uint8_t wp_num = 0;
+	static uint8_t wp_num = 0; // надо обязательно где-то это обнулить иначе можно будет только 1 раз по маршруту полететь
 
 	navigator.updatePlanePos(data_input[LATITUDE], data_input[LONGITUDE], data_input[BARO], data_input[COURSE]);
 	navigator.updateActiveWp(way_point[wp_num]);

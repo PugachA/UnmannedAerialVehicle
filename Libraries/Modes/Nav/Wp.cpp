@@ -9,7 +9,7 @@ Wp::Wp(double lat, double lon, double alt) //constructor
   	this->wp_lon = lon;
   	this->wp_alt = alt;
 }
-void Wp::setWpCoord(double lat, double lon, double alt) //constructor
+void Wp::setWpCoord(double lat, double lon, double alt)
 {
   	this->wp_lat = lat;
   	this->wp_lon = lon;
