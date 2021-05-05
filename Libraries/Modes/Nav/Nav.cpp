@@ -15,7 +15,7 @@ float Nav::getDistanceToActiveWp()
 //координаты точки отсюда active_wp.getWpXCoord() active_wp.getWpYCoord()
 float Nav::getCourseToWp()
 {
-
+	return 0.0;
 }
 void Nav::updateXYcoordForWp()
 {
@@ -25,7 +25,7 @@ void Nav::updateXYcoordForWp()
 	active_wp.setWpXCoord( difLon*DEG2RAD*LON2X );
 	active_wp.setWpYCoord( difLat*DEG2RAD*LAT2Y );
 }
-void Nav::updateActiveWp(Wp &wp)
+void Nav::updateActiveWp(Wp wp)
 {
 	if(this->active_wp != wp)
 		this->active_wp = wp;

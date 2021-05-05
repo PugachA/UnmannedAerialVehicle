@@ -4,7 +4,6 @@
 #include "stm32f4xx_hal.h"
 #include "math.h"
 #include "Wp.h"
-#include "../../Gps/Gps.h"
 
 //#include "cmsis_os.h"
 
@@ -27,7 +26,7 @@ class Nav
 	Nav(void);
     float getDistanceToActiveWp();
     float getOmegaTurnToWp();
-    void updateActiveWp(Wp &wp);
+    void updateActiveWp(Wp wp);
     void updatePlanePos(double lat, double lon, double alt, double course);
 			
 };
