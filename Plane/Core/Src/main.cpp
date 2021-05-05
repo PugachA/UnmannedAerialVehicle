@@ -314,8 +314,6 @@ double data_input[SENSOR_ARRAY_SIZE] = {0.0};
 double logger_data[LOG_ARRAY_SIZE] = {0.0};
 double omega_target[OMEGA_ARRAY_SIZE] = {0.0};
 
-uint32_t timeNowMs = 0;
-
 char str[150] = "\0";
 
 uint8_t current_mode = 0;
@@ -1643,7 +1641,6 @@ void loggerUpdateTask(void *argument)
 				sprintf(str, "beta=%d\n", (int)data_input[BETA]);
 			#endif
 		#endif
-		//sprintf(str, "%d\n", timeNowMs);
 		HAL_UART_Transmit_IT(&huart2, (uint8_t*)str, sizeof(str));
 		osDelay(100);
 	}
