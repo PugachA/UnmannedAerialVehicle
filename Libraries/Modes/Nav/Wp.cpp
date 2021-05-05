@@ -1,5 +1,8 @@
 #include "Wp.h"
+Wp::Wp(void)
+{
 
+}
 Wp::Wp(double lat, double lon, double alt) //constructor
 {
   	this->wp_lat = lat;

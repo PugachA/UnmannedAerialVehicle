@@ -20,12 +20,12 @@ class Nav
 	Wp plane_position;
 	double plane_course;
 
-	float getDistanceToActiveWp();
 	float getCourseToWp();
 	void updateXYcoordForWp();
 	
   public:
-    Nav(); //constructor
+	Nav(void);
+    float getDistanceToActiveWp();
     float getOmegaTurnToWp();
     void updateActiveWp(Wp &wp);
     void updatePlanePos(double lat, double lon, double alt, double course);

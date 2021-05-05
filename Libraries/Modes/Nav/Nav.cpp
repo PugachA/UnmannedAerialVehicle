@@ -1,5 +1,4 @@
 #include "Nav.h"
-
 Nav::Nav() //constructor
 {
 
