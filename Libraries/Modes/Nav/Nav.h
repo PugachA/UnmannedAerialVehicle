@@ -12,13 +12,17 @@ class Nav
 {
   private:
 
+	const double DEG2RAD = 0.0174533;
+	const double LAT2Y = 6363535;
+	const double LON2X = 3580000;
+
 	Wp active_wp;
 	Wp plane_position;
 	double plane_course;
 
 	float getDistanceToActiveWp();
 	float getCourseToWp();
-	void calcXYcoordForWp();
+	void updateXYcoordForWp();
 	
   public:
     Nav(); //constructor

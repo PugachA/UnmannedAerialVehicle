@@ -11,14 +11,20 @@ float Nav::getDistanceToActiveWp()
 
 	return sqrt( difX*difX + difY*difY );
 }
-float Nav::getCourseToWp()//переменная текущего курса есть в классе
+//переменная текущего курса есть в классе: this->plane_course
+//координаты самолета брать отсюда this->plane_position.get...
+//координаты точки отсюда active_wp.getWpXCoord() active_wp.getWpYCoord()
+float Nav::getCourseToWp()
 {
 
 }
-void Nav::calcXYcoordForWp()
+void Nav::updateXYcoordForWp()
 {
-	active_wp.setWpXCoord(active_wp.getWpLon()*0.05); //хз как будет делаться перевод в линейные написал заглушку
-	active_wp.setWpYCoord(active_wp.getWpLat()*0.05); //хз как будет делаться перевод в линейные написал заглушку
+	float difLat = active_wp.getWpLat()-plane_position.getWpLat();
+	float difLon = active_wp.getWpLon()-plane_position.getWpLon();
+
+	active_wp.setWpXCoord( difLon*DEG2RAD*LON2X ); //хз как будет делаться перевод в линейные написал заглушку
+	active_wp.setWpYCoord( difLat*DEG2RAD*LAT2Y ); //хз как будет делаться перевод в линейные написал заглушку
 }
 void Nav::updateActiveWp(Wp &wp)
 {
