@@ -291,6 +291,10 @@ void IcHandlerTim4(TIM_HandleTypeDef *htim)
 //GPS-----------------------------------------------------------
 Gps gps = Gps(&huart3, GPIOE, GPIO_PIN_7);
 
+//Route---------------------------------------------------------
+Nav navigator;
+Wp way_point[5];
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	if(huart == &huart3)
@@ -346,6 +350,15 @@ void actuatorsUpdateTask(void *argument);
 void baroUpdateTask(void *argument);
 
 /* USER CODE BEGIN PFP */
+void setRoute()
+{
+	way_point[0].setWpCoord(0, 0, 0);
+	way_point[1].setWpCoord(0, 0, 0);
+	way_point[2].setWpCoord(0, 0, 0);
+	way_point[3].setWpCoord(0, 0, 0);
+	way_point[4].setWpCoord(0, 0, 0);
+}
+
 void flapsUpdate(uint8_t activate_flaps)
 {
 	int flaperon_delta_limit = 340; // 2/6 from the whole range
@@ -411,7 +424,6 @@ void stabOmegaTgtCalc(void)
 	omega_target[Y] = -(0.234375*rc_input[RUD] - 351.5625);
 	omega_target[Z] = (0.234375*rc_input[ELEV] - 350.0625);
 }
-
 void stabOmegaUpdate()
 {
 	//------------------Regulators INIT------------------------
@@ -531,13 +543,17 @@ void commandModeUpdate(double omega_turn_tgt, double vy_tgt)
 	//---------------------------------------------------------
 }
 
+void navModeUpdate()
+{
+
+}
+
 void setMode()
 {
 	static uint8_t prev_mode = 0;
 
 	if(prev_mode != current_mode)
 	{
-		//beeper->longBeep();
 		g_activate_flaps = false;
 		integral_reset_flag = true;
 	}
