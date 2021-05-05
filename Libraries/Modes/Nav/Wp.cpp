@@ -12,6 +12,14 @@ void Wp::setWpCoord(double lat, double lon, double alt) //constructor
   	this->wp_lon = lon;
   	this->wp_alt = alt;
 }
+void Wp::setWpAsHome()
+{
+	wp_is_home = 1;
+}
+void Wp::setWpAsLast()
+{
+	wp_is_last = 1;
+}
 void Wp::setWpXCoord(double X)
 {
 	this->wp_x = X;
@@ -27,14 +35,6 @@ void Wp::setWpYCoord(double Y)
 double Wp::getWpYCoord()
 {
 	return this->wp_y;
-}
-void Wp::setWpAsHome()
-{
-
-}
-void Wp::setWpAsLast()
-{
-
 }
 double Wp::getWpLat()
 {
