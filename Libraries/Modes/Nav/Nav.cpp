@@ -19,6 +19,8 @@ float Nav::getCourseToWp()
 }
 void Nav::updateXYcoordForWp()
 {
+	//Перевод в ортодромические координаты, инициализация СК в точке, где находится самолет
+
 	float difLat = active_wp.getWpLat()-plane_position.getWpLat();
 	float difLon = active_wp.getWpLon()-plane_position.getWpLon();
 
@@ -35,8 +37,9 @@ float Nav::getOmegaTurnToWp()
 {
 	return 0.0;
 }
-void Nav::updatePlanePos(double lat, double lon, double alt, double track)
+void Nav::updatePlanePos(double lat, double lon, double alt, double track, double speed)
 {
 	this->plane_position.setWpCoord(lat, lon, alt);
 	this->plane_track = track;
+	this->plane_abs_speed = speed;
 }

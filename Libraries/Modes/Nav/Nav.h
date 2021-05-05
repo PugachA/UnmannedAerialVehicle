@@ -18,6 +18,7 @@ class Nav
 	Wp active_wp;
 	Wp plane_position;
 	double plane_track;
+	double plane_abs_speed;
 
 	float getCourseToWp();
 	void updateXYcoordForWp();
@@ -27,7 +28,7 @@ class Nav
     float getDistanceToActiveWp();
     float getOmegaTurnToWp();
     void updateActiveWp(Wp wp);
-    void updatePlanePos(double lat, double lon, double alt, double course);
+    void updatePlanePos(double lat, double lon, double alt, double course, double speed);
 			
 };
 #endif
