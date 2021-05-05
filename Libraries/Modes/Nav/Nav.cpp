@@ -22,16 +22,18 @@ void Nav::updateXYcoordForWp()
 	float difLat = active_wp.getWpLat()-plane_position.getWpLat();
 	float difLon = active_wp.getWpLon()-plane_position.getWpLon();
 
-	active_wp.setWpXCoord( difLon*DEG2RAD*LON2X ); //хз как будет делаться перевод в линейные написал заглушку
-	active_wp.setWpYCoord( difLat*DEG2RAD*LAT2Y ); //хз как будет делаться перевод в линейные написал заглушку
+	active_wp.setWpXCoord( difLon*DEG2RAD*LON2X );
+	active_wp.setWpYCoord( difLat*DEG2RAD*LAT2Y );
 }
 void Nav::updateActiveWp(Wp &wp)
 {
-	this->active_wp = wp;
+	if(this->active_wp.getWpLat() != wp.getWpLat() && this->active_wp.getWpLon() != wp.getWpLon() )
+		this->active_wp = wp;
+	updateXYcoordForWp();
 }
 float Nav::getOmegaTurnToWp()
 {
-
+	return 0.0;
 }
 void Nav::updatePlanePos(double lat, double lon, double alt, double course)
 {
