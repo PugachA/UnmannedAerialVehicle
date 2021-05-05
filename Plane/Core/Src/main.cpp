@@ -429,9 +429,7 @@ void stabOmegaUpdate()
 		omega_z_PI_reg.integralReset();
 		integral_reset_flag = 0;
 	}
-	//omega_zad_x = -(0.234375*rc_input[AIL2] - 351.5625);
-	//omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
-	//omega_zad_z = (0.234375*rc_input[ELEV] - 350.0625);
+
 	logger_data[OMEGA_X_ZAD] = omega_target[X];
 	logger_data[OMEGA_Y_ZAD] = omega_target[Y];
 	logger_data[OMEGA_Z_ZAD] = omega_target[Z];
