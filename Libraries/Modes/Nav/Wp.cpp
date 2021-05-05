@@ -47,3 +47,7 @@ double Wp::getWpLon()
 {
 	return this->wp_lon;
 }
+uint8_t Wp::isWpLast()
+{
+	return this->wp_is_last;
+}
