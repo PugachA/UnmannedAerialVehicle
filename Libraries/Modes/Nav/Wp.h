@@ -24,12 +24,13 @@ class Wp
     Wp(double lat, double lon, double alt); //constructor
 
     void setWpCoord(double lat, double lon, double alt);
+    double getWpLat();
+    double getWpLon();
     void setWpXCoord(double X);
     double getWpXCoord();
     void setWpYCoord(double Y);
     double getWpYCoord();
 
-    void setWpAsActive();
     void setWpAsHome();
     void setWpAsLast();
 };

@@ -28,10 +28,6 @@ double Wp::getWpYCoord()
 {
 	return this->wp_y;
 }
-void Wp::setWpAsActive()
-{
-
-}
 void Wp::setWpAsHome()
 {
 
@@ -39,4 +35,12 @@ void Wp::setWpAsHome()
 void Wp::setWpAsLast()
 {
 
+}
+double Wp::getWpLat()
+{
+	return this->wp_lat;
+}
+double Wp::getWpLon()
+{
+	return this->wp_lon;
 }
