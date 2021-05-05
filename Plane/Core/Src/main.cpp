@@ -468,9 +468,9 @@ void stabOmegaUpdate()
 void commandModeUpdate(double omega_turn_tgt, double vy_tgt)
 {
 	//------------------Local vars INIT------------------------
-	double rad2deg = 57.2958;
-	double deg2rad = 1/rad2deg;
-	double g = 9.81;
+	const double RAD2DEG = 57.2958;
+	const double DEG2RAD = 1/RAD2DEG;
+	const double g = 9.81;
 
 	//double omega_turn_tgt = 0.0;
 	double gamma_tgt = 0.0;
@@ -512,20 +512,20 @@ void commandModeUpdate(double omega_turn_tgt, double vy_tgt)
 	}
 	logger_data[OMEGA_TURN_ZAD] = omega_turn_tgt;
 
-	gamma_tgt = -atan((data_input[AIR]*omega_turn_tgt*deg2rad)/g);
-	gamma_tgt = gamma_tgt*rad2deg;
+	gamma_tgt = -atan((data_input[AIR]*omega_turn_tgt*DEG2RAD)/g);
+	gamma_tgt = gamma_tgt*RAD2DEG;
 	logger_data[GAMMA_ZAD] = gamma_tgt;
 	//---------------------------------------------------------
 
 	//---------------Omega coord turn calc---------------------
 	omega_x_roll_tgt = k_pr_gamma*(gamma_tgt - data_input[GAMMA]);
-	omega_x_turn_tgt = omega_turn_tgt*sin(data_input[TETA]*deg2rad);
+	omega_x_turn_tgt = omega_turn_tgt*sin(data_input[TETA]*DEG2RAD);
 	omega_target[X] = omega_x_roll_tgt + omega_x_turn_tgt; //deg/s
 
-	omega_y_turn_tgt = omega_turn_tgt*cos(data_input[TETA]*deg2rad)*cos(data_input[GAMMA]*deg2rad);
+	omega_y_turn_tgt = omega_turn_tgt*cos(data_input[TETA]*DEG2RAD)*cos(data_input[GAMMA]*DEG2RAD);
 	omega_target[Y] = omega_y_turn_tgt; //deg/s
 
-	omega_z_turn_tgt = omega_turn_tgt*cos(data_input[TETA]*deg2rad)*sin((-data_input[GAMMA]*deg2rad));
+	omega_z_turn_tgt = omega_turn_tgt*cos(data_input[TETA]*DEG2RAD)*sin((-data_input[GAMMA]*DEG2RAD));
 	omega_z_vy_tgt = vy_PI_reg.getOutput();
 	omega_target[Z] = omega_z_vy_tgt + omega_z_turn_tgt; //deg/s
 	//---------------------------------------------------------
