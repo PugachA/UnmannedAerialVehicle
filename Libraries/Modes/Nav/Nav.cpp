@@ -35,8 +35,8 @@ float Nav::getOmegaTurnToWp()
 {
 	return 0.0;
 }
-void Nav::updatePlanePos(double lat, double lon, double alt, double course)
+void Nav::updatePlanePos(double lat, double lon, double alt, double track)
 {
 	this->plane_position.setWpCoord(lat, lon, alt);
-	this->plane_course = course;
+	this->plane_track = track;
 }

@@ -17,7 +17,7 @@ class Nav
 
 	Wp active_wp;
 	Wp plane_position;
-	double plane_course;
+	double plane_track;
 
 	float getCourseToWp();
 	void updateXYcoordForWp();
