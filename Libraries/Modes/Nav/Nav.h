@@ -15,7 +15,7 @@ class Nav
 
 	float getWpDistance();
 	float getWpCourse();
-	void calcWpXYcoord();
+	void calcXYcoordForWp();
 	
 
 
