@@ -354,9 +354,12 @@ void baroUpdateTask(void *argument);
 void setRoute()
 {
 	way_point[0].setWpCoord(0, 0, 0);
+	way_point[0].setWpAsHome();
+
 	way_point[1].setWpCoord(0, 0, 0);
 	way_point[2].setWpCoord(0, 0, 0);
 	way_point[3].setWpCoord(0, 0, 0);
+
 	way_point[4].setWpCoord(0, 0, 0);
 	way_point[4].setWpAsLast();
 }
@@ -547,7 +550,7 @@ void commandModeUpdate(double omega_turn_tgt, double vy_tgt)
 
 void navModeUpdate()// для апдейт нава надо будет сделать свой поток сделаю позже
 {
-	static uint8_t wp_num = 0; // надо обязательно где-то это обнулить иначе можно будет только 1 раз по маршруту полететь
+	static uint8_t wp_num = 1; // нулевая точка - это дом, маршрут начинается с первой точки
 
 	navigator.updatePlanePos(data_input[LATITUDE], data_input[LONGITUDE], data_input[BARO], data_input[TRACK], data_input[GPS_SPEED]);
 	navigator.updateActiveWp(way_point[wp_num]);
@@ -555,11 +558,17 @@ void navModeUpdate()// для апдейт нава надо будет сдел
 	omega_target[OMEGA_TURN_FROM_NAV] = navigator.getOmegaTurnToWp();
 
 	if( navigator.getDistanceToActiveWp() <= 10 )
-		if( way_point[wp_num].isWpLast() == 0 )
-			wp_num++;
-		//else чет пока не придумал что если точка последняя
-
-
+	{
+		if( way_point[wp_num].isHome() == 0 )
+			if( way_point[wp_num].isLast() == 0 )
+				wp_num++;
+			else
+				wp_num = 0; // в качестве активной точки устанавлиается дом
+		else
+		{
+			wp_num = 1; // в качестве активной точки устанавлиается 1й ппм
+		}
+	}
 }
 
 void setMode()
