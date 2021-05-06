@@ -54,19 +54,21 @@ float Nav::getDeltaPsiToWp()
 	{
 		d_psi = asin(vect_prod / (this->plane_abs_speed * abs_dist_to_wp));
 	}
-	else if ((vect_prod > 0) && (scalar_prod < 0))
-	{
-		d_psi = PI - asin(vect_prod / (this->plane_abs_speed * abs_dist_to_wp));
-	}
-	else if ((vect_prod < 0) && (scalar_prod < 0))
-	{
-		d_psi = -PI - asin(vect_prod / (this->plane_abs_speed * abs_dist_to_wp));
-	}
 	else
-	if ((vect_prod < 0) && (scalar_prod > 0))
-	{
-		d_psi = asin(vect_prod / (this->plane_abs_speed * abs_dist_to_wp));
-	}
+		if ((vect_prod > 0) && (scalar_prod < 0))
+		{
+			d_psi = PI - asin(vect_prod / (this->plane_abs_speed * abs_dist_to_wp));
+		}
+		else
+			if ((vect_prod < 0) && (scalar_prod < 0))
+			{
+				d_psi = -PI - asin(vect_prod / (this->plane_abs_speed * abs_dist_to_wp));
+			}
+			else
+				if ((vect_prod < 0) && (scalar_prod > 0))
+				{
+					d_psi = asin(vect_prod / (this->plane_abs_speed * abs_dist_to_wp));
+				}
 
 	return (float)(d_psi*RAD2DEG); //функция возвращает разницу между текущим путевым углом и направлением на цель, в градусах от -180 до +180;
 }
