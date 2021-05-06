@@ -1,7 +1,7 @@
 #include "Nav.h"
 Nav::Nav() //constructor
 {
-
+	k_omega_turn = 0.3;
 }
 float Nav::getDistanceToActiveWp()
 {
@@ -88,8 +88,9 @@ void Nav::updateActiveWp(Wp wp)
 }
 float Nav::getOmegaTurnToWp()
 {
+	float d_psi = getDeltaPsiToWp();
 
-	return 0.0;
+	return (k_omega_turn * d_psi); //deg/s
 }
 void Nav::updatePlanePos(double lat, double lon, double alt, double track, double speed)
 {
