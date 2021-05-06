@@ -68,7 +68,7 @@ float Nav::getDeltaPsiToWp()
 		d_psi = asin(vect_prod / (this->plane_abs_speed * abs_dist_to_wp));
 	}
 
-	return (d_psi*RAD2DEG); //функция возвращает разницу между текущим путевым углом и направлением на цель, в градусах от -180 до +180;
+	return (float)(d_psi*RAD2DEG); //функция возвращает разницу между текущим путевым углом и направлением на цель, в градусах от -180 до +180;
 }
 void Nav::updateXYcoordForWp()
 {
@@ -88,6 +88,7 @@ void Nav::updateActiveWp(Wp wp)
 }
 float Nav::getOmegaTurnToWp()
 {
+
 	return 0.0;
 }
 void Nav::updatePlanePos(double lat, double lon, double alt, double track, double speed)
