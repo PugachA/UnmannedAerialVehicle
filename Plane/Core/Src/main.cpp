@@ -1654,13 +1654,17 @@ void baroUpdateTask(void *argument)
 /* USER CODE END Header_navUpdateTask */
 void navUpdateTask(void *argument)
 {
-  /* USER CODE BEGIN navUpdateTask */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END navUpdateTask */
+	/* USER CODE BEGIN navUpdateTask */
+	setRoute();
+	/* Infinite loop */
+	for(;;)
+	{
+		if( current_mode == NAV )
+			navModeUpdate();
+
+		osDelay(100);
+	}
+	/* USER CODE END navUpdateTask */
 }
 
  /**
