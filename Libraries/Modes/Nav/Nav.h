@@ -22,7 +22,7 @@ class Nav
 	double plane_track;
 	double plane_abs_speed;
 
-	double k_omega_turn;
+	float k_omega_turn;
 
 	float getDeltaPsiToWp();
 	void updateXYcoordForWp();
