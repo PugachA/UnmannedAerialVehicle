@@ -298,7 +298,7 @@ Gps gps = Gps(&huart3, GPIOE, GPIO_PIN_7);
 
 //Route---------------------------------------------------------
 Nav navigator;
-Wp way_point[5];
+Wp waypoint[5];
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
@@ -358,15 +358,15 @@ void navUpdateTask(void *argument);
 /* USER CODE BEGIN PFP */
 void setRoute()
 {
-	way_point[0].setWpCoord(55.582540, 38.079028, 15);
-	way_point[0].setWpAsHome();
+	waypoint[0].setWpCoord(55.582540, 38.079028, 15);
+	waypoint[0].setWpAsHome();
 
-	way_point[1].setWpCoord(55.581607, 38.078521, 15);
-	way_point[2].setWpCoord(55.580585, 38.080667, 15);
-	way_point[3].setWpCoord(55.581610, 38.082089, 15);
+	waypoint[1].setWpCoord(55.581607, 38.078521, 15);
+	waypoint[2].setWpCoord(55.580585, 38.080667, 15);
+	waypoint[3].setWpCoord(55.581610, 38.082089, 15);
 
-	way_point[4].setWpCoord(55.583225, 38.082355, 15);
-	way_point[4].setWpAsLast();
+	waypoint[4].setWpCoord(55.583225, 38.082355, 15);
+	waypoint[4].setWpAsLast();
 }
 
 void flapsUpdate(uint8_t activate_flaps)
@@ -558,14 +558,14 @@ void navModeUpdate()// для апдейт нава надо будет сдел
 	static uint8_t wp_num = 1; // нулевая точка - это дом, маршрут начинается с первой точки
 
 	navigator.updatePlanePos(data_input[LATITUDE], data_input[LONGITUDE], data_input[BARO], data_input[TRACK], data_input[GPS_SPEED]);
-	navigator.updateActiveWp(way_point[wp_num]);
+	navigator.updateActiveWp(waypoint[wp_num]);
 
 	omega_target[OMEGA_TURN_FROM_NAV] = navigator.getOmegaTurnToWp();
 
 	if( navigator.getDistanceToActiveWp() <= 10 )
 	{
-		if( way_point[wp_num].isHome() == 0 )
-			if( way_point[wp_num].isLast() == 0 )
+		if( waypoint[wp_num].isHome() == 0 )
+			if( waypoint[wp_num].isLast() == 0 )
 				wp_num++;
 			else
 				wp_num = 0; // в качестве активной точки устанавлиается дом
