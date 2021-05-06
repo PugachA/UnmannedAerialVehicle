@@ -200,7 +200,7 @@ double k_int_omega_y = 6.0;
 
 
 double k_pr_Vy = 8.5;
-double k_int_Vy = 0.0;
+double k_int_Vy = 1.5;
 
 const uint8_t num_of_coeff_ref_points = 5;
 
@@ -513,6 +513,12 @@ void commandModeUpdate(double omega_turn_tgt, double vy_tgt)
 	static PIReg vy_PI_reg(k_pr_Vy, k_int_Vy, 0.01, int_lim_Vy);
 
 	//---------------------------------------------------------
+
+	if(integral_reset_flag)
+	{
+		vy_PI_reg.integralReset();
+		integral_reset_flag = 0;
+	}
 
 	//---------------Vertical speed stab-----------------------
 	if (abs(vy_tgt) < 0.2) //to set zero when the stick is in neutral
