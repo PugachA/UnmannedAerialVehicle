@@ -627,7 +627,8 @@ void updateModeState()
 				directUpdate();
 			}break;
 		case NAV: {
-				commandModeUpdate( omega_target[OMEGA_TURN_FROM_NAV], 0.0 );
+				commandModeUpdate( omega_target[OMEGA_TURN_FROM_NAV], (0.01953125*rc_input[ELEV] - 29.3164062) );
+				stabOmegaUpdate();
 			}break;
 	}
 }
