@@ -34,7 +34,8 @@ class Wp
 
     void setWpAsHome();
     void setWpAsLast();
-    uint8_t isWpLast();
+    uint8_t isLast();
+    uint8_t isHome();
     bool operator != (Wp wp1);
 };
 #endif

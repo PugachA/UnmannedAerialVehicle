@@ -47,9 +47,13 @@ double Wp::getWpLon()
 {
 	return this->wp_lon;
 }
-uint8_t Wp::isWpLast()
+uint8_t Wp::isLast()
 {
 	return this->wp_is_last;
+}
+uint8_t Wp::isHome()
+{
+	return this->wp_is_home;
 }
 bool Wp::operator != (Wp wp1)
 {
