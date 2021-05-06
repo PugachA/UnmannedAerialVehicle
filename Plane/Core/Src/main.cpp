@@ -349,6 +349,7 @@ void radioInputUpdateTask(void *argument);
 void loggerUpdateTask(void *argument);
 void actuatorsUpdateTask(void *argument);
 void baroUpdateTask(void *argument);
+void navUpdateTask(void *argument);
 
 /* USER CODE BEGIN PFP */
 void setRoute()
@@ -744,6 +745,9 @@ int main(void)
 
   /* creation of baroUpdate */
   baroUpdateHandle = osThreadNew(baroUpdateTask, NULL, &baroUpdate_attributes);
+
+  /* creation of navUpdate */
+  navUpdateHandle = osThreadNew(navUpdateTask, NULL, &navUpdate_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -1639,6 +1643,24 @@ void baroUpdateTask(void *argument)
 		osDelay(2);// в функции вычисления высоты 2 задержки по 9 мС -> цикличность вызоыва каждые 20 мС
 	}
   /* USER CODE END baroUpdateTask */
+}
+
+/* USER CODE BEGIN Header_navUpdateTask */
+/**
+* @brief Function implementing the navUpdate thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_navUpdateTask */
+void navUpdateTask(void *argument)
+{
+  /* USER CODE BEGIN navUpdateTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END navUpdateTask */
 }
 
  /**
