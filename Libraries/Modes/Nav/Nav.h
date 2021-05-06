@@ -12,6 +12,7 @@ class Nav
   private:
 
 	const double DEG2RAD = 0.0174533;
+	const double RAD2DEG = 1/DEG2RAD;
 	const double LAT2Y = 6363535;
 	const double LON2X = 3580000;
 	const double PI = 3.14159;
@@ -21,7 +22,7 @@ class Nav
 	double plane_track;
 	double plane_abs_speed;
 
-	float getCourseToWp();
+	float getDeltaPsiToWp();
 	void updateXYcoordForWp();
 	
   public:
