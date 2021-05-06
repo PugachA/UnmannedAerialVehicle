@@ -178,6 +178,10 @@ extern const osThreadAttr_t loggerUpdate_attributes;
 extern osThreadId_t baroUpdateHandle;
 extern const osThreadAttr_t baroUpdate_attributes;
 
+/* Definitions for navUpdate */
+extern osThreadId_t navUpdateHandle;
+extern const osThreadAttr_t navUpdate_attributes;
+
 //-------------------My Global VARs--------------------------
 const uint16_t WHAIT_FOR_RADIO_MS = 5000;
 
@@ -593,7 +597,7 @@ void setMode()
 		}
 		else
 		{
-			if(switch_rc.isInRange(1100, 1300))
+			if(switch_rc.isInRange(1100, 1300) || switch_rc.isInRange(1500, 1600))
 				current_mode = OMEGA_STAB;
 			if(switch_rc.isInRange(1400, 1500))
 				current_mode = COMMAND;
