@@ -354,14 +354,14 @@ void navUpdateTask(void *argument);
 /* USER CODE BEGIN PFP */
 void setRoute()
 {
-	way_point[0].setWpCoord(0, 0, 0);
+	way_point[0].setWpCoord(55.582540, 38.079028, 15);
 	way_point[0].setWpAsHome();
 
-	way_point[1].setWpCoord(0, 0, 0);
-	way_point[2].setWpCoord(0, 0, 0);
-	way_point[3].setWpCoord(0, 0, 0);
+	way_point[1].setWpCoord(55.581607, 38.078521, 15);
+	way_point[2].setWpCoord(55.580585, 38.080667, 15);
+	way_point[3].setWpCoord(55.581610, 38.082089, 15);
 
-	way_point[4].setWpCoord(0, 0, 0);
+	way_point[4].setWpCoord(55.583225, 38.082355, 15);
 	way_point[4].setWpAsLast();
 }
 
