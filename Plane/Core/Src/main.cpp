@@ -625,7 +625,7 @@ void updateModeState()
 				stabOmegaUpdate();
 			}break;
 		case COMMAND: {
-				commandModeUpdate( (-(-0.1173*rc_input[AIL1] + 176.0097)), (0.01953125*rc_input[ELEV] - 29.3164062) );
+				commandModeUpdate( (-(-0.1173*(double)rc_input[AIL1] + 176.0097)), (0.01953125*(double)rc_input[ELEV] - 29.3164062) );
 				stabOmegaUpdate();
 			}break;
 		case DIRECT_FLAPS: {
@@ -633,7 +633,7 @@ void updateModeState()
 				directUpdate();
 			}break;
 		case NAV: {
-				commandModeUpdate( omega_target[OMEGA_TURN_FROM_NAV], (0.01953125*rc_input[ELEV] - 29.3164062) );
+				commandModeUpdate( omega_target[OMEGA_TURN_FROM_NAV], (0.01953125*(double)rc_input[ELEV] - 29.3164062) );
 				stabOmegaUpdate();
 			}break;
 	}
@@ -1509,13 +1509,13 @@ void sensorsUpdateTask(void *argument)
 		//data_input[AIR] = ms4525do.getAirSpeed();
 		//data_input[BETA] = p3002.getAngle();
 
-		data_input[LATITUDE] = (double) minmea_tocoord(&gps.gpsData.latitude);
-		data_input[LONGITUDE] = (double) minmea_tocoord(&gps.gpsData.longitude);
-		data_input[GPS_SPEED] = (double) minmea_tofloat(&gps.gpsData.speed) * 0.51; //перевод в м/с из узлов
-		data_input[TRACK] = (double) minmea_tofloat(&gps.gpsData.course);
-		data_input[GPS_VALID] = (double) gps.gpsData.valid;
-
-		data_input[AIR] = data_input[GPS_SPEED];
+		if( gps.gpsData.valid )
+		{
+			data_input[LATITUDE] = (double) minmea_tocoord(&gps.gpsData.latitude);
+			data_input[LONGITUDE] = (double) minmea_tocoord(&gps.gpsData.longitude);
+			data_input[GPS_SPEED] = (double) minmea_tofloat(&gps.gpsData.speed) * 0.51; //перевод в м/с из узлов
+			data_input[TRACK] = (double) minmea_tofloat(&gps.gpsData.course);
+		}
 
 		osDelay(10);//ещё 5 мС внутри либы airspeed
 	}
