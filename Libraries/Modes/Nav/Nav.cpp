@@ -97,6 +97,6 @@ float Nav::getOmegaTurnToWp()
 void Nav::updatePlanePos(double lat, double lon, double alt, double track, double speed)
 {
 	this->plane_position.setWpCoord(lat, lon, alt);
-	this->plane_track = track;
+	this->plane_track = track*DEG2RAD;
 	this->plane_abs_speed = speed;
 }
