@@ -328,6 +328,7 @@ char str[150] = "\0";
 
 uint8_t current_mode = 0;
 uint8_t integral_reset_flag = 0;
+uint8_t reset_route = 0;
 //-----------------------------------------------------------
 /* USER CODE END PV */
 
@@ -563,6 +564,12 @@ void navModeUpdate()// для апдейт нава надо будет сдел
 {
 	static uint8_t wp_num = 1; // нулевая точка - это дом, маршрут начинается с первой точки
 
+	if(reset_route)
+	{
+		wp_num = 1;
+		reset_route = false;
+	}
+
 	navigator.updatePlanePos(data_input[LATITUDE], data_input[LONGITUDE], data_input[BARO], data_input[TRACK], data_input[GPS_SPEED]);
 	navigator.updateActiveWp(waypoint[wp_num]);
 
@@ -590,6 +597,7 @@ void setMode()
 	{
 		g_activate_flaps = false;
 		integral_reset_flag = true;
+		reset_route = true;
 	}
 	prev_mode = current_mode;
 
