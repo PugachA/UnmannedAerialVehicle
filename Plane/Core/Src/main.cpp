@@ -107,6 +107,7 @@ enum Sensors
 	GPS_SPEED,
 	TRACK,
 	GPS_VALID,
+	BAROFILTERED,
 	SENSOR_ARRAY_SIZE, //этот элемент всегда должен быть последним в енуме
 };
 enum Modes
@@ -561,7 +562,7 @@ double stabAltCalcTgtVy()
 	double alt_tgt = navigator.getActiveWpAlt();
 	double k_altdif_to_vy = 0.1;
 
-	return k_altdif_to_vy * ( alt_tgt - data_input[BARO] );
+	return k_altdif_to_vy * ( alt_tgt - data_input[BAROFILTERED] );
 
 }
 void navModeUpdate()// для апдейт нава надо будет сделать свой поток сделаю позже
@@ -1663,6 +1664,7 @@ void baroUpdateTask(void *argument)
 		data_input[BARO] = ms5611.getRawAltitude();
 
 		ms5611.calcVerticalSpeed();
+		data_input[BAROFILTERED] = ms5611.getFilterAltitude();
 		data_input[BAROVY] = ms5611.getVerticalSpeed();
 
 		osDelay(2);// в функции вычисления высоты 2 задержки по 9 мС -> цикличность вызоыва каждые 20 мС
