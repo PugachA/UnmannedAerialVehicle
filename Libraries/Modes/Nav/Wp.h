@@ -26,6 +26,7 @@ class Wp
     void setWpCoord(double lat, double lon, double alt);
     double getWpLat();
     double getWpLon();
+    double getWpAlt();
 
     void setWpXCoord(double X);
     double getWpXCoord();
