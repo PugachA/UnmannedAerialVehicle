@@ -555,7 +555,14 @@ void commandModeUpdate(double omega_turn_tgt, double vy_tgt)
 	omega_target[Z] = omega_z_vy_tgt + omega_z_turn_tgt; //deg/s
 	//---------------------------------------------------------
 }
+double stabAltCalcTgtVy()
+{
+	double alt_tgt = navigator.getActiveWpAlt();
+	double k_altdif_to_vy = 0.1;
 
+	return k_altdif_to_vy * ( alt_tgt - data_input[BARO] );
+
+}
 void navModeUpdate()// для апдейт нава надо будет сделать свой поток сделаю позже
 {
 	static uint8_t wp_num = 1; // нулевая точка - это дом, маршрут начинается с первой точки
@@ -637,7 +644,7 @@ void updateModeState()
 				directUpdate();
 			}break;
 		case NAV: {
-				commandModeUpdate( omega_target[OMEGA_TURN_FROM_NAV], (0.01953125*(double)rc_input[ELEV] - 29.3164062) );
+				commandModeUpdate( omega_target[OMEGA_TURN_FROM_NAV], stabAltCalcTgtVy() );
 				stabOmegaUpdate();
 			}break;
 	}
