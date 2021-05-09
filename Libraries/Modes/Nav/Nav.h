@@ -30,6 +30,7 @@ class Nav
   public:
 	Nav(void);
     float getDistanceToActiveWp();
+    float getActiveWpAlt();
     float getOmegaTurnToWp();
     void updateActiveWp(Wp wp);
     void updatePlanePos(double lat, double lon, double alt, double course, double speed);
