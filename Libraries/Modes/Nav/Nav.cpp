@@ -102,5 +102,5 @@ void Nav::updatePlanePos(double lat, double lon, double alt, double track, doubl
 }
 float Nav::getActiveWpAlt()
 {
-	this->active_wp.getWpAlt();
+	return this->active_wp.getWpAlt();
 }
