@@ -94,6 +94,13 @@ const osThreadAttr_t baroUpdate_attributes = {
   .priority = (osPriority_t) osPriorityNormal,
   .stack_size = 1024 * 4
 };
+/* Definitions for navUpdate */
+osThreadId_t navUpdateHandle;
+const osThreadAttr_t navUpdate_attributes = {
+  .name = "navUpdate",
+  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 256 * 4
+};
 /* USER CODE END Variables */
 
 /* Private function prototypes -----------------------------------------------*/

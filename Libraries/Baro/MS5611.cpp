@@ -194,7 +194,7 @@ void MS5611::firstVsFilter(void)
 void MS5611::secondVsFilter(void)
 {
     double error = k2*(this->first_filter_output - this->second_filter_output);
-	//this->vertical_speed = error;
+	this->vertical_speed = error;
 	this->second_filter_output += error*dt;
 }
 
@@ -207,7 +207,7 @@ void MS5611::thirdVsFilter(void)
 void MS5611::fourthVsFilter(void)
 {
 	double error = k4*(this->third_filter_output - this->fourth_filter_output);
-	this->vertical_speed = error;
+	//this->vertical_speed = error;
 	this->fourth_filter_output += error*dt;
 }
 
@@ -215,8 +215,8 @@ void MS5611::calcVerticalSpeed(void)
 {
 	firstVsFilter();
 	secondVsFilter();
-	thirdVsFilter();
-	fourthVsFilter();
+	//thirdVsFilter();
+	//fourthVsFilter();
 }
 
 double MS5611::getVerticalSpeed(void)

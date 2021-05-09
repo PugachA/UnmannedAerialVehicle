@@ -28,13 +28,13 @@
 #include "Servo/Servo.h"
 #include "Beeper/Beeper.h"
 #include "Baro/MS5611.h"
-//#include "AirSpeed/MPXV7002.h"
 #include "AirSpeed/MS4525DO.h"
 #include "Gyro/bno055.h"
 #include "PIReg/PIReg.h"
 #include "Beta/P3002.h"
 #include "PWMCapturer/PWMCapturer.h"
 #include "Gps/Gps.h"
+#include "Modes/Nav/Nav.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -105,7 +105,7 @@ enum Sensors
 	LATITUDE,
 	LONGITUDE,
 	GPS_SPEED,
-	COURSE,
+	TRACK,
 	GPS_VALID,
 	SENSOR_ARRAY_SIZE, //этот элемент всегда должен быть последним в енуме
 };
@@ -114,11 +114,12 @@ enum Modes
 	PREFLIGHTCHECK,
 	DIRECT,
 	OMEGA_STAB,
-	VY_STAB,
+	COMMAND,
 	DIRECT_FLAPS,
 	OMEGA_STAB_K_TUNE,
 	OMEGA_STAB_I_TUNE,
 	VY_STAB_K_TUNE,
+	NAV,
 };
 enum Logs
 {
@@ -143,6 +144,7 @@ enum Omega_targets
 	X,
 	Y,
 	Z,
+	OMEGA_TURN_FROM_NAV,
 	OMEGA_ARRAY_SIZE,
 };
 
@@ -176,6 +178,10 @@ extern const osThreadAttr_t loggerUpdate_attributes;
 extern osThreadId_t baroUpdateHandle;
 extern const osThreadAttr_t baroUpdate_attributes;
 
+/* Definitions for navUpdate */
+extern osThreadId_t navUpdateHandle;
+extern const osThreadAttr_t navUpdate_attributes;
+
 //-------------------My Global VARs--------------------------
 const uint16_t WHAIT_FOR_RADIO_MS = 5000;
 
@@ -194,7 +200,7 @@ double k_int_omega_y = 6.0;
 
 
 double k_pr_Vy = 8.5;
-double k_int_Vy = 0.0;
+double k_int_Vy = 1.5;
 
 const uint8_t num_of_coeff_ref_points = 5;
 
@@ -290,6 +296,10 @@ void IcHandlerTim4(TIM_HandleTypeDef *htim)
 //GPS-----------------------------------------------------------
 Gps gps = Gps(&huart3, GPIOE, GPIO_PIN_7);
 
+//Route---------------------------------------------------------
+Nav navigator;
+Wp waypoint[5];
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	if(huart == &huart3)
@@ -314,12 +324,11 @@ double data_input[SENSOR_ARRAY_SIZE] = {0.0};
 double logger_data[LOG_ARRAY_SIZE] = {0.0};
 double omega_target[OMEGA_ARRAY_SIZE] = {0.0};
 
-uint32_t timeNowMs = 0;
-
 char str[150] = "\0";
 
 uint8_t current_mode = 0;
 uint8_t integral_reset_flag = 0;
+uint8_t reset_route = 0;
 //-----------------------------------------------------------
 /* USER CODE END PV */
 
@@ -345,8 +354,22 @@ void radioInputUpdateTask(void *argument);
 void loggerUpdateTask(void *argument);
 void actuatorsUpdateTask(void *argument);
 void baroUpdateTask(void *argument);
+void navUpdateTask(void *argument);
 
 /* USER CODE BEGIN PFP */
+void setRoute()
+{
+	waypoint[0].setWpCoord(55.582540, 38.079028, 15);
+	waypoint[0].setWpAsHome();
+
+	waypoint[1].setWpCoord(55.581607, 38.078521, 15);
+	waypoint[2].setWpCoord(55.580585, 38.080667, 15);
+	waypoint[3].setWpCoord(55.581610, 38.082089, 15);
+
+	waypoint[4].setWpCoord(55.583225, 38.082355, 15);
+	waypoint[4].setWpAsLast();
+}
+
 void flapsUpdate(uint8_t activate_flaps)
 {
 	int flaperon_delta_limit = 340; // 2/6 from the whole range
@@ -412,8 +435,7 @@ void stabOmegaTgtCalc(void)
 	omega_target[Y] = -(0.234375*rc_input[RUD] - 351.5625);
 	omega_target[Z] = (0.234375*rc_input[ELEV] - 350.0625);
 }
-
-void stabOmegaUpdate(uint8_t tune_mode)
+void stabOmegaUpdate()
 {
 	//------------------Regulators INIT------------------------
 	double int_lim_omega_z = 1000, int_lim_omega_x = 1000, int_lim_omega_y = 1000;
@@ -423,22 +445,6 @@ void stabOmegaUpdate(uint8_t tune_mode)
 	static PIReg omega_z_PI_reg(k_pr_omega_z, k_int_omega_z, 0.01, int_lim_omega_z, speed_ref_points, k_pr_omega_z_points, k_int_omega_z_points, num_of_coeff_ref_points);
 	//---------------------------------------------------------
 
-	//----------------------Coeff Tune-------------------------
-	/*if(tune_mode != TUNE_OFF)
-	{
-		if(tune_mode == TUNE_K_P)
-		{
-			k_pr_omega_x = ((double)rc_input[SLIDER] - 979.0)/100.0;
-			omega_x_PI_reg.setGainParams(k_pr_omega_x, k_int_omega_x);
-		}
-		if(tune_mode == TUNE_K_I)
-		{
-			k_int_omega_x = ((double)rc_input[SLIDER] - 979.0)/100.0;;
-			omega_x_PI_reg.setGainParams(k_pr_omega_x, k_int_omega_x);
-		}
-	}*/
-	//---------------------------------------------------------
-
 	if(integral_reset_flag)
 	{
 		omega_x_PI_reg.integralReset();
@@ -446,9 +452,7 @@ void stabOmegaUpdate(uint8_t tune_mode)
 		omega_z_PI_reg.integralReset();
 		integral_reset_flag = 0;
 	}
-	//omega_zad_x = -(0.234375*rc_input[AIL2] - 351.5625);
-	//omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
-	//omega_zad_z = (0.234375*rc_input[ELEV] - 350.0625);
+
 	logger_data[OMEGA_X_ZAD] = omega_target[X];
 	logger_data[OMEGA_Y_ZAD] = omega_target[Y];
 	logger_data[OMEGA_Z_ZAD] = omega_target[Z];
@@ -484,86 +488,19 @@ void stabOmegaUpdate(uint8_t tune_mode)
 
 }
 
-void stabVyUpdate(uint8_t tune_mode)
-{
-	//------------------Regulators INIT------------------------
-
-	double int_lim_Vy = 1000;
-	double vert_speed_zad = 0;
-
-	static PIReg vert_speed_PI_reg(k_pr_Vy, k_int_Vy, 0.01, int_lim_Vy);
-
-	//double k_int_omega_x = 2.5;
-	//double k_pr_omega_x = 5.5;
-
-	//double k_int_omega_y = 2.5;
-	//double k_pr_omega_y = 5.5;
-
-	double int_lim_omega = 1000;
-	double omega_zad_x = 0, omega_zad_y = 0, omega_zad_z = 0;
-
-	//static PIReg omega_x_PI_reg(k_pr_omega_x, k_int_omega_x, 0.01, int_lim_omega);
-	//static PIReg omega_y_PI_reg(k_pr_omega_y, k_int_omega_y, 0.01, int_lim_omega);
-	static PIReg omega_z_PI_reg(k_pr_omega_z, k_int_omega_z, 0.01, int_lim_omega);
-	//---------------------------------------------------------
-	if(tune_mode != TUNE_OFF)
-	{
-		if(tune_mode == TUNE_K_P)
-		{
-			k_pr_Vy = ((double)rc_input[SLIDER] - 979.0)/100.0;
-			vert_speed_PI_reg.setGainParams(k_pr_Vy, k_int_Vy);
-			omega_z_PI_reg.setGainParams(k_pr_omega_z, k_int_omega_z);
-		}
-	}
-
-	if(integral_reset_flag)
-	{
-		//omega_x_PI_reg.integralReset();
-		//omega_y_PI_reg.integralReset();
-		omega_z_PI_reg.integralReset();
-		vert_speed_PI_reg.integralReset();
-		integral_reset_flag = 0;
-	}
-
-	vert_speed_zad = (0.01953125*rc_input[ELEV] - 29.3164062); // minus 10 to 10 m/s
-	logger_data[VY_ZAD] = vert_speed_zad;
-
-	vert_speed_PI_reg.setError(vert_speed_zad - data_input[BAROVY]);
-	vert_speed_PI_reg.calcOutput();
-
-	//omega_zad_x = (0.234375*rc_input[AIL2] - 351.5625);
-	//omega_zad_y = (0.234375*rc_input[RUD] - 351.5625);
-	omega_zad_z = vert_speed_PI_reg.getOutput();
-	logger_data[OMEGA_Z_ZAD] = omega_zad_z;
-
-	//omega_x_PI_reg.setError(omega_zad_x - data_input[GYROX]);
-	//omega_x_PI_reg.calcOutput();
-	//omega_y_PI_reg.setError(omega_zad_y - data_input[GYROY]);
-	//omega_y_PI_reg.calcOutput();
-	omega_z_PI_reg.setError(omega_zad_z - data_input[GYROZ]);
-	omega_z_PI_reg.calcOutput();
-
-	output[THR] = rc_input[THR];
-	output[ELEV] = (int)(1500+0.4*omega_z_PI_reg.getOutput());
-	output[AIL1] = rc_input[AIL1];
-	output[AIL2] = rc_input[AIL2];
-	output[RUD] = rc_input[RUD];
-
-}
-
-void commandModeUpdate()
+void commandModeUpdate(double omega_turn_tgt, double vy_tgt)
 {
 	//------------------Local vars INIT------------------------
-	double rad2deg = 57.2958;
-	double deg2rad = 1/rad2deg;
-	double g = 9.81;
+	const double RAD2DEG = 57.2958;
+	const double DEG2RAD = 1/RAD2DEG;
+	const double g = 9.81;
 
-	double omega_turn_tgt = 0.0;
+	//double omega_turn_tgt = 0.0;
 	double gamma_tgt = 0.0;
 	double k_pr_gamma = 1.5;
 
 	double int_lim_Vy = 1000;
-	double vy_tgt = 0.0;
+	//double vy_tgt = 0.0;
 
 	double omega_x_roll_tgt = 0.0; // component of omega_x target from target roll angle
 	double omega_x_turn_tgt = 0.0; // component of omega_x target from coordinated turn
@@ -578,8 +515,13 @@ void commandModeUpdate()
 
 	//---------------------------------------------------------
 
+	if(integral_reset_flag)
+	{
+		vy_PI_reg.integralReset();
+		integral_reset_flag = 0;
+	}
+
 	//---------------Vertical speed stab-----------------------
-	vy_tgt = (0.01953125*rc_input[ELEV] - 29.3164062); // minus 10 to 10 m/s
 	if (abs(vy_tgt) < 0.2) //to set zero when the stick is in neutral
 	{
 		vy_tgt = 0;
@@ -593,30 +535,58 @@ void commandModeUpdate()
 
 	//--------------Omega and Roll target calc-----------------
 
-	omega_turn_tgt = -(-0.1173*rc_input[AIL1] + 176.0097); // minus 60 to 60 deg/s
 	if (abs(omega_turn_tgt) < 1.0) //to set zero when the stick is in neutral
 	{
 		omega_turn_tgt = 0;
 	}
 	logger_data[OMEGA_TURN_ZAD] = omega_turn_tgt;
 
-	gamma_tgt = -atan((data_input[AIR]*omega_turn_tgt*deg2rad)/g);
-	gamma_tgt = gamma_tgt*rad2deg;
+	gamma_tgt = -atan((data_input[AIR]*omega_turn_tgt*DEG2RAD)/g);
+	gamma_tgt = gamma_tgt*RAD2DEG;
 	logger_data[GAMMA_ZAD] = gamma_tgt;
 	//---------------------------------------------------------
 
 	//---------------Omega coord turn calc---------------------
 	omega_x_roll_tgt = k_pr_gamma*(gamma_tgt - data_input[GAMMA]);
-	omega_x_turn_tgt = omega_turn_tgt*sin(data_input[TETA]*deg2rad);
+	omega_x_turn_tgt = omega_turn_tgt*sin(data_input[TETA]*DEG2RAD);
 	omega_target[X] = omega_x_roll_tgt + omega_x_turn_tgt; //deg/s
 
-	omega_y_turn_tgt = omega_turn_tgt*cos(data_input[TETA]*deg2rad)*cos(data_input[GAMMA]*deg2rad);
+	omega_y_turn_tgt = omega_turn_tgt*cos(data_input[TETA]*DEG2RAD)*cos(data_input[GAMMA]*DEG2RAD);
 	omega_target[Y] = omega_y_turn_tgt; //deg/s
 
-	omega_z_turn_tgt = omega_turn_tgt*cos(data_input[TETA]*deg2rad)*sin((-data_input[GAMMA]*deg2rad));
+	omega_z_turn_tgt = omega_turn_tgt*cos(data_input[TETA]*DEG2RAD)*sin((-data_input[GAMMA]*DEG2RAD));
 	omega_z_vy_tgt = vy_PI_reg.getOutput();
 	omega_target[Z] = omega_z_vy_tgt + omega_z_turn_tgt; //deg/s
 	//---------------------------------------------------------
+}
+
+void navModeUpdate()// для апдейт нава надо будет сделать свой поток сделаю позже
+{
+	static uint8_t wp_num = 1; // нулевая точка - это дом, маршрут начинается с первой точки
+
+	if(reset_route)
+	{
+		wp_num = 1;
+		reset_route = false;
+	}
+
+	navigator.updatePlanePos(data_input[LATITUDE], data_input[LONGITUDE], data_input[BARO], data_input[TRACK], data_input[GPS_SPEED]);
+	navigator.updateActiveWp(waypoint[wp_num]);
+
+	omega_target[OMEGA_TURN_FROM_NAV] = navigator.getOmegaTurnToWp();
+
+	if( navigator.getDistanceToActiveWp() <= 10 )
+	{
+		if( waypoint[wp_num].isHome() == 0 )
+			if( waypoint[wp_num].isLast() == 0 )
+				wp_num++;
+			else
+				wp_num = 0; // в качестве активной точки устанавлиается дом
+		else
+		{
+			wp_num = 1; // в качестве активной точки устанавлиается 1й ппм
+		}
+	}
 }
 
 void setMode()
@@ -625,9 +595,9 @@ void setMode()
 
 	if(prev_mode != current_mode)
 	{
-		//beeper->longBeep();
 		g_activate_flaps = false;
 		integral_reset_flag = true;
+		reset_route = true;
 	}
 	prev_mode = current_mode;
 
@@ -641,20 +611,12 @@ void setMode()
 		}
 		else
 		{
-			if(switch_rc.isInRange(1100, 1300) || switch_rc.isInRange(1400, 1500))
+			if(switch_rc.isInRange(1100, 1300) || switch_rc.isInRange(1500, 1600))
 				current_mode = OMEGA_STAB;
-			/*else
-			{
-				if(switch_rc.isInRange(1300, 1400))
-					current_mode = OMEGA_STAB_K_TUNE;
-				if(switch_rc.isInRange(1500, 1700))
-					current_mode = OMEGA_STAB_I_TUNE;
-			}*/
+			if(switch_rc.isInRange(1400, 1500))
+				current_mode = COMMAND;
 			if(switch_rc.isInRange(1700, 1800))
-				current_mode = VY_STAB;
-			/*else
-				if(switch_rc.isInRange(1800, 1900))
-					current_mode = VY_STAB_K_TUNE;*/
+				current_mode = NAV;
 			if(switch_rc.isInRange(1900, 1950))
 				current_mode = DIRECT_FLAPS;
 		}
@@ -668,21 +630,23 @@ void updateModeState()
 		case DIRECT: directUpdate(); break;
 		case OMEGA_STAB: {
 				stabOmegaTgtCalc();
-				stabOmegaUpdate(TUNE_OFF);
+				stabOmegaUpdate();
 			}break;
-		case VY_STAB: {
-				commandModeUpdate();
-				stabOmegaUpdate(TUNE_OFF);
+		case COMMAND: {
+				commandModeUpdate( (-(-0.1173*(double)rc_input[AIL1] + 176.0097)), (0.01953125*(double)rc_input[ELEV] - 29.3164062) );
+				stabOmegaUpdate();
 			}break;
 		case DIRECT_FLAPS: {
 				g_activate_flaps = true;
 				directUpdate();
 			}break;
-		//case OMEGA_STAB_K_TUNE: stabOmegaUpdate(TUNE_K_P); break;
-		//case OMEGA_STAB_I_TUNE:	stabOmegaUpdate(TUNE_K_I); break;
-		//case VY_STAB_K_TUNE: stabVyUpdate(TUNE_K_P); break;
+		case NAV: {
+				commandModeUpdate( omega_target[OMEGA_TURN_FROM_NAV], (0.01953125*(double)rc_input[ELEV] - 29.3164062) );
+				stabOmegaUpdate();
+			}break;
 	}
 }
+
 
 
 /* USER CODE END PFP */
@@ -800,6 +764,9 @@ int main(void)
 
   /* creation of baroUpdate */
   baroUpdateHandle = osThreadNew(baroUpdateTask, NULL, &baroUpdate_attributes);
+
+  /* creation of navUpdate */
+  navUpdateHandle = osThreadNew(navUpdateTask, NULL, &navUpdate_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -1550,12 +1517,14 @@ void sensorsUpdateTask(void *argument)
 		//data_input[AIR] = ms4525do.getAirSpeed();
 		//data_input[BETA] = p3002.getAngle();
 
-		data_input[LATITUDE] = (double) minmea_tocoord(&gps.gpsData.latitude);
-		data_input[LONGITUDE] = (double) minmea_tocoord(&gps.gpsData.longitude);
-		data_input[GPS_SPEED] = (double) minmea_tofloat(&gps.gpsData.speed) * 0.51; //перевод в м/с из узлов
-		data_input[COURSE] = (double) minmea_tofloat(&gps.gpsData.course);
+		if( gps.gpsData.valid )
+		{
+			data_input[LATITUDE] = (double) minmea_tocoord(&gps.gpsData.latitude);
+			data_input[LONGITUDE] = (double) minmea_tocoord(&gps.gpsData.longitude);
+			data_input[GPS_SPEED] = (double) minmea_tofloat(&gps.gpsData.speed) * 0.51; //перевод в м/с из узлов
+			data_input[TRACK] = (double) minmea_tofloat(&gps.gpsData.course);
+		}
 		data_input[GPS_VALID] = (double) gps.gpsData.valid;
-
 		data_input[AIR] = data_input[GPS_SPEED];
 
 		osDelay(10);//ещё 5 мС внутри либы airspeed
@@ -1628,7 +1597,7 @@ void loggerUpdateTask(void *argument)
 					(int)(10*logger_data[K_PR_OMEGA_Z]), (int)(100*logger_data[K_INT_OMEGA_Z]), (int)(10*k_pr_Vy),\
 					(int)(data_input[TETA]*10), (int)(data_input[GAMMA]*10), (int)(data_input[PSI]*10),\
 					(int)(data_input[NZ]*1000), (int)(10*logger_data[OMEGA_TURN_ZAD]), (int)(10*logger_data[GAMMA_ZAD]), (int)(data_input[LONGITUDE]*1000000), (int)(data_input[LATITUDE]*1000000),\
-					(int)(data_input[GPS_SPEED]*100), (int)(data_input[COURSE]*10), (int)(data_input[GPS_VALID]), (int)switch_rc.getPulseWidth());
+					(int)(data_input[GPS_SPEED]*100), (int)(data_input[TRACK]*10), (int)(data_input[GPS_VALID]), (int)switch_rc.getPulseWidth());
 		#else
 			#if DEBUG_MODE == BARO_DEBUG
 				sprintf(str, "%d %d %d\n", (int)(data_input[BARO]*100), (int)(logger_data[ALT_FILTERED]*100), (int)(100*data_input[BAROVY]));
@@ -1643,7 +1612,6 @@ void loggerUpdateTask(void *argument)
 				sprintf(str, "beta=%d\n", (int)data_input[BETA]);
 			#endif
 		#endif
-		//sprintf(str, "%d\n", timeNowMs);
 		HAL_UART_Transmit_IT(&huart2, (uint8_t*)str, sizeof(str));
 		osDelay(100);
 	}
@@ -1696,6 +1664,28 @@ void baroUpdateTask(void *argument)
 		osDelay(2);// в функции вычисления высоты 2 задержки по 9 мС -> цикличность вызоыва каждые 20 мС
 	}
   /* USER CODE END baroUpdateTask */
+}
+
+/* USER CODE BEGIN Header_navUpdateTask */
+/**
+* @brief Function implementing the navUpdate thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_navUpdateTask */
+void navUpdateTask(void *argument)
+{
+	/* USER CODE BEGIN navUpdateTask */
+	setRoute();
+	/* Infinite loop */
+	for(;;)
+	{
+		if( current_mode == NAV )
+			navModeUpdate();
+
+		osDelay(100);
+	}
+	/* USER CODE END navUpdateTask */
 }
 
  /**
