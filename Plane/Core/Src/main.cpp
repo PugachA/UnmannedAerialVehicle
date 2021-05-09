@@ -354,18 +354,22 @@ void navUpdateTask(void *argument);
 
 /* USER CODE BEGIN PFP */
 
-Wp waypoint[5];
+Wp waypoint[11];
 void setRoute()
 {
-	waypoint[0].setWpCoord(55.582540, 38.079028, 15);
+	waypoint[0].setWpCoord(55.582540, 38.079028, 40);
 	waypoint[0].setWpAsHome();
-
-	waypoint[1].setWpCoord(55.581607, 38.078521, 15);
-	waypoint[2].setWpCoord(55.580585, 38.080667, 15);
-	waypoint[3].setWpCoord(55.581610, 38.082089, 15);
-
-	waypoint[4].setWpCoord(55.583225, 38.082355, 15);
-	waypoint[4].setWpAsLast();
+	waypoint[1].setWpCoord(55.581682, 38.078081, 50);
+	waypoint[2].setWpCoord(55.581605, 38.080250, 50);
+	waypoint[3].setWpCoord(55.583198, 38.081973, 50);
+	waypoint[4].setWpCoord(55.583221, 38.084280, 50);
+	waypoint[5].setWpCoord(55.584361, 38.084540, 50);
+	waypoint[6].setWpCoord(55.585972, 38.080555, 80);
+	waypoint[7].setWpCoord(55.584919, 38.079759, 80);
+	waypoint[8].setWpCoord(55.583985, 38.079356, 80);
+	waypoint[9].setWpCoord(55.582962, 38.077614, 60);
+	waypoint[10].setWpCoord(55.581682, 38.078081, 60);
+	waypoint[10].setWpAsLast();
 }
 
 void flapsUpdate(uint8_t activate_flaps)
@@ -560,7 +564,7 @@ void commandModeUpdate(double omega_turn_tgt, double vy_tgt)
 double stabAltCalcTgtVy()
 {
 	double alt_tgt = navigator.getActiveWpAlt();
-	double k_altdif_to_vy = 0.1;
+	double k_altdif_to_vy = 0.2;
 
 	return k_altdif_to_vy * ( alt_tgt - data_input[BAROFILTERED] );
 
