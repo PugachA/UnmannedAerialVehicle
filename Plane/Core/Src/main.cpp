@@ -294,7 +294,6 @@ Gps gps = Gps(&huart3, GPIOE, GPIO_PIN_7);
 
 //Route---------------------------------------------------------
 Nav navigator;
-Wp waypoint[5];
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
@@ -353,6 +352,8 @@ void baroUpdateTask(void *argument);
 void navUpdateTask(void *argument);
 
 /* USER CODE BEGIN PFP */
+
+Wp waypoint[5];
 void setRoute()
 {
 	waypoint[0].setWpCoord(55.582540, 38.079028, 15);
