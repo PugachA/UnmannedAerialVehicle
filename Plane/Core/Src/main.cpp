@@ -137,6 +137,7 @@ enum Logs
 	ALT_FILTERED,
 	OMEGA_TURN_ZAD,
 	GAMMA_ZAD,
+	ALT_ZAD,
 	LOG_ARRAY_SIZE,
 };
 
@@ -563,13 +564,27 @@ void commandModeUpdate(double omega_turn_tgt, double vy_tgt)
 }
 double stabAltCalcTgtVy()
 {
+	double vy_tgt = 0.0;
 	double alt_tgt = navigator.getActiveWpAlt();
 	double k_altdif_to_vy = 0.2;
 
-	return k_altdif_to_vy * ( alt_tgt - data_input[BAROFILTERED] );
+	logger_data[ALT_ZAD] = alt_tgt;
+
+	vy_tgt = k_altdif_to_vy * ( alt_tgt - data_input[BAROFILTERED] );
+
+	if (vy_tgt > 10.0)
+	{
+		vy_tgt = 10.0;
+	}
+	else if (vy_tgt < -10.0)
+	{
+		vy_tgt = -10.0;
+	}
+
+	return vy_tgt;
 
 }
-void navModeUpdate()// для апдейт нава надо будет сделать свой поток сделаю позже
+void navModeUpdate()
 {
 	static uint8_t wp_num = 1; // нулевая точка - это дом, маршрут начинается с первой точки
 
@@ -1600,7 +1615,7 @@ void loggerUpdateTask(void *argument)
 			sprintf(str, "%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d",\
 					(int)HAL_GetTick(), (int)(10*logger_data[OMEGA_X_ZAD]), (int)(data_input[GYROX]*10),\
 					(int)(10*logger_data[OMEGA_Y_ZAD]), (int)(data_input[GYROY]*10), (int)(10*logger_data[OMEGA_Z_ZAD]),\
-					(int)(data_input[GYROZ]*10), (int)(data_input[BARO]*100), (int)(100*logger_data[VY_ZAD]),\
+					(int)(data_input[GYROZ]*10), (int)(data_input[BAROFILTERED]*100), (int)(100*logger_data[VY_ZAD]),\
 					(int)(100*data_input[BAROVY]), (int)(100*data_input[AIR]),	(int)(logger_data[K_PR_OMEGA_X]*10),\
 					(int)(100*logger_data[K_INT_OMEGA_X]), (int)(10*logger_data[K_PR_OMEGA_Y]), (int)(100*logger_data[K_INT_OMEGA_Y]),\
 					(int)(10*logger_data[K_PR_OMEGA_Z]), (int)(100*logger_data[K_INT_OMEGA_Z]), (int)(10*k_pr_Vy),\

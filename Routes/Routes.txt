@@ -21,3 +21,16 @@ waypoint[8].setWpCoord(55.583985, 38.079356, 80);
 waypoint[9].setWpCoord(55.582962, 38.077614, 60);
 waypoint[10].setWpCoord(55.581682, 38.078081, 60);
 waypoint[10].setWpAsLast();
+
+Маршрут 2 10.05.2021:
+waypoint[0].setWpCoord(55.582570, 38.083131, 60);
+waypoint[0].setWpAsHome();
+waypoint[1].setWpCoord(55.582038, 38.079318, 40);
+waypoint[2].setWpCoord(55.581559, 38.081758, 80);
+waypoint[3].setWpCoord(55.580172, 38.082627, 60);
+waypoint[4].setWpCoord(55.580578, 38.083511, 80);
+waypoint[5].setWpCoord(55.581465, 38.082750, 40);
+waypoint[6].setWpCoord(55.582357, 38.085437, 80);
+waypoint[7].setWpCoord(55.583830, 38.084572, 60);
+waypoint[8].setWpCoord(55.583269, 38.084012, 60);
+waypoint[8].setWpAsLast();
