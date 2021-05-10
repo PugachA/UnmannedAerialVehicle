@@ -525,10 +525,10 @@ void commandModeUpdate(double omega_turn_tgt, double vy_tgt)
 	}
 
 	//---------------Vertical speed stab-----------------------
-	if (abs(vy_tgt) < 0.2) //to set zero when the stick is in neutral
+	/*if (abs(vy_tgt) < 0.2) //to set zero when the stick is in neutral
 	{
 		vy_tgt = 0;
-	}
+	}*/
 
 	logger_data[VY_ZAD] = vy_tgt;
 
@@ -1612,10 +1612,10 @@ void loggerUpdateTask(void *argument)
 	{
 		memset(str, '\0', sizeof(str));
 		#ifndef DEBUG_MODE
-			sprintf(str, "%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d",\
+			sprintf(str, "%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d",\
 					(int)HAL_GetTick(), (int)(10*logger_data[OMEGA_X_ZAD]), (int)(data_input[GYROX]*10),\
 					(int)(10*logger_data[OMEGA_Y_ZAD]), (int)(data_input[GYROY]*10), (int)(10*logger_data[OMEGA_Z_ZAD]),\
-					(int)(data_input[GYROZ]*10), (int)(data_input[BAROFILTERED]*100), (int)(100*logger_data[VY_ZAD]),\
+					(int)(data_input[GYROZ]*10), (int)(data_input[BAROFILTERED]*100), (int)(10*logger_data[ALT_ZAD]), (int)(100*logger_data[VY_ZAD]),\
 					(int)(100*data_input[BAROVY]), (int)(100*data_input[AIR]),	(int)(logger_data[K_PR_OMEGA_X]*10),\
 					(int)(100*logger_data[K_INT_OMEGA_X]), (int)(10*logger_data[K_PR_OMEGA_Y]), (int)(100*logger_data[K_INT_OMEGA_Y]),\
 					(int)(10*logger_data[K_PR_OMEGA_Z]), (int)(100*logger_data[K_INT_OMEGA_Z]), (int)(10*k_pr_Vy),\
