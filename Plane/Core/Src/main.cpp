@@ -607,35 +607,6 @@ void navModeUpdate()
 	}
 }
 
-void navModeUpdate()// для апдейт нава надо будет сделать свой поток сделаю позже
-{
-	static uint8_t wp_num = 1; // нулевая точка - это дом, маршрут начинается с первой точки
-
-	if(reset_route)
-	{
-		wp_num = 1;
-		reset_route = false;
-	}
-
-	navigator.updatePlanePos(data_input[LATITUDE], data_input[LONGITUDE], data_input[BARO], data_input[TRACK], data_input[GPS_SPEED]);
-	navigator.updateActiveWp(waypoint[wp_num]);
-
-	omega_target[OMEGA_TURN_FROM_NAV] = navigator.getOmegaTurnToWp();
-
-	if( navigator.getDistanceToActiveWp() <= 10 )
-	{
-		if( waypoint[wp_num].isHome() == 0 )
-			if( waypoint[wp_num].isLast() == 0 )
-				wp_num++;
-			else
-				wp_num = 0; // в качестве активной точки устанавлиается дом
-		else
-		{
-			wp_num = 1; // в качестве активной точки устанавлиается 1й ппм
-		}
-	}
-}
-
 void setMode()
 {
 	static uint8_t prev_mode = 0;
