@@ -59,6 +59,7 @@ bool Wp::operator != (Wp wp1)
 {
 	return (this->wp_lat == wp1.wp_lat && this->wp_lon == wp1.wp_lon && this->wp_alt == wp1.wp_alt) ? 0 : 1;
 }
+
 double Wp::getWpAlt()
 {
 	return this->wp_alt;

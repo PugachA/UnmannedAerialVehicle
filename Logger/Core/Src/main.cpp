@@ -229,9 +229,9 @@ int main(void)
 
 		if(!ersFlag)
 		{
-			beeper.beep(1000); // задержка 1 секунды плюс пищалка
+			beeper.beep(500); // задержка 1 секунды плюс пищалка
 			ersServo.setPosition(ers_open_position); //открытие капсылы парашюта
-			HAL_Delay(700);
+			HAL_Delay(500);
 		}
 
 		ersServo.setPosition(ers_push_position); //выпуск вытяжного парашюта
