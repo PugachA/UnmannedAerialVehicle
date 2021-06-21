@@ -197,8 +197,8 @@ double k_pr_omega_y = 8.0;
 double k_int_omega_y = 6.0;
 
 
-double k_pr_Vy = 8.5;
-double k_int_Vy = 1.5;
+double k_pr_Vy = 6.5;
+double k_int_Vy = 2.0;
 
 const uint8_t num_of_coeff_ref_points = 5;
 
