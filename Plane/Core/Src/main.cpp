@@ -493,12 +493,10 @@ void commandModeUpdate(double omega_turn_tgt, double vy_tgt)
 	const double DEG2RAD = 1/RAD2DEG;
 	const double g = 9.81;
 
-	//double omega_turn_tgt = 0.0;
 	double gamma_tgt = 0.0;
 	double k_pr_gamma = 1.5;
 
-	double int_lim_Vy = 1000;
-	//double vy_tgt = 0.0;
+	double int_lim_Vy = 60;
 
 	double omega_x_roll_tgt = 0.0; // component of omega_x target from target roll angle
 	double omega_x_turn_tgt = 0.0; // component of omega_x target from coordinated turn
