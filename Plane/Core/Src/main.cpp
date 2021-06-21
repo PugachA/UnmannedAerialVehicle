@@ -567,13 +567,13 @@ double stabAltCalcTgtVy()
 
 	vy_tgt = k_altdif_to_vy * ( alt_tgt - data_input[BAROFILTERED] );
 
-	if (vy_tgt > 10.0)
+	if (vy_tgt > 5.0)
 	{
-		vy_tgt = 10.0;
+		vy_tgt = 5.0;
 	}
-	else if (vy_tgt < -10.0)
+	else if (vy_tgt < -5.0)
 	{
-		vy_tgt = -10.0;
+		vy_tgt = -5.0;
 	}
 
 	return vy_tgt;
