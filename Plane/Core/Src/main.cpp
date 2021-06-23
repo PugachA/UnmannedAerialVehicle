@@ -578,6 +578,18 @@ double stabAltCalcTgtVy()
 	return vy_tgt;
 
 }
+
+double landCalcTgtVy()
+{
+	double vy_tgt = 0.0;
+
+	const double RAD2DEG = 57.2958;
+	const double DEG2RAD = 1/RAD2DEG;
+	const double TETA_GS = 3.0; //glideslope angle in degrees
+
+	vy_tgt = data_input[AIR]*asin(TETA_GS*DEG2RAD);
+}
+
 void navModeUpdate()
 {
 	static uint8_t wp_num = 1; // нулевая точка - это дом, маршрут начинается с первой точки
