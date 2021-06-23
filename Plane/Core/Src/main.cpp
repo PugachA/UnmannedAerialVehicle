@@ -107,6 +107,7 @@ enum Sensors
 	GPS_SPEED,
 	TRACK,
 	GPS_VALID,
+	BAROFILTERED,
 	SENSOR_ARRAY_SIZE, //этот элемент всегда должен быть последним в енуме
 };
 enum Modes
@@ -136,6 +137,7 @@ enum Logs
 	ALT_FILTERED,
 	OMEGA_TURN_ZAD,
 	GAMMA_ZAD,
+	ALT_ZAD,
 	LOG_ARRAY_SIZE,
 };
 
@@ -185,10 +187,6 @@ extern const osThreadAttr_t navUpdate_attributes;
 //-------------------My Global VARs--------------------------
 const uint16_t WHAIT_FOR_RADIO_MS = 5000;
 
-const uint8_t TUNE_K_P = 1;
-const uint8_t TUNE_K_I = 2;
-const uint8_t TUNE_OFF = 0;
-
 uint8_t g_activate_flaps = 0;
 
 double k_pr_omega_x = 7.6;
@@ -199,8 +197,8 @@ double k_pr_omega_y = 8.0;
 double k_int_omega_y = 6.0;
 
 
-double k_pr_Vy = 8.5;
-double k_int_Vy = 1.5;
+double k_pr_Vy = 6.5;
+double k_int_Vy = 2.0;
 
 const uint8_t num_of_coeff_ref_points = 5;
 
@@ -298,7 +296,6 @@ Gps gps = Gps(&huart3, GPIOE, GPIO_PIN_7);
 
 //Route---------------------------------------------------------
 Nav navigator;
-Wp waypoint[5];
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
@@ -357,17 +354,18 @@ void baroUpdateTask(void *argument);
 void navUpdateTask(void *argument);
 
 /* USER CODE BEGIN PFP */
+
+Wp waypoint[6];
 void setRoute()
 {
-	waypoint[0].setWpCoord(55.582540, 38.079028, 15);
+	waypoint[0].setWpCoord(55.582540, 38.079028, 80);
 	waypoint[0].setWpAsHome();
-
-	waypoint[1].setWpCoord(55.581607, 38.078521, 15);
-	waypoint[2].setWpCoord(55.580585, 38.080667, 15);
-	waypoint[3].setWpCoord(55.581610, 38.082089, 15);
-
-	waypoint[4].setWpCoord(55.583225, 38.082355, 15);
-	waypoint[4].setWpAsLast();
+	waypoint[1].setWpCoord(55.581607, 38.078521, 80);
+	waypoint[2].setWpCoord(55.580585, 38.080667, 80);
+	waypoint[3].setWpCoord(55.580352, 38.083807, 100);
+	waypoint[4].setWpCoord(55.581610, 38.082089, 90);
+	waypoint[5].setWpCoord(55.583225, 38.082355, 80);
+	waypoint[5].setWpAsLast();
 }
 
 void flapsUpdate(uint8_t activate_flaps)
@@ -495,12 +493,10 @@ void commandModeUpdate(double omega_turn_tgt, double vy_tgt)
 	const double DEG2RAD = 1/RAD2DEG;
 	const double g = 9.81;
 
-	//double omega_turn_tgt = 0.0;
 	double gamma_tgt = 0.0;
 	double k_pr_gamma = 1.5;
 
-	double int_lim_Vy = 1000;
-	//double vy_tgt = 0.0;
+	double int_lim_Vy = 60;
 
 	double omega_x_roll_tgt = 0.0; // component of omega_x target from target roll angle
 	double omega_x_turn_tgt = 0.0; // component of omega_x target from coordinated turn
@@ -522,10 +518,11 @@ void commandModeUpdate(double omega_turn_tgt, double vy_tgt)
 	}
 
 	//---------------Vertical speed stab-----------------------
-	if (abs(vy_tgt) < 0.2) //to set zero when the stick is in neutral
+	/*if (abs(vy_tgt) < 0.2) //to set zero when the stick is in neutral
+
 	{
 		vy_tgt = 0;
-	}
+	}*/
 
 	logger_data[VY_ZAD] = vy_tgt;
 
@@ -559,8 +556,29 @@ void commandModeUpdate(double omega_turn_tgt, double vy_tgt)
 	omega_target[Z] = omega_z_vy_tgt + omega_z_turn_tgt; //deg/s
 	//---------------------------------------------------------
 }
+double stabAltCalcTgtVy()
+{
+	double vy_tgt = 0.0;
+	double alt_tgt = navigator.getActiveWpAlt();
+	double k_altdif_to_vy = 0.2;
 
-void navModeUpdate()// для апдейт нава надо будет сделать свой поток сделаю позже
+	logger_data[ALT_ZAD] = alt_tgt;
+
+	vy_tgt = k_altdif_to_vy * ( alt_tgt - data_input[BAROFILTERED] );
+
+	if (vy_tgt > 5.0)
+	{
+		vy_tgt = 5.0;
+	}
+	else if (vy_tgt < -5.0)
+	{
+		vy_tgt = -5.0;
+	}
+
+	return vy_tgt;
+
+}
+void navModeUpdate()
 {
 	static uint8_t wp_num = 1; // нулевая точка - это дом, маршрут начинается с первой точки
 
@@ -641,7 +659,7 @@ void updateModeState()
 				directUpdate();
 			}break;
 		case NAV: {
-				commandModeUpdate( omega_target[OMEGA_TURN_FROM_NAV], (0.01953125*(double)rc_input[ELEV] - 29.3164062) );
+				commandModeUpdate( omega_target[OMEGA_TURN_FROM_NAV], stabAltCalcTgtVy() );
 				stabOmegaUpdate();
 			}break;
 	}
@@ -1588,10 +1606,10 @@ void loggerUpdateTask(void *argument)
 	{
 		memset(str, '\0', sizeof(str));
 		#ifndef DEBUG_MODE
-			sprintf(str, "%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d",\
+			sprintf(str, "%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d",\
 					(int)HAL_GetTick(), (int)(10*logger_data[OMEGA_X_ZAD]), (int)(data_input[GYROX]*10),\
 					(int)(10*logger_data[OMEGA_Y_ZAD]), (int)(data_input[GYROY]*10), (int)(10*logger_data[OMEGA_Z_ZAD]),\
-					(int)(data_input[GYROZ]*10), (int)(data_input[BARO]*100), (int)(100*logger_data[VY_ZAD]),\
+					(int)(data_input[GYROZ]*10), (int)(data_input[BAROFILTERED]*100), (int)(10*logger_data[ALT_ZAD]), (int)(100*logger_data[VY_ZAD]),\
 					(int)(100*data_input[BAROVY]), (int)(100*data_input[AIR]),	(int)(logger_data[K_PR_OMEGA_X]*10),\
 					(int)(100*logger_data[K_INT_OMEGA_X]), (int)(10*logger_data[K_PR_OMEGA_Y]), (int)(100*logger_data[K_INT_OMEGA_Y]),\
 					(int)(10*logger_data[K_PR_OMEGA_Z]), (int)(100*logger_data[K_INT_OMEGA_Z]), (int)(10*k_pr_Vy),\
@@ -1659,6 +1677,7 @@ void baroUpdateTask(void *argument)
 		data_input[BARO] = ms5611.getRawAltitude();
 
 		ms5611.calcVerticalSpeed();
+		data_input[BAROFILTERED] = ms5611.getFilterAltitude();
 		data_input[BAROVY] = ms5611.getVerticalSpeed();
 
 		osDelay(2);// в функции вычисления высоты 2 задержки по 9 мС -> цикличность вызоыва каждые 20 мС

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+	<name>Маршрут 07-05-2021.kml</name>
+	<Style id="s_ylw-pushpin_hl0">
+		<IconStyle>
+			<scale>1.3</scale>
+			<Icon>
+				<href>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+			</Icon>
+			<hotSpot x="20" y="2" xunits="pixels" yunits="pixels"/>
+		</IconStyle>
+	</Style>
+	<StyleMap id="m_ylw-pushpin">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#s_ylw-pushpin1</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#s_ylw-pushpin_hl0</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Style id="s_ylw-pushpin1">
+		<IconStyle>
+			<scale>1.1</scale>
+			<Icon>
+				<href>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+			</Icon>
+			<hotSpot x="20" y="2" xunits="pixels" yunits="pixels"/>
+		</IconStyle>
+	</Style>
+	<Folder>
+		<name>Маршрут 07-05-2021</name>
+		<open>1</open>
+		<Placemark>
+			<name>WP1</name>
+			<LookAt>
+				<longitude>38.07997958496047</longitude>
+				<latitude>55.58168000617988</latitude>
+				<altitude>0</altitude>
+				<heading>-3.711033322561801</heading>
+				<tilt>9.781917725052372</tilt>
+				<range>433.2393413683088</range>
+				<gx:altitudeMode>relativeToSeaFloor</gx:altitudeMode>
+			</LookAt>
+			<styleUrl>#m_ylw-pushpin</styleUrl>
+			<Point>
+				<gx:drawOrder>1</gx:drawOrder>
+				<coordinates>38.078521,55.581607,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark>
+			<name>WP2</name>
+			<LookAt>
+				<longitude>38.08086314605534</longitude>
+				<latitude>55.5817148634869</latitude>
+				<altitude>0</altitude>
+				<heading>-3.710304045500199</heading>
+				<tilt>9.782312950968281</tilt>
+				<range>692.2534098159095</range>
+				<gx:altitudeMode>relativeToSeaFloor</gx:altitudeMode>
+			</LookAt>
+			<styleUrl>#m_ylw-pushpin</styleUrl>
+			<Point>
+				<gx:drawOrder>1</gx:drawOrder>
+				<coordinates>38.080667,55.580585,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark>
+			<name>WP3</name>
+			<LookAt>
+				<longitude>38.08086314605534</longitude>
+				<latitude>55.5817148634869</latitude>
+				<altitude>0</altitude>
+				<heading>-3.710304045500199</heading>
+				<tilt>9.782312950968281</tilt>
+				<range>692.2534098159095</range>
+				<gx:altitudeMode>relativeToSeaFloor</gx:altitudeMode>
+			</LookAt>
+			<styleUrl>#m_ylw-pushpin</styleUrl>
+			<Point>
+				<gx:drawOrder>1</gx:drawOrder>
+				<coordinates>38.082089,55.58161,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark>
+			<name>WP4</name>
+			<LookAt>
+				<longitude>38.08086314605534</longitude>
+				<latitude>55.5817148634869</latitude>
+				<altitude>0</altitude>
+				<heading>-3.710304045500199</heading>
+				<tilt>9.782312950968281</tilt>
+				<range>692.2534098159095</range>
+				<gx:altitudeMode>relativeToSeaFloor</gx:altitudeMode>
+			</LookAt>
+			<styleUrl>#m_ylw-pushpin</styleUrl>
+			<Point>
+				<gx:drawOrder>1</gx:drawOrder>
+				<coordinates>38.082355,55.583225,0</coordinates>
+			</Point>
+		</Placemark>
+		<Placemark>
+			<name>Home</name>
+			<LookAt>
+				<longitude>38.07932394980273</longitude>
+				<latitude>55.58254606363298</latitude>
+				<altitude>0</altitude>
+				<heading>-1.392531718268306</heading>
+				<tilt>11.75847194005482</tilt>
+				<range>175.2275778919297</range>
+				<gx:altitudeMode>relativeToSeaFloor</gx:altitudeMode>
+			</LookAt>
+			<styleUrl>#m_ylw-pushpin</styleUrl>
+			<Point>
+				<gx:drawOrder>1</gx:drawOrder>
+				<coordinates>38.07902843765541,55.58254000000001,0</coordinates>
+			</Point>
+		</Placemark>
+	</Folder>
+</Document>
+</kml>

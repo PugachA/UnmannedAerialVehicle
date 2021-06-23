@@ -100,3 +100,8 @@ void Nav::updatePlanePos(double lat, double lon, double alt, double track, doubl
 	this->plane_track = track*DEG2RAD;
 	this->plane_abs_speed = speed;
 }
+
+float Nav::getActiveWpAlt()
+{
+	return this->active_wp.getWpAlt();
+}
