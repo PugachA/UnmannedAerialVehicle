@@ -372,7 +372,7 @@ void flapsUpdate(uint8_t activate_flaps)
 {
 	int flaperon_delta_limit = 340; // 2/6 from the whole range
 
-	if (activate_flaps) //need to replace with flag from RC
+	if (activate_flaps)
 	{
 		g_flaperon_delta += 1;
 	}
@@ -581,13 +581,37 @@ double stabAltCalcTgtVy()
 
 double landCalcTgtVy()
 {
-	double vy_tgt = 0.0;
+	static double vy_tgt = 0.0;
+	static uint8_t counter = 0;
 
 	const double RAD2DEG = 57.2958;
 	const double DEG2RAD = 1/RAD2DEG;
 	const double TETA_GS = 3.0; //glideslope angle in degrees
+	const double FLARE_HEIGHT = 2.0; //height of the flare maneuver start in meters
 
-	vy_tgt = data_input[AIR]*asin(TETA_GS*DEG2RAD);
+	if (data_input[BAROFILTERED] > FLARE_HEIGHT)
+	{
+		vy_tgt = data_input[AIR]*asin(TETA_GS*DEG2RAD);
+		counter = 0;
+	}
+	else
+	{
+		counter++;
+	}
+
+	if ((data_input[BAROFILTERED] <= FLARE_HEIGHT) && (counter > 50)) // if height is below flare height for 0.05 seconds
+	{
+		vy_tgt = vy_tgt + 0.003; //vy_tgt will be increased by by 3m/s in 1 second
+		if (vy_tgt > 0.0)
+		{
+			vy_tgt = 0.0;
+		}
+		counter = 0;
+	}
+
+
+
+	return vy_tgt;
 }
 
 void navModeUpdate()
