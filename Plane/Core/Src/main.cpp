@@ -609,8 +609,6 @@ double landCalcTgtVy()
 		counter = 0;
 	}
 
-
-
 	return vy_tgt;
 }
 
