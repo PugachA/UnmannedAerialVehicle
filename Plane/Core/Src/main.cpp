@@ -586,12 +586,12 @@ double landCalcTgtVy()
 
 	const double RAD2DEG = 57.2958;
 	const double DEG2RAD = 1/RAD2DEG;
-	const double TETA_GS = 3.0; //glideslope angle in degrees
+	const double TETA_GS = -3.0; //glideslope angle in degrees
 	const double FLARE_HEIGHT = 2.0; //height of the flare maneuver start in meters
 
 	if (data_input[BAROFILTERED] > FLARE_HEIGHT)
 	{
-		vy_tgt = data_input[AIR]*asin(TETA_GS*DEG2RAD);
+		vy_tgt = data_input[AIR]*sin(TETA_GS*DEG2RAD);
 		counter = 0;
 	}
 	else
