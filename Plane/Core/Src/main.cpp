@@ -370,6 +370,7 @@ void setRoute()
 	waypoint[1].setWpCoord(55.581607, 38.078521, 80);
 	waypoint[2].setWpCoord(55.580585, 38.080667, 80);
 	waypoint[3].setWpCoord(55.580352, 38.083807, 100);
+	waypoint[3].setWpAsFAF();
 	waypoint[4].setWpCoord(55.581610, 38.082089, 90);
 	waypoint[5].setWpCoord(55.583225, 38.082355, 80);
 	waypoint[5].setWpAsLast();
@@ -626,6 +627,7 @@ void navModeUpdate()
 	if(reset_route)
 	{
 		wp_num = 1;
+		navigator.follow_gs = 0;
 		reset_route = false;
 	}
 
@@ -636,14 +638,22 @@ void navModeUpdate()
 
 	if( navigator.getDistanceToActiveWp() <= 10 )
 	{
-		if( waypoint[wp_num].isHome() == 0 )
-			if( waypoint[wp_num].isLast() == 0 )
-				wp_num++;
+		if( waypoint[wp_num].isFAF() == 0)
+		{
+			if( waypoint[wp_num].isHome() == 0 )
+				if( waypoint[wp_num].isLast() == 0 )
+					wp_num++;
+				else
+					wp_num = 0; // в качестве активной точки устанавлиается дом
 			else
-				wp_num = 0; // в качестве активной точки устанавлиается дом
+			{
+				wp_num = 1; // в качестве активной точки устанавлиается 1й ппм
+			}
+		}
 		else
 		{
-			wp_num = 1; // в качестве активной точки устанавлиается 1й ппм
+			navigator.follow_gs = 1;
+			wp_num++;
 		}
 	}
 }
@@ -700,6 +710,8 @@ void updateModeState()
 				directUpdate();
 			}break;
 		case NAV: {
+
+				velocity_target[VY] = navigator.follow_gs ? landCalcTgtVy() : stabAltCalcTgtVy();
 				commandModeUpdate( omega_target[OMEGA_TURN_FROM_NAV], velocity_target[VY]);
 				stabOmegaUpdate();
 			}break;

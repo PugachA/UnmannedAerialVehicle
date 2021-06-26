@@ -105,3 +105,7 @@ float Nav::getActiveWpAlt()
 {
 	return this->active_wp.getWpAlt();
 }
+Wp Nav::getActiveWp()
+{
+	return this->active_wp;
+}

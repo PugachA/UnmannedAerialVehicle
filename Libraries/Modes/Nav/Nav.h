@@ -31,6 +31,8 @@ class Nav
 	Nav(void);
     float getDistanceToActiveWp();
     float getActiveWpAlt();
+    Wp getActiveWp();
+    uint8_t follow_gs = 0;
 
     float getOmegaTurnToWp();
     void updateActiveWp(Wp wp);
