@@ -18,6 +18,7 @@ class Wp
 	uint8_t wp_is_active = 0;
 	uint8_t wp_is_home = 0;
 	uint8_t wp_is_last = 0;
+	uint8_t wp_is_faf = 0;
 	
   public:
 	Wp(void);
@@ -37,6 +38,8 @@ class Wp
 
     void setWpAsHome();
     void setWpAsLast();
+    void setWpAsFAF();
+    uint8_t isFAF();
     uint8_t isLast();
     uint8_t isHome();
     bool operator != (Wp wp1);

@@ -23,6 +23,10 @@ void Wp::setWpAsLast()
 {
 	wp_is_last = 1;
 }
+void Wp::setWpAsFAF()
+{
+	wp_is_faf = 1;
+}
 void Wp::setWpXCoord(double X)
 {
 	this->wp_x = X;
@@ -54,6 +58,10 @@ uint8_t Wp::isLast()
 uint8_t Wp::isHome()
 {
 	return this->wp_is_home;
+}
+uint8_t Wp::isFAF()
+{
+	return this->wp_is_faf;
 }
 bool Wp::operator != (Wp wp1)
 {
