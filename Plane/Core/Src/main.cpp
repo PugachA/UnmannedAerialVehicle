@@ -1585,7 +1585,7 @@ void sensorsUpdateTask(void *argument)
 		data_input[GAMMA] = euler.x;
 		data_input[PSI] = euler.y;
 		data_input[NZ] = accel.z;
-		//data_input[AIR] = ms4525do.getAirSpeed();
+		data_input[AIR] = ms4525do.getAirSpeed();
 		//data_input[BETA] = p3002.getAngle();
 
 		if( gps.gpsData.valid )
@@ -1596,7 +1596,7 @@ void sensorsUpdateTask(void *argument)
 			data_input[TRACK] = (double) minmea_tofloat(&gps.gpsData.course);
 		}
 		data_input[GPS_VALID] = (double) gps.gpsData.valid;
-		data_input[AIR] = data_input[GPS_SPEED];
+		//data_input[AIR] = data_input[GPS_SPEED];
 
 		osDelay(10);//ещё 5 мС внутри либы airspeed
 	}
