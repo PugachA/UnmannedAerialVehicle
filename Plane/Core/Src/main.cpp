@@ -150,6 +150,12 @@ enum Omega_targets
 	OMEGA_ARRAY_SIZE,
 };
 
+enum Velocity_targets
+{
+	VY,
+	VELOCITY_ARRAY_SIZE,
+};
+
 //--------------------Threads-----------------------
 
 /* Definitions for defaultTask */
@@ -320,6 +326,7 @@ uint32_t rc_input[CHANNELS_ARRAY_SIZE] = {1500};
 double data_input[SENSOR_ARRAY_SIZE] = {0.0};
 double logger_data[LOG_ARRAY_SIZE] = {0.0};
 double omega_target[OMEGA_ARRAY_SIZE] = {0.0};
+double velocity_target[VELOCITY_ARRAY_SIZE] = {0.0};
 
 char str[150] = "\0";
 
@@ -693,7 +700,7 @@ void updateModeState()
 				directUpdate();
 			}break;
 		case NAV: {
-				commandModeUpdate( omega_target[OMEGA_TURN_FROM_NAV], stabAltCalcTgtVy() );
+				commandModeUpdate( omega_target[OMEGA_TURN_FROM_NAV], velocity_target[VY]);
 				stabOmegaUpdate();
 			}break;
 	}
