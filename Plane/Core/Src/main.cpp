@@ -1570,7 +1570,7 @@ void sensorsUpdateTask(void *argument)
 
 	gps.Start();
 
-	//MS4525DO ms4525do(&hi2c2, 0.01);
+	MS4525DO ms4525do(&hi2c2, 0.01);
   /* Infinite loop */
 	for(;;)
 	{
