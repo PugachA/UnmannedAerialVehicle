@@ -367,13 +367,14 @@ void setRoute()
 {
 	waypoint[0].setWpCoord(55.582540, 38.079028, 80);
 	waypoint[0].setWpAsHome();
-	waypoint[1].setWpCoord(55.581607, 38.078521, 80);
-	waypoint[2].setWpCoord(55.580585, 38.080667, 80);
-	waypoint[3].setWpCoord(55.580352, 38.083807, 100);
-	waypoint[3].setWpAsFAF();
-	waypoint[4].setWpCoord(55.581610, 38.082089, 90);
-	waypoint[5].setWpCoord(55.583225, 38.082355, 80);
-	waypoint[5].setWpAsLast();
+	waypoint[1].setWpCoord(55.581607, 38.078521, 60);
+	waypoint[2].setWpCoord(55.580585, 38.080667, 70);
+	waypoint[3].setWpCoord(55.580352, 38.083807, 50);
+	waypoint[4].setWpCoord(55.583995, 38.082805, 30);
+	waypoint[5].setWpCoord(55.583582, 38.080629, 20);
+	waypoint[5].setWpAsFAF();
+	waypoint[6].setWpCoord(55.582540, 38.079028, 10);
+	waypoint[6].setWpAsLast();
 }
 
 void flapsUpdate(uint8_t activate_flaps)
@@ -595,7 +596,7 @@ double landCalcTgtVy()
 	const double RAD2DEG = 57.2958;
 	const double DEG2RAD = 1/RAD2DEG;
 	const double TETA_GS = -3.0; //glideslope angle in degrees
-	const double FLARE_HEIGHT = 2.0; //height of the flare maneuver start in meters
+	const double FLARE_HEIGHT = 12.0; //height of the flare maneuver start in meters
 
 	if (data_input[BAROFILTERED] > FLARE_HEIGHT)
 	{
@@ -1585,7 +1586,7 @@ void sensorsUpdateTask(void *argument)
 		data_input[GAMMA] = euler.x;
 		data_input[PSI] = euler.y;
 		data_input[NZ] = accel.z;
-		data_input[AIR] = ms4525do.getAirSpeed();
+		//data_input[AIR] = ms4525do.getAirSpeed();
 		//data_input[BETA] = p3002.getAngle();
 
 		if( gps.gpsData.valid )
@@ -1596,7 +1597,7 @@ void sensorsUpdateTask(void *argument)
 			data_input[TRACK] = (double) minmea_tofloat(&gps.gpsData.course);
 		}
 		data_input[GPS_VALID] = (double) gps.gpsData.valid;
-		//data_input[AIR] = data_input[GPS_SPEED];
+		data_input[AIR] = data_input[GPS_SPEED];
 
 		osDelay(10);//ещё 5 мС внутри либы airspeed
 	}
